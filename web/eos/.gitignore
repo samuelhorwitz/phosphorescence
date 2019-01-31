@@ -1,0 +1,3 @@
+dist
+*.crt
+*.key

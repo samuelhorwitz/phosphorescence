@@ -1,0 +1,27 @@
+{
+  "name": "phosphorescence-training",
+  "version": "1.0.0",
+  "author": "Samuel Horwitz",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@tensorflow/tfjs": "^0.14.2",
+    "axios": "^0.18.0",
+    "express": "^4.16.4",
+    "nano": "^8.0.0",
+    "nuxt": "^2.3.4",
+    "require-all": "^3.0.0",
+    "svg.js": "^2.7.1",
+    "svgdom": "0.0.17"
+  },
+  "engines": {
+    "node": "^10.0.0"
+  },
+  "engineStrict": true,
+  "scripts": {
+    "start": "nuxt",
+    "import": "node ./data/import.js",
+    "export": "node ./data/export.js",
+    "process-raw-data": "npm run import && npm run export"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "views": {
+    "data": {
+      "map": "function (doc) {\n  if (doc.track && doc.track.track && doc.track.track.artists && doc.track.track.name && doc.analysis && doc.evocativeness) {\n    emit(doc._id, {\n      name: doc.track.track.name,\n      artists: doc.track.track.artists.map(function(artist) {\n        return artist.name;\n      }),\n      danceability: doc.analysis.danceability,\n      energy: doc.analysis.energy,\n      key: doc.analysis.key,\n      loudness: doc.analysis.loudness,\n      mode: doc.analysis.mode,\n      speechiness: doc.analysis.speechiness,\n      acousticness: doc.analysis.acousticness,\n      instrumentalness: doc.analysis.instrumentalness,\n      liveness: doc.analysis.liveness,\n      valence: doc.analysis.valence,\n      tempo: doc.analysis.tempo,\n      time_signature: doc.analysis.time_signature,\n      aetherealness: doc.evocativeness.x,\n      primordialness: doc.evocativeness.y\n    });\n  }\n}"
+    },
+    "test": {
+      "map": "function (doc) {\n  if (doc.track && doc.track.track && doc.track.track.artists && doc.track.track.name && doc.analysis && !doc.evocativeness) {\n    emit(doc._id, {\n      name: doc.track.track.name,\n      artists: doc.track.track.artists.map(function(artist) {\n        return artist.name;\n      }),\n      danceability: doc.analysis.danceability,\n      energy: doc.analysis.energy,\n      key: doc.analysis.key,\n      loudness: doc.analysis.loudness,\n      mode: doc.analysis.mode,\n      speechiness: doc.analysis.speechiness,\n      acousticness: doc.analysis.acousticness,\n      instrumentalness: doc.analysis.instrumentalness,\n      liveness: doc.analysis.liveness,\n      valence: doc.analysis.valence,\n      tempo: doc.analysis.tempo,\n      time_signature: doc.analysis.time_signature,\n    });\n  }\n}"
+    }
+  },
+  "language": "javascript"
+}

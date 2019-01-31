@@ -1,0 +1,306 @@
+<template>
+    <div class="container">
+        <div class="wrapper">
+            <div class="bg"></div>
+            <menu>
+                <li class="menuItem" @click="regenerate()">
+                    <button :disabled="advancedOpen || isRegenerating || $nuxt.$route.path !== '/'">Generate New</button>
+                </li>
+                <li class="menuItem toPage" :class="{active: advancedOpen}" @click="toggledAdvanced()">
+                    <button>Advanced</button>
+                </li>
+                <li class="menuItem toPage" @click="flash()">
+                    <button><nuxt-link to="/settings">Settings</nuxt-link></button>
+                </li>
+                <li class="menuItem logout" @click="logout()">
+                    <button>Logout</button>
+                </li>
+            </menu>
+        </div>
+        <aside class="advancedWrapper" v-if="advancedOpen">
+            <div class="bg bg-inverse"></div>
+            <ul class="advanced">
+                <li class="advancedMenuItem">
+                    <label for="tracksPerPlaylist">Number of Tracks</label>
+                    <input name="tracksPerPlaylist" type="number" v-model="tracksPerPlaylist">
+                </li>
+                <li class="advancedMenuItem">
+                    <label for="seedStyle">Seed style</label>
+                    <select name="seedStyle" v-model="seedStyle">
+                        <option :value="null">Random</option>
+                        <option :value="'chillout'">Chillout</option>
+                        <option :value="'primal'">Primal</option>
+                        <option :value="'melancholy'">Melancholy</option>
+                        <option :value="'emotional'">Emotional</option>
+                        <option :value="'progressive'">Progressive</option>
+                        <option :value="'hard'">Hard</option>
+                        <option :value="'dark'">Dark</option>
+                        <option :value="'trippy'">Trippy</option>
+                    </select>
+                </li>
+                <li class="advancedMenuItem">
+                    <button @click="regenerate()" :disabled="isRegenerating || $nuxt.$route.path !== '/'">Generate!</button>
+                </li>
+            </ul>
+        </aside>
+    </div>
+</template>
+
+<style scoped>
+    .container {
+        display: flex;
+        flex-direction: column;
+        grid-column: 1 / 3;
+    }
+
+    .advanced {
+        padding: 0px;
+        margin: 0px;
+        margin-left: 7vw;
+        margin-right: 7vw;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex: 1;
+        z-index: 1;
+    }
+
+    .advancedWrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2em;
+        margin-top: 1em;
+    }
+
+    .advancedMenuItem {
+        display: inline;
+        font-weight: bold;
+        color: white;
+        margin-right: 2em;
+    }
+
+    menu {
+        padding: 0px;
+        margin: 0px;
+        margin-bottom: 1em;
+        margin-left: 7vw;
+        margin-right: 7vw;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex: 1;
+    }
+
+    .menuItem {
+        display: inline;
+        cursor: pointer;
+        margin-right: 3em;
+        white-space: nowrap;
+    }
+
+    .menuItem:last-child {
+        margin-left: auto;
+    }
+
+    button {
+        appearance: none;
+        border: 0px;
+        background: transparent;
+        color: white;
+        font-family: 'Caveat';
+        font-size: 2.5em;
+        outline: none;
+        transform: rotate(-10deg);
+        cursor: pointer;
+        text-shadow: -1px -1px 0 midnightblue, 1px -1px 0 midnightblue, -1px 1px 0 midnightblue, 1px 1px 0 midnightblue;
+    }
+
+    button[disabled] {
+        cursor: not-allowed;
+    }
+
+    .menuItem:hover button, .menuItem.active button, .advancedMenuItem:hover button {
+        color: magenta;
+        text-shadow: -1px -1px 0 lightcyan, 1px -1px 0 lightcyan, -1px 1px 0 lightcyan, 1px 1px 0 lightcyan;
+    }
+
+    .menuItem:hover button[disabled] {
+        text-decoration: line-through;
+    }
+
+    .bg {
+        background-color: mediumvioletred;
+        height: 2em;
+        transform: skewX(-36deg);
+        position: absolute;
+        width: 90vw;
+        border: 3px outset mediumturquoise;
+    }
+
+    .bg-inverse {
+        background-color: mediumvioletred;
+        border-color: mediumvioletred;
+        transform: skewX(36deg);
+    }
+
+    .wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    label {
+        font-family: 'Montserrat';
+        font-size: 1.3em;
+        margin-bottom: 0.7em;
+    }
+
+    input {
+        -webkit-appearance: none;
+        border: 3px inset gray;
+        height: 1em;
+        font-size: 1em;
+        text-align: right;
+        outline: 0;
+        width: 100%;
+    }
+
+    input[type="number"] {
+        width: 3em;
+    }
+
+    select {
+        height: 3.2em;
+        border-radius: 0px;
+        border: 3px outset gray;
+        background-color: dimgray;
+    }
+
+    @media only screen and (max-height: 449px) {
+        .container {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+        }
+
+        .wrapper {
+            position: relative;
+            width: 100%;
+            margin-top: 0.5em;
+        }
+
+        .bg {
+            width: 90%;
+        }
+
+        .menuItem {
+            margin-right: 2em;
+        }
+
+        .menuItem.toPage {
+            display: none;
+        }
+
+        .advancedWrapper {
+            display: none;
+        }
+    }
+
+    @media only screen and (max-width: 949px) and (max-height: 449px) {
+        .bg {
+            width: 80%;
+        }
+    }
+
+    @media only screen and (max-width: 749px) and (max-height: 449px) {
+        .container {
+            grid-column: 1 / 3;
+        }
+    }
+
+    @media only screen and (max-width: 524px) and (max-height: 449px) {
+        .menuItem.logout {
+            display: none;
+        }
+
+        .menuItem {
+            margin: 0;
+        }
+
+        menu {
+            justify-content: center;
+        }
+
+        .bg {
+            width: 75%;
+        }
+    }
+
+    @media only screen and (min-height: 450px) and (max-width: 1099px) {
+        .container {
+            grid-column: 1 / 2;
+        }
+    }
+</style>
+
+<script>
+    import {logout} from '~/assets/session';
+    import {builders, loadNewPlaylist} from '~/assets/recordcrate';
+
+    export default {
+        data() {
+            return {
+                isRegenerating: false,
+                advancedOpen: false
+            };
+        },
+        computed: {
+            seedStyle: {
+                get() {
+                    return this.$store.state.preferences.seedStyle;
+                },
+                set(newValue) {
+                    this.$store.commit('preferences/updateSeedStyle', newValue);
+                }
+            },
+            tracksPerPlaylist: {
+                get() {
+                    return this.$store.state.preferences.tracksPerPlaylist;
+                },
+                set(newValue) {
+                    this.$store.commit('preferences/updateTracksPerPlaylist', newValue);
+                }
+            }
+        },
+        methods: {
+            async regenerate() {
+                if (!this.$store.getters['tracks/stopped'] && !confirm('This will destroy the current playlist. Are you sure?')) {
+                    return;
+                }
+                this.isRegenerating = true;
+                this.$store.commit('loading/startLoad');
+                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
+                this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                this.$store.dispatch('loading/endLoadAfterDelay');
+                this.isRegenerating = false;
+            },
+            logout() {
+                this.$store.dispatch('loading/loadFlash');
+                logout();
+                this.$router.push('/auth');
+            },
+            flash() {
+                this.$store.dispatch('loading/loadFlash');
+            },
+            toggledAdvanced() {
+                this.flash();
+                this.advancedOpen = !this.advancedOpen;
+            }
+        }
+    };
+</script>

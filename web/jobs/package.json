@@ -1,0 +1,23 @@
+{
+  "name": "phosphorescence-jobs",
+  "version": "1.0.0",
+  "author": "Samuel Horwitz",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": "^10.0.0"
+  },
+  "engineStrict": true,
+  "scripts": {
+    "start": "npm run rebuild-tracks && npm run redeploy-tracks",
+    "rebuild-tracks": "node ./cachetracks.js",
+    "redeploy-tracks": "node ./pushtracks.js"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.395.0",
+    "axios": "^0.18.0"
+  },
+  "devDependencies": {
+    "dotenv": "^6.2.0"
+  }
+}
