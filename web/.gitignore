@@ -1,0 +1,9 @@
+.nuxt
+node_modules
+*.crt
+*.key
+static/monaco
+static/docs
+dist
+.env
+static/tracks.json

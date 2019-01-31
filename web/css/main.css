@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Varela|Caveat|VT323');
+
+html, body {
+	margin: 0px;
+	padding: 0px;
+}
+
+body {
+	background-image: url('~/images/bg_small.jpg');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center bottom -250px;
+    background-color: rgb(40, 27, 61);
+    background-repeat: no-repeat;
+    font-family: Montserrat;
+    overflow: hidden;
+    font-size: 16px;
+}
+
+@media only screen and (max-width: 599px) and (min-height: 450px) {
+    body {
+        font-size: 6px;
+    }
+}
+
+@media only screen and (min-width: 600px) and (max-width: 899px) and (min-height: 450px) {
+    body {
+        font-size: 11px;
+    }
+}
+
+@media only screen and (min-width: 900px) and (max-width: 1199px) and (min-height: 450px) {
+    body {
+        font-size: 16px;
+    }
+}
+
+::selection {
+	background: magenta;
+}
+
+h2.pageHeader {
+    color: white;
+    font-size: 4em;
+    margin: 0px;
+}
+
+.pageWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1em;
+}
+
+article.authPage {
+    background-color: teal;
+    margin: 0 3em;
+    padding: 1em 3em;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    border: 7px outset magenta;
+    width: 50em;
+}

@@ -1,0 +1,4 @@
+.nuxt
+node_modules
+venv
+spotify_credentials.json
