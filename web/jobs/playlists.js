@@ -5,10 +5,8 @@ module.exports = {
 	],
 	"seeders": [
 		"5lSgExb6yTKfLusGag7bm7", // Armada Trance Top 1000
-		"0IJUUs6IqIPk9tS5nau0Rj", // Armada Chill
 		"0uVIGYfnUAkOT5REqtQICx", // Armada Vocal Trance
 		"2iTMQ36cvjhxgIYGv7uld5", // Armada Trance 100
-		"68BiK8KG3otORDaYB3ZaO9", // Armada Chillout Top 1000
 		"5ztDD0tx94xaHpIRpepP2r", // Armada Trance Top 1000 Chill Edition
 		"5Hou76tCX8ef4FEM0RvaM0", // Armada Who's Afraid of 138?!
 		"5QafFMGgQKGwqgV7k3qHy6", // Armada ASOT Classics
@@ -29,14 +27,11 @@ module.exports = {
 		"4BNXWlP8K8kt4F3bcXg3jX", // DI.FM Instrumental Melodic Trance & Uplifting Trance Top 1000
 		"3bYwSveexd8YNXvS84Hj12", // DI.FM Vocal Melodic Trance & Uplifiting Trance Top 1000
 		"2ohxIbffYJK1gmiPjsOe2q", // FSOE Recordings
-		"708Lw1vngitikCt5JxqDsD", // Aly & Fila Chillout
 		"7dmNbBu1FI01pfNg1dqro2", // FSOE Radio
 		"5A4dvp15zTXXNKNfcRfE3f", // ASOT Top 50 2018
 		"54KSGqVphnrK8ntRc4NL1G", // Planet Perfecto
 		"7f8Nq71ChVGywKVcgEUa35", // Planet Perfecto Radio
 		"6ZNqBjtmRBjXBG2BW0QYCA", // Psytrance Full On Progressive & Goa Trance
-		"4Xq4VM7PpM63Rl1LYNWBIO", // Psytrance (Goa, Minimal, Progressive, Dark, Chill...)
-		"3T1e2xXlbVJ6AXbqALUSfr", // Psytrance, progresive, goa, psybient, fullon, forest, dark and rest
 		"5NHLM1DytStTaxfGJigoC0", // Psytrance Classics
 		"4p6NpPAfQBPdhVfeHZzRmM", // Ibiza Classics
 		"0npkErs6y3GCymDR868GdD", // 90's Ibiza Trance
@@ -47,10 +42,21 @@ module.exports = {
 		"2MnPSLpVpaJvyNosrPRUTA", // 90s Trance & Techno Anthems
 		"78AFAJFvRzboZfEDnAkkFn", // Trance Anthems 90s-00s
 		"72DnoMQTeGRgLbLk7WlKol", // Trance/90s
-		"06IaXoRhHIvrCi8g4fmjel", // Psy/Goa/Prog/Dark-trance
 		"6kaLL9VKSZK37QtuCqdqZX", // Euphoric Chillout Trance
+		"708Lw1vngitikCt5JxqDsD", // Aly & Fila Chillout
 	],
 	"blacklists": [
 		"4NTy5kvMHlsVUyXiCRbzfW", // Phosphorescence Blacklist
-	]
+	],
+	"subgenres": {
+		"chill": [
+			"0IJUUs6IqIPk9tS5nau0Rj", // Armada Chill
+			"68BiK8KG3otORDaYB3ZaO9", // Armada Chillout Top 1000
+		],
+		"psy": [
+			"06IaXoRhHIvrCi8g4fmjel", // Psy/Goa/Prog/Dark-trance
+			"4Xq4VM7PpM63Rl1LYNWBIO", // Psytrance (Goa, Minimal, Progressive, Dark, Chill...)
+			"3T1e2xXlbVJ6AXbqALUSfr", // Psytrance, progresive, goa, psybient, fullon, forest, dark and rest
+		]
+	}
 }
