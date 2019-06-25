@@ -34,7 +34,26 @@ export function sendTrackBlobToEos(raw) {
     });
 }
 
-export async function buildPlaylist(trackCount, builder, firstTrackBuilder) {
+export function sendTrackToEos(track) {
+    return new Promise((resolve, reject) => {
+        let channel = new MessageChannel();
+        channel.port1.onmessage = ({origin, data}) => {
+            if (data.type === 'acknowledge') {
+                resolve();
+            }
+            else if (data.type === 'error') {
+                reject(data.error);
+            }
+            else {
+                reject(`Unknown error when sending track data: ${data.type}`)
+            }
+            channel.port1.close();
+        };
+        iframe.contentWindow.postMessage({type: 'loadAdditionalTrack', track, responsePort: channel.port2}, process.env.EOS_ORIGIN, [channel.port2]);
+    });
+}
+
+export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firstTrack) {
     let script = encoder.encode(builder);
     if (firstTrackBuilder) {
         let firstTrack, firstTrackDimensions;
@@ -52,6 +71,9 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder) {
             playlist,
             dimensions: [...firstTrackDimensions, ...dimensions].filter((val, index, arr) => arr.indexOf(val) === index)
         };
+    }
+    else if (firstTrack) {
+        return callBuilder({firstTrack, trackCount, script});
     }
     else {
         return callBuilder({trackCount, script});

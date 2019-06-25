@@ -1,6 +1,7 @@
 import RunnerWorker from 'worker-loader!./runner.worker.js';
 import {encoder, decoder} from '../common/textencoding';
 
+let additionalTracks = {};
 let tracksReadyResolver;
 let tracksReady = new Promise(resolve => tracksReadyResolver = resolve);
 
@@ -36,10 +37,14 @@ addEventListener('message', async ({origin, data}) => {
                     finished = true;
                 }
             }, {once: true});
-            runner.postMessage({type: 'buildPlaylist', tracksUrl: await tracksReady, trackCount: data.trackCount, firstTrackOnly: data.firstTrackOnly, firstTrack: data.firstTrack, script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`), secret});
+            runner.postMessage({type: 'buildPlaylist', tracksUrl: await tracksReady, additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})), trackCount: data.trackCount, firstTrackOnly: data.firstTrackOnly, firstTrack: data.firstTrack, script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`), secret});
         }
         else if (data.type === 'loadTracks') {
             tracksReadyResolver(URL.createObjectURL(new Blob([data.tracks], {type: 'application/json'})));
+            responsePort.postMessage({type: 'acknowledge'});
+        }
+        else if (data.type === 'loadAdditionalTrack') {
+            additionalTracks[data.track.track.id] = data.track;
             responsePort.postMessage({type: 'acknowledge'});
         }
     }

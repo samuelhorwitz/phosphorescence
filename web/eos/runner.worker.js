@@ -5,6 +5,7 @@
     let tags;
     let idToTagMap;
     let tracks;
+    let additionalTracks = {};
     let tree;
     let getTree = () => tree;
     let getIdToTagMap = () => idToTagMap;
@@ -18,9 +19,27 @@
                 let response = await fetch(data.tracksUrl);
                 resolve(await response.json());
             });
+            let additionalTrackData = await new Promise(async resolve => {
+                let response = await fetch(data.additionalTracksUrl);
+                resolve(await response.json());
+            });
             tags = trackData.tags;
             idToTagMap = trackData.idsToTags;
             tracks = trackData.tracks;
+            for (let [id, track] of Object.entries(additionalTrackData)) {
+                if (tags[track.tag]) {
+                    tags[track.tag].push(id);
+                }
+                else {
+                    tags[track.tag] = [id];
+                }
+                idToTagMap[id] = track.tag;
+                additionalTracks[id] = {
+                    track: track.track,
+                    features: track.features,
+                    evocativeness: track.evocativeness
+                };
+            }
             let trackCount = data.trackCount;
             let firstTrack;
             if (data.firstTrackOnly) {
