@@ -70,8 +70,8 @@
 </style>
 
 <script>
-    import {initialize, builders, loadNewPlaylist} from '~/assets/recordcrate';
-    import {accessTokenExists, refreshUser, getUsersCountry} from '~/assets/session';
+    import {initialize, builders, loadNewPlaylist, processTrack} from '~/assets/recordcrate';
+    import {accessTokenExists, refreshUser, getUsersCountry, getTrackWithFeatures} from '~/assets/session';
     import {spider} from '~/assets/spotify';
     import logo from '~/components/logo';
     import toolbar from '~/components/toolbar';
@@ -103,6 +103,32 @@
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
             }
             this.$store.dispatch('loading/endLoadAfterDelay');
+        },
+        mounted() {
+            document.body.addEventListener('dragover', this.preventDefault);
+            document.body.addEventListener('drop', this.handleDrop);
+        },
+        beforeDestroy() {
+            document.body.removeEventListener('dragover', this.preventDefault);
+            document.body.removeEventListener('drop', this.handleDrop);
+        },
+        methods: {
+            preventDefault(e) {
+                e.preventDefault();
+            },
+            async handleDrop(e) {
+                this.$store.commit('loading/startLoad');
+                e.preventDefault();
+                let url = e.dataTransfer.getData('text/x-spotify-tracks');
+                let trackParts = url.split('/');
+                let trackId = trackParts[trackParts.length - 1];
+                let track = await getTrackWithFeatures(trackId);
+                let processedTrack = await processTrack(await getUsersCountry(), track);
+                console.log(processedTrack);
+                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
+                this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                this.$store.dispatch('loading/endLoadAfterDelay');
+            }
         }
     };
 </script>
