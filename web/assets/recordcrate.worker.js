@@ -20,6 +20,14 @@ addEventListener('message', async ({data}) => {
         console.log('Tracks processed');
         let {tags, idsToTags} = buildTags(tracks);
         postMessage({type: 'sendProcessedTracks', data: encoder.encode(JSON.stringify({tracks, tags, idsToTags}))});
+    } else if (data.type == 'sendTrack') {
+        let track = data.track;
+        let countryCode = data.countryCode;
+        console.log('Processing track...');
+        track = await getEvocativenessOfSingleTrack(track);
+        console.log('Track processed');
+        let tag = getTrackTag(track.track);
+        postMessage({type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}});
     }
 });
 
@@ -46,6 +54,12 @@ async function getEvocativeness(tracks) {
         tracks[id].evocativeness = predict(features, aModel, pModel, meanstd);
     }
     return tracks;
+}
+
+async function getEvocativenessOfSingleTrack(track) {
+    let {aModel, pModel, meanstd} = await modelsReady;
+    track.evocativeness = predict(track.features, aModel, pModel, meanstd);
+    return track;
 }
 
 function predict(a, aModel, pModel, meanstd) {

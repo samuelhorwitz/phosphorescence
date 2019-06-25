@@ -112,3 +112,35 @@ export async function getUsersCountry() {
     }
     return null;
 }
+
+export async function getTrackWithFeatures(trackId) {
+    let fullResponse = {};
+    let trackResponse = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${await getAccessToken()}`
+        }
+    });
+    if (trackResponse && trackResponse.status == 200) {
+        fullResponse.track = await trackResponse.json();
+    } else {
+        return null;
+    }
+    let featuresResponse = await fetch(`https://api.spotify.com/v1/audio-features?ids=${trackId}`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${await getAccessToken()}`
+        }
+    });
+    if (featuresResponse && featuresResponse.status == 200) {
+        let allFeatures = await featuresResponse.json();
+        if (allFeatures.audio_features && allFeatures.audio_features.length > 0) {
+            fullResponse.features = allFeatures.audio_features[0];
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+    return fullResponse;
+}
