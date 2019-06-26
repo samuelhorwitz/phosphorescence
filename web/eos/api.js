@@ -6,12 +6,6 @@
 // custom distance functions. Here, we will detail what global constructs are
 // available to you to use in your scripts.
 
-/* This work is dedicated under the Creative Commons 0 dedication.
- * To the extent possible under law, the person who associated CC0 with this
- * work has waived all copyright and related or neighboring rights to this work.
- * https://creativecommons.org/publicdomain/zero/1.0/
- */
-
 /* Creative Commons 0 Dedication
  *
  * This work is dedicated under the Creative Commons 0 dedication.
@@ -30,7 +24,7 @@
 // Please note that if you develop custom scripts on our website, you are
 // relinquishing these scripts into the public domain as per
 // [CC0](https://creativecommons.org/share-your-work/public-domain/cc0/). You
-// may clone the project from Github and run your own instance as alternatives,
+// may clone the project from Github and run your own instance instead,
 // if you do not wish to release your work into the public domain.
 //
 // ---
