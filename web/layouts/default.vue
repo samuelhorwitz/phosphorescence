@@ -124,7 +124,6 @@
                 let trackId = trackParts[trackParts.length - 1];
                 let track = await getTrackWithFeatures(trackId);
                 let processedTrack = await processTrack(await getUsersCountry(), track);
-                console.log(processedTrack);
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.dispatch('loading/endLoadAfterDelay');
