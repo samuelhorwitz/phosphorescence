@@ -4,7 +4,7 @@
             <div class="bg"></div>
             <menu>
                 <li class="menuItem" @click="regenerate()">
-                    <button :disabled="advancedOpen || isRegenerating || $nuxt.$route.path !== '/'">Generate New</button>
+                    <button :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
                 </li>
                 <li class="menuItem toPage" :class="{active: advancedOpen}" @click="toggledAdvanced()">
                     <button>Advanced</button>
@@ -39,7 +39,7 @@
                     </select>
                 </li>
                 <li class="advancedMenuItem">
-                    <button @click="regenerate()" :disabled="isRegenerating || $nuxt.$route.path !== '/'">Generate!</button>
+                    <button @click="regenerate()" :disabled="$store.state.loading.loading || $nuxt.$route.path !== '/'">Generate!</button>
                 </li>
             </ul>
         </aside>
@@ -255,7 +255,6 @@
     export default {
         data() {
             return {
-                isRegenerating: false,
                 advancedOpen: false
             };
         },
@@ -282,12 +281,10 @@
                 if (!this.$store.getters['tracks/stopped'] && !confirm('This will destroy the current playlist. Are you sure?')) {
                     return;
                 }
-                this.isRegenerating = true;
                 this.$store.commit('loading/startLoad');
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.dispatch('loading/endLoadAfterDelay');
-                this.isRegenerating = false;
             },
             logout() {
                 this.$store.dispatch('loading/loadFlash');
