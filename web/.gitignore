@@ -7,3 +7,4 @@ static/docs
 dist
 .env
 static/tracks.json
+pgdata

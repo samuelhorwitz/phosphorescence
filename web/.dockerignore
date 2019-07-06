@@ -22,3 +22,4 @@ eos/.gitignore
 eos/Dockerfile
 jobs/.gitignore
 jobs/node_modules/*
+pgdata/*
