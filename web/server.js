@@ -1,5 +1,8 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const app = express();
+
+app.use(cookieParser());
 
 app.use(function (req, res, next) {
     res.set({
@@ -9,6 +12,7 @@ app.use(function (req, res, next) {
 });
 
 require('./api/spotify')(app);
+require('./api/scripts')(app);
 
 if (process.env.NODE_ENV === 'production') {
     const http = require('http');
