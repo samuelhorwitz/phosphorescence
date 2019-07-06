@@ -295,11 +295,7 @@ export function injector({getTree, getIdToTagMap}) {
         if (diff == 0) {
             return 0;
         }
-        let scaledDiff = 1;
-        for (let i = 0; i < diff; i++) {
-            scaledDiff /= 1.5;
-        }
-        return 1 - scaledDiff;
+        return 1 - (1 / (1 + (0.5 * Math.pow(diff, 3))));
     });
 
     // If you want to do harmonics comparisons outside of the tree search and
@@ -407,11 +403,30 @@ export function injector({getTree, getIdToTagMap}) {
             acousticness,
             danceability,
             instrumentalness,
-            duration: duration_ms,
-            timeSignature: time_signature
+            duration_ms: duration,
+            time_signature: timeSignature
         } = features;
         let {aetherealness, primordialness} = evocativeness;
         let tag = idsToTags[id];
+        console.log(JSON.stringify({
+            id,
+            tag,
+            key,
+            mode,
+            tempo,
+            energy,
+            valence,
+            liveness,
+            loudness,
+            speechiness,
+            acousticness,
+            danceability,
+            aetherealness,
+            primordialness,
+            instrumentalness,
+            duration,
+            timeSignature
+        }, null, 4));
         return {
             id,
             tag,
@@ -428,8 +443,8 @@ export function injector({getTree, getIdToTagMap}) {
             aetherealness,
             primordialness,
             instrumentalness,
-            duration: duration_ms,
-            timeSignature: time_signature
+            duration,
+            timeSignature
         };
     });
 };
