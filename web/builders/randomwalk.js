@@ -48,6 +48,6 @@ self.hooks.getFirstTrack = function() {
 // tracks that may not be exact duplicates but are likely remixes or different
 // releases of an already chosen track.
 self.hooks.getNextTrack = function({tags}, previousTrack) {
-    let neighbors = getNearestNeighborsByTrack(treeSize() * 0.01, previousTrack);
+    let neighbors = getNearestNeighborsByTrack(treeSize() * 0.005, previousTrack);
     return pickRandom(cullTracksWithAlreadySeenTags(neighbors, tags));
 };

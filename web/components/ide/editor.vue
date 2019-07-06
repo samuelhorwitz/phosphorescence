@@ -22,7 +22,7 @@
 
 <script>
     import * as monaco from 'monaco-editor';
-    import basewalker from '!raw-loader!~/assets/ide/basewalker.js';
+    import basewalker from '!raw-loader!~/builders/randomwalk.js';
     import api from '!raw-loader!~/eos/api.js';
 
     export default {

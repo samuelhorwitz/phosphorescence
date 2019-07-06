@@ -6,7 +6,7 @@ html, body {
 }
 
 body {
-	background-image: url('~/images/bg_small.jpg');
+	background-image: url('/images/bg_small.jpg');
     background-attachment: fixed;
     background-size: cover;
     background-position: center bottom -250px;
