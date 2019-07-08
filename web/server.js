@@ -5,8 +5,13 @@ const app = express();
 app.use(cookieParser());
 
 app.use(function (req, res, next) {
+    let unsafeEval = '';
+    // Webpack dev mode uses eval
+    if (process.env.NODE_ENV !== 'production') {
+        unsafeEval = `'unsafe-eval'`;
+    }
     res.set({
-        'Content-Security-Policy': `default-src 'none';manifest-src 'self';child-src 'self';script-src 'self' 'unsafe-eval' 'unsafe-inline' https://sdk.scdn.co;img-src 'self' https://i.scdn.co data:;style-src 'self' 'unsafe-inline' https://fonts.gstatic.com https://fonts.googleapis.com;font-src 'self' https://fonts.gstatic.com;frame-src 'self' https://accounts.spotify.com https://sdk.scdn.co ${process.env.EOS_ORIGIN} ${process.env.API_ORIGIN};connect-src 'self' https://phosphorescence.sfo2.digitaloceanspaces.com https://api.spotify.com ${process.env.API_ORIGIN};worker-src 'self';base-uri 'none';form-action 'none';frame-ancestors 'self';block-all-mixed-content;navigate-to 'self' ${process.env.API_ORIGIN} https://accounts.spotify.com;`
+        'Content-Security-Policy': `default-src 'none';manifest-src 'self';child-src 'self';script-src 'self' ${unsafeEval} 'unsafe-inline' https://sdk.scdn.co;img-src 'self' https://i.scdn.co data:;style-src 'self' 'unsafe-inline' https://fonts.gstatic.com https://fonts.googleapis.com;font-src 'self' https://fonts.gstatic.com;frame-src 'self' https://accounts.spotify.com https://sdk.scdn.co ${process.env.EOS_ORIGIN} ${process.env.API_ORIGIN};connect-src 'self' https://phosphorescence.sfo2.digitaloceanspaces.com https://api.spotify.com ${process.env.API_ORIGIN};worker-src 'self';base-uri 'none';form-action 'none';frame-ancestors 'self';block-all-mixed-content;navigate-to 'self' ${process.env.API_ORIGIN} https://accounts.spotify.com;`
     })
     next();
 });
