@@ -13,59 +13,65 @@
     require('./api.js').injector({getTree, getIdToTagMap});
 
     addEventListener('message', async ({data}) => {
-        if (data.type === 'buildPlaylist') {
-            let secret = data.secret;
-            let trackData = await new Promise(async resolve => {
-                let response = await fetch(data.tracksUrl);
-                resolve(await response.json());
-            });
-            let additionalTrackData = await new Promise(async resolve => {
-                let response = await fetch(data.additionalTracksUrl);
-                resolve(await response.json());
-            });
-            tags = trackData.tags;
-            idToTagMap = trackData.idsToTags;
-            tracks = trackData.tracks;
-            for (let [id, track] of Object.entries(additionalTrackData)) {
-                if (tags[track.tag]) {
-                    tags[track.tag].push(id);
-                }
-                else {
-                    tags[track.tag] = [id];
-                }
-                idToTagMap[id] = track.tag;
-                additionalTracks[id] = {
-                    track: track.track,
-                    features: track.features,
-                    evocativeness: track.evocativeness
-                };
-            }
-            let trackCount = data.trackCount;
-            let firstTrack;
-            if (data.firstTrackOnly) {
-                trackCount = 1;
-            }
-            else if (data.firstTrack) {
-                firstTrack = data.firstTrack;
-            }
-            let playlist;
-            try {
-                playlist = await buildPlaylist(data.script, trackCount, firstTrack);
-            }
-            catch (e) {
-                console.error('Could not build playlist:', e);
-                self.postMessage({type: 'playlistError', error: e.message, secret});
-                return;
-            }
-            self.postMessage({type: 'playlist', playlist, dimensions: tree.getDimensions(), secret});
+        // The secret is used so that the worker code cannot try and falsify a postMessage to `self`
+        // The message handlers set up to listen to this worker pass in a secret they expect back
+        // on response which lives inside this closure and cannot be accessed by user code.
+        let secret = data.secret;
+        if (data.type !== 'buildPlaylist') {
+            console.error('Could not build playlist, unexpected request', data.type);
+            self.postMessage({type: 'playlistError', error: 'unexpected request type', secret});
+            return;
         }
+        let trackData = await new Promise(async resolve => {
+            let response = await fetch(data.tracksUrl);
+            resolve(await response.json());
+        });
+        let additionalTrackData = await new Promise(async resolve => {
+            let response = await fetch(data.additionalTracksUrl);
+            resolve(await response.json());
+        });
+        tags = trackData.tags;
+        idToTagMap = trackData.idsToTags;
+        tracks = trackData.tracks;
+        for (let [id, track] of Object.entries(additionalTrackData)) {
+            if (tags[track.tag]) {
+                tags[track.tag].push(id);
+            }
+            else {
+                tags[track.tag] = [id];
+            }
+            idToTagMap[id] = track.tag;
+            additionalTracks[id] = {
+                track: track.track,
+                features: track.features,
+                evocativeness: track.evocativeness
+            };
+        }
+        let trackCount = data.trackCount;
+        let firstTrack;
+        if (data.firstTrackOnly) {
+            trackCount = 1;
+        }
+        else if (data.firstTrack) {
+            firstTrack = data.firstTrack;
+        }
+        let playlist;
+        try {
+            playlist = await buildPlaylist(data.script, trackCount, firstTrack);
+        }
+        catch (e) {
+            console.error('Could not build playlist:', e);
+            self.postMessage({type: 'playlistError', error: e.message, secret});
+            return;
+        }
+        self.postMessage({type: 'playlist', playlist, dimensions: tree.getDimensions(), secret});
     });
 
     async function buildPlaylist(script, goalTracks, firstTrack) {
         if (!goalTracks) {
             goalTracks = 20;
         }
-        let blobUrl = URL.createObjectURL(new Blob([script], {type: 'text/javascript'}));
+        let blobUrl = URL.createObjectURL(new Blob([script], {type: 'application/javascript'}));
         importScripts(blobUrl);
         let points = tracksToPoints(tracks);
         tree = await self.hooks.buildTree(kdTree, JSON.parse(JSON.stringify({tracks, idToTagMap, points})));

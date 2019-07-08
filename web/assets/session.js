@@ -12,7 +12,7 @@ export async function refreshUser() {
 export function authorizeUser() {
     return new Promise((resolve, reject) => {
         let iframe = document.createElement('iframe');
-        iframe.src = '/api/spotify/authorize';
+        iframe.src = `${process.env.API_ORIGIN}/spotify/authorize`;
         iframe.style.display = 'none';
         document.head.appendChild(iframe);
         let intervalId = setInterval(() => {
@@ -27,13 +27,13 @@ export function authorizeUser() {
             clearInterval(intervalId);
             document.head.removeChild(iframe);
             reject();
-            location.href = '/api/spotify/authorize';
+            location.href = `${process.env.API_ORIGIN}/spotify/authorize`;
         }, 5000);
     });
 }
 
 function setCookies(access, refresh, expires) {
-    createCookie('spotify_access', access, expires);
+    createCookie('spotify_access', access, expires, true);
     if (refresh) {
         createCookie('spotify_refresh', refresh, 60 * 60 * 12);
     }
@@ -82,7 +82,7 @@ async function getTokens(code, isRefresh) {
     } else {
         type = 'refresh';
     }
-    let response = await fetch(`/api/spotify/tokens?code=${code}&type=${type}`, {cache: 'no-cache'});
+    let response = await fetch(`${process.env.API_ORIGIN}/spotify/tokens?code=${code}&type=${type}`, {cache: 'no-cache'});
     let {status, statusText} = response;
     if (status != 200) {
         throw new Error(`Could not get tokens: ${statusText}`);
