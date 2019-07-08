@@ -408,25 +408,6 @@ export function injector({getTree, getIdToTagMap}) {
         } = features;
         let {aetherealness, primordialness} = evocativeness;
         let tag = idsToTags[id];
-        console.log(JSON.stringify({
-            id,
-            tag,
-            key,
-            mode,
-            tempo,
-            energy,
-            valence,
-            liveness,
-            loudness,
-            speechiness,
-            acousticness,
-            danceability,
-            aetherealness,
-            primordialness,
-            instrumentalness,
-            duration,
-            timeSignature
-        }, null, 4));
         return {
             id,
             tag,
