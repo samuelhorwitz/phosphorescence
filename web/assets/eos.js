@@ -6,7 +6,7 @@ export function initialize() {
     return new Promise(resolve => {
         iframe = document.createElement('iframe');
         iframe.src = process.env.EOS_ORIGIN;
-        iframe.sandbox = 'allow-scripts allow-same-origin';
+        iframe.sandbox = 'allow-scripts';
         iframe.style.display = 'none';
         iframe.addEventListener('load', () => {
             resolve();
@@ -30,7 +30,7 @@ export function sendTrackBlobToEos(raw) {
             }
             channel.port1.close();
         };
-        iframe.contentWindow.postMessage({type: 'loadTracks', tracks: raw, responsePort: channel.port2}, process.env.EOS_ORIGIN, [channel.port2]);
+        iframe.contentWindow.postMessage({type: 'loadTracks', tracks: raw, responsePort: channel.port2}, '*', [channel.port2]);
     });
 }
 
@@ -49,7 +49,7 @@ export function sendTrackToEos(track) {
             }
             channel.port1.close();
         };
-        iframe.contentWindow.postMessage({type: 'loadAdditionalTrack', track, responsePort: channel.port2}, process.env.EOS_ORIGIN, [channel.port2]);
+        iframe.contentWindow.postMessage({type: 'loadAdditionalTrack', track, responsePort: channel.port2}, '*', [channel.port2]);
     });
 }
 
@@ -81,7 +81,7 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
 }
 
 export function terminatePlaylistBuilding() {
-    iframe.contentWindow.postMessage({type: 'terminateAll'}, process.env.EOS_ORIGIN);
+    iframe.contentWindow.postMessage({type: 'terminateAll'}, '*');
 }
 
 function callBuilder(body) {
@@ -99,6 +99,6 @@ function callBuilder(body) {
             }
             channel.port1.close();
         };
-        iframe.contentWindow.postMessage(Object.assign({type: 'buildPlaylist', responsePort: channel.port2}, body), process.env.EOS_ORIGIN, [channel.port2]);
+        iframe.contentWindow.postMessage(Object.assign({type: 'buildPlaylist', responsePort: channel.port2}, body), '*', [channel.port2]);
     });
 }

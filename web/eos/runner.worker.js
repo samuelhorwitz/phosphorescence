@@ -15,14 +15,14 @@
     addEventListener('message', async ({data}) => {
         if (data.type === 'buildPlaylist') {
             let secret = data.secret;
-            let trackData = await new Promise(async resolve => {
-                let response = await fetch(data.tracksUrl);
-                resolve(await response.json());
-            });
-            let additionalTrackData = await new Promise(async resolve => {
-                let response = await fetch(data.additionalTracksUrl);
-                resolve(await response.json());
-            });
+            let trackData = await new Response(new Blob([data.trackData], {type: 'application/json'})).json();
+            let additionalTrackData;
+            if (data.additionalTrackData.byteLength == 0) {
+                additionalTrackData = {};
+            }
+            else {
+                additionalTrackData = await new Response(new Blob([data.additionalTrackData], {type: 'application/json'})).json();
+            }
             tags = trackData.tags;
             idToTagMap = trackData.idsToTags;
             tracks = trackData.tracks;
