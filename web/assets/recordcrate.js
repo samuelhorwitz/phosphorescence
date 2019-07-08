@@ -12,7 +12,7 @@ export async function initialize(countryCode) {
         return;
     }
     initializeCalled = true;
-    let response = await fetch(`/api/spotify/tracks?token=${await getAccessToken()}`);
+    let response = await fetch(`${process.env.API_ORIGIN}/spotify/tracks?token=${await getAccessToken()}`);
     let encodedTracks = await response.arrayBuffer();
     let recordCrateWorker = new RecordCrateWorker();
     await new Promise((resolve, reject) => {

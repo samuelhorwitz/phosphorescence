@@ -1,5 +1,6 @@
-export function createCookie(name, value, seconds) {
+export function createCookie(name, value, seconds, crossSubdomain) {
     let expires;
+    let domain;
     if (seconds) {
         let date = new Date();
         date.setTime(date.getTime() + (seconds * 1000));
@@ -8,7 +9,13 @@ export function createCookie(name, value, seconds) {
     else {
         expires = '';
     }
-    document.cookie = `${name}=${value}${expires}; path=/`;
+    if (crossSubdomain) {
+        domain = `; domain=.${location.hostname}`;
+    }
+    else {
+        domain = '';
+    }
+    document.cookie = `${name}=${value}${expires}${domain}; path=/`;
 }
 
 export function readCookie(name) {
