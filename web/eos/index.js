@@ -1,7 +1,8 @@
-import RunnerWorker from 'worker-loader!./runner.worker.js';
+import RunnerWorker from 'worker-loader?inline=true&fallback=false!./runner.worker.js';
 import {encoder, decoder} from '../common/textencoding';
 
 let additionalTracks = {};
+let additionalTracksUrl;
 let tracksReadyResolver;
 let tracksReady = new Promise(resolve => tracksReadyResolver = resolve);
 
@@ -24,6 +25,9 @@ addEventListener('message', async ({origin, data}) => {
                         responsePort.postMessage({type: 'playlistError', error: e.data.error});
                     }
                 }
+                else {
+                    responsePort.postMessage({type: 'playlistError', error: 'Blocked potentially-malicious playlist builder hijacking'});
+                }
                 runner.terminate();
                 finished = true;
             }, {once: true});
@@ -37,7 +41,19 @@ addEventListener('message', async ({origin, data}) => {
                     finished = true;
                 }
             }, {once: true});
-            runner.postMessage({type: 'buildPlaylist', tracksUrl: await tracksReady, additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})), trackCount: data.trackCount, firstTrackOnly: data.firstTrackOnly, firstTrack: data.firstTrack, script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`), secret});
+            let tracksUrl = await tracksReady;
+            let trackData = await new Promise(async resolve => {
+                let response = await fetch(tracksUrl);
+                resolve(await response.arrayBuffer());
+            });
+            let additionalTrackData = new ArrayBuffer(0);
+            if (additionalTracksUrl) {
+                additionalTrackData = await new Promise(async resolve => {
+                    let response = await fetch(additionalTracksUrl);
+                    resolve(await response.arrayBuffer());
+                });
+            }
+            runner.postMessage({type: 'buildPlaylist', trackData, additionalTrackData, trackCount: data.trackCount, firstTrackOnly: data.firstTrackOnly, firstTrack: data.firstTrack, script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`), secret}, [trackData, additionalTrackData]);
         }
         else if (data.type === 'loadTracks') {
             tracksReadyResolver(URL.createObjectURL(new Blob([data.tracks], {type: 'application/json'})));
@@ -45,6 +61,7 @@ addEventListener('message', async ({origin, data}) => {
         }
         else if (data.type === 'loadAdditionalTrack') {
             additionalTracks[data.track.track.id] = data.track;
+            additionalTracksUrl = URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'}));
             responsePort.postMessage({type: 'acknowledge'});
         }
     }

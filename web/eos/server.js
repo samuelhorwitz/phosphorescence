@@ -3,7 +3,7 @@ const app = express();
 
 app.use(function (req, res, next) {
     res.set({
-        'Content-Security-Policy': `default-src 'none';child-src 'self';script-src 'self' 'unsafe-eval' blob:;style-src 'self' 'unsafe-inline';worker-src 'self';connect-src blob:;base-uri 'none';form-action 'none';frame-ancestors ${process.env.PHOSPHOR_ORIGIN};block-all-mixed-content;navigate-to 'none';sandbox allow-scripts allow-same-origin;`
+        'Content-Security-Policy': `default-src 'none';child-src ${process.env.EOS_ORIGIN};script-src ${process.env.EOS_ORIGIN} 'unsafe-eval' blob:;style-src ${process.env.EOS_ORIGIN} 'unsafe-inline';worker-src blob:;connect-src blob:;base-uri 'none';form-action 'none';frame-ancestors ${process.env.PHOSPHOR_ORIGIN};block-all-mixed-content;navigate-to 'none';sandbox allow-scripts;`
     })
     next();
 });
