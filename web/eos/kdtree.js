@@ -29,7 +29,7 @@ export default function wrappedKdTree(points, dimensions, distanceFn) {
         tree = createTree();
     };
     this.nearest = function nearest(k, point) {
-        return tree.nearest(point, k).map(([point, distance]) => Object.assign({point, distance}));
+        return tree.nearest(point, k).map(([point, distance]) => Object.assign({point, distance})).sort((a, b) => a.distance - b.distance);
     };
     this.getRandomNode = function getRandomNode() {
         let points = Object.values(pointsIndex);
