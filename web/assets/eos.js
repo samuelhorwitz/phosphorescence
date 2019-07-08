@@ -6,7 +6,7 @@ export function initialize() {
     return new Promise(resolve => {
         iframe = document.createElement('iframe');
         iframe.src = process.env.EOS_ORIGIN;
-        iframe.sandbox = 'allow-scripts';
+        iframe.sandbox = 'allow-scripts allow-same-origin';
         iframe.style.display = 'none';
         iframe.addEventListener('load', () => {
             resolve();

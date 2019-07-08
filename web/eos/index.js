@@ -6,14 +6,21 @@ let additionalTracksUrl;
 let tracksReadyResolver;
 let tracksReady = new Promise(resolve => tracksReadyResolver = resolve);
 
+async function destroyIDB() {
+    // Since we cannot completely sandbox this origin, user's may create Indexed DBs.
+    // We don't want them to do that and will destroy them.
+    (await indexedDB.databases()).forEach(db => indexedDB.deleteDatabase(db.name));
+}
+
 addEventListener('message', async ({origin, data}) => {
     if (origin === process.env.PHOSPHOR_ORIGIN) {
         let {responsePort} = data;
         if (data.type === 'buildPlaylist') {
+            await destroyIDB();
             let finished = false;
             let runner = new RunnerWorker();
             let secret = crypto.getRandomValues(new Uint8Array(32)).reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
-            runner.addEventListener('message', e => {
+            runner.addEventListener('message', async e => {
                 if (finished) {
                     return;
                 }
@@ -30,8 +37,9 @@ addEventListener('message', async ({origin, data}) => {
                 }
                 runner.terminate();
                 finished = true;
+                await destroyIDB();
             }, {once: true});
-            addEventListener('message', ({origin, data}) => {
+            addEventListener('message', async ({origin, data}) => {
                 if (finished) {
                     return;
                 }
@@ -39,6 +47,7 @@ addEventListener('message', async ({origin, data}) => {
                     responsePort.postMessage({type: 'playlistError', error: 'User killed builder'});
                     runner.terminate();
                     finished = true;
+                    await destroyIDB();
                 }
             }, {once: true});
             let tracksUrl = await tracksReady;

@@ -8,7 +8,7 @@ app.use(function (req, res, next) {
         unsafeEval = `'unsafe-eval'`;
     }
     res.set({
-        'Content-Security-Policy': `default-src 'none';script-src ${process.env.EOS_ORIGIN} ${unsafeEval} blob:;worker-src blob:;connect-src blob:;base-uri 'none';form-action 'none';frame-ancestors ${process.env.PHOSPHOR_ORIGIN};block-all-mixed-content;navigate-to 'none';sandbox allow-scripts;`
+        'Content-Security-Policy': `default-src 'none';script-src ${process.env.EOS_ORIGIN} ${unsafeEval} blob:;worker-src blob:;connect-src blob:;base-uri 'none';form-action 'none';frame-ancestors ${process.env.PHOSPHOR_ORIGIN};block-all-mixed-content;navigate-to 'none';sandbox allow-scripts allow-same-origin;`
     })
     next();
 });
