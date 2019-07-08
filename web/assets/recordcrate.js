@@ -1,6 +1,5 @@
 import RecordCrateWorker from 'worker-loader!~/assets/recordcrate.worker.js';
 import {encoder} from '~/common/textencoding';
-import {getAccessToken} from '~/assets/session';
 import {sendTrackBlobToEos, sendTrackToEos, buildPlaylist} from '~/assets/eos';
 import _builders from '~/builders/index';
 export const builders = Object.freeze(_builders);
@@ -12,7 +11,7 @@ export async function initialize(countryCode) {
         return;
     }
     initializeCalled = true;
-    let response = await fetch(`/api/spotify/tracks?token=${await getAccessToken()}`);
+    let response = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
     let encodedTracks = await response.arrayBuffer();
     let recordCrateWorker = new RecordCrateWorker();
     await new Promise((resolve, reject) => {
