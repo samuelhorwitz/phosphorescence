@@ -21,7 +21,7 @@ func initializeRoutes(cfg *config) http.Handler {
 		MaxAge:           300,
 	})
 	r.Use(cors.Handler)
-	r.Use(middleware.CSP)
+	r.Use(middleware.CSP(cfg.phosphorOrigin))
 	if !cfg.isProduction {
 		r.Get("/tracks.json", serveTracks)
 	}
