@@ -11,7 +11,7 @@ API_LATEST      := ${API_NAME}:latest
 build: build-phosphor build-eos build-jobs build-api
 
 build-phosphor:
-	docker build -t ${PHOSPHOR_LATEST} --build-arg EOS_ORIGIN=https://eoserigeneia.run .
+	docker build -t ${PHOSPHOR_LATEST} --build-arg EOS_ORIGIN=https://eoserigeneia.run --build-arg API_ORIGIN=https://api.phosphor.me .
 
 build-eos:
 	docker build -t ${EOS_LATEST} -f ./eos/Dockerfile --build-arg PHOSPHOR_ORIGIN=https://phosphor.me .

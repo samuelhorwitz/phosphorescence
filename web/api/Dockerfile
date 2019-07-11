@@ -22,6 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o apiapp
 FROM alpine:3.10 AS release
 WORKDIR /app
 COPY --from=dependencies /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /app/api/migrations ./migrations
 COPY --from=build /app/api/apiapp ./
 RUN chmod +x /app/apiapp
 EXPOSE 80

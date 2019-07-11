@@ -25,5 +25,9 @@ func Tracks(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tracksURL = fmt.Sprintf("%s/tracks.json", apiOrigin)
 	}
-	http.Redirect(w, r, tracksURL, http.StatusFound)
+	common.JSON(w, struct {
+		TracksURL string `json:"tracksUrl"`
+	}{
+		TracksURL: tracksURL,
+	})
 }
