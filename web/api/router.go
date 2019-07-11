@@ -3,13 +3,10 @@ package main
 import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
-	"github.com/samuelhorwitz/phosphorescence/api/common"
+	"github.com/samuelhorwitz/phosphorescence/api/handlers/phosphor"
+	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
-	"github.com/samuelhorwitz/phosphorescence/api/scripts"
-	"github.com/samuelhorwitz/phosphorescence/api/spotify"
 	"net/http"
-	"os"
-	"path/filepath"
 )
 
 func initializeRoutes(cfg *config) http.Handler {
@@ -22,30 +19,62 @@ func initializeRoutes(cfg *config) http.Handler {
 	})
 	r.Use(cors.Handler)
 	r.Use(middleware.CSP(cfg.phosphorOrigin))
-	if !cfg.isProduction {
-		r.Get("/tracks.json", serveTracks)
-	}
 	r.Route("/spotify", func(r chi.Router) {
 		r.Get("/authorize", spotify.Authorize)
 		r.Get("/tokens", spotify.Tokens)
 		r.With(middleware.Authenticate).Get("/tracks", spotify.Tracks)
 	})
-	r.Route("/scripts", func(r chi.Router) {
-		r.Use(middleware.Authenticate)
-		r.Get("/my", scripts.UserScripts)
-		r.Post("/", scripts.SaveScript)
-	})
-	return r
-}
-
-func serveTracks(w http.ResponseWriter, r *http.Request) {
-	ex, err := os.Executable()
-	if err != nil {
-		common.Fail(w, err, http.StatusInternalServerError)
-		return
+	versionRouter := func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Paginate)
+			r.Get("/", phosphor.GetScriptVersions)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.AuthorizePrivateScriptActions)
+				r.Get("/draft", phosphor.GetPrivateScriptVersions)
+				r.Get("/drafts", phosphor.GetPrivateScriptVersions)
+			})
+		})
+		r.Route("/{scriptVersionID}", func(r chi.Router) {
+			r.Use(middleware.AuthorizeReadScriptVersion)
+			r.Get("/", phosphor.GetScriptVersion)
+			r.Post("/fork", phosphor.ForkScriptVersion)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.AuthorizePrivateScriptActions)
+				r.Post("/duplicate", phosphor.DuplicateScriptVersion)
+				r.Delete("/", phosphor.DeleteScriptVersion)
+			})
+		})
 	}
-	exPath := filepath.Dir(ex)
-	tracksJSON := filepath.Join(exPath, "..", "static", "tracks.json")
-	w.Header().Set("Content-Type", "application/json")
-	http.ServeFile(w, r, tracksJSON)
+	scriptRouter := func(r chi.Router) {
+		r.Use(middleware.Authenticate)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Paginate)
+			r.Get("/", phosphor.ListPublicScripts)
+			r.Get("/my", phosphor.ListCurrentUserScripts)
+		})
+		r.Post("/", phosphor.CreateScript)
+		r.Route("/{scriptID}", func(r chi.Router) {
+			r.Use(middleware.AuthorizeReadScript)
+			r.Get("/", phosphor.GetScript)
+			r.Post("/fork", phosphor.ForkScript)
+			r.Route("/version", versionRouter)
+			r.Route("/versions", versionRouter)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.AuthorizePrivateScriptActions)
+				r.Post("/duplicate", phosphor.DuplicateScript)
+				r.Put("/", phosphor.UpdateScript)
+				r.Put("/publish", phosphor.PublishScript)
+				r.Delete("/", phosphor.DeleteScript)
+			})
+		})
+	}
+	r.Route("/script", scriptRouter)
+	r.Route("/scripts", scriptRouter)
+	userRouter := func(r chi.Router) {
+		r.Use(middleware.Authenticate)
+		r.Get("/me", phosphor.GetCurrentUser)
+	}
+	r.Route("/user", userRouter)
+	r.Route("/users", userRouter)
+	return r
 }

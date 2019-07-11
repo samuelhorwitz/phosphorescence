@@ -6,7 +6,7 @@ export async function login(code) {
 }
 
 export async function refreshUser() {
-    getAccessToken();
+    await getAccessToken();
 }
 
 export function authorizeUser() {

@@ -41,7 +41,6 @@
 </style>
 
 <script>
-    import {accessTokenExists, refreshUser} from '~/assets/session';
     import sidebar from '~/components/ide/sidebar';
     import detailsPane from '~/components/ide/detailspane';
 
@@ -51,11 +50,6 @@
             detailsPane
         },
         middleware: 'authenticated',
-        beforeCreate() {
-            if (!accessTokenExists()) {
-                refreshUser();
-            }
-        },
         created() {
             this.$store.commit('ide/restore');
         }

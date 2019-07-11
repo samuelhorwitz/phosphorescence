@@ -10,9 +10,7 @@ import (
 	"net/http"
 )
 
-type contextKey string
-
-var SpotifyIDContextKey = contextKey("spotifyID")
+const SpotifyIDContextKey = contextKey("spotifyID")
 
 func Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

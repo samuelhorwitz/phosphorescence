@@ -39,7 +39,8 @@
             }
             this.editor = monaco.editor.create(this.$refs.monaco, {
                 value: initialValue,
-                language: 'javascript'
+                language: 'javascript',
+                readOnly: !this.$store.getters['ide/isScriptOwnedByUser']
             });
             this.saveState();
             this.editor.onDidChangeModelContent(() => {
@@ -57,7 +58,7 @@
                 this.editor.layout();
             },
             saveState() {
-                this.$store.commit('ide/save', this.editor.getValue());
+                this.$store.commit('ide/saveScript', this.editor.getValue());
             }
         }
     };

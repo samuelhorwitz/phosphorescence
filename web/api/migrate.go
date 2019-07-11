@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var migrationsNamespace = uuid.NewV5(common.PhosphorUUIDV5Namespace, "migrations")
@@ -72,33 +73,56 @@ func migrate(cfg *config) {
 					return
 				}
 			}
-			if !(uuid.Equal(migrationID, foundID) && migrationFilename == foundName) {
+			if (uuid.Equal(migrationID, foundID) && migrationFilename != foundName) || (migrationFilename == foundName && !uuid.Equal(migrationID, foundID)) {
 				log.Fatalf("It appears that a migration was likely altered after running, bailing. (File %s, in db as %s, ID %s, in db as %s)", migrationFilename, foundName, migrationID.String(), foundID.String())
 				return
 			}
 		}
 		if shouldRunMigration {
-			tx, err := db.Begin()
-			if err != nil {
-				rollbackAndFatal(tx, fmt.Errorf("Could not begin transaction: %s", err))
-				return
+			runInTx := true
+			if strings.HasSuffix(migrationFilename, ".no-transaction.sql") {
+				runInTx = false
+			}
+			var tx *sql.Tx
+			if runInTx {
+				tx, err = db.Begin()
+				if err != nil {
+					rollbackAndFatal(tx, fmt.Errorf("Could not begin transaction: %s", err))
+					return
+				}
 			}
 			_, err = db.Exec(string(migration))
 			if err != nil {
-				rollbackAndFatal(tx, fmt.Errorf("Could not run migration: %s", err))
+				err = fmt.Errorf("Could not run migration: %s", err)
+				if runInTx {
+					rollbackAndFatal(tx, err)
+				} else {
+					log.Fatal(err)
+				}
 				return
 			}
-			_, err = psql.Insert("_migrations").Columns("id", "name").
-				Values(migrationID, migrationFilename).
-				RunWith(tx).Exec()
+			ins := psql.Insert("_migrations").Columns("id", "name").
+				Values(migrationID, migrationFilename)
+			if runInTx {
+				_, err = ins.RunWith(tx).Exec()
+			} else {
+				_, err = ins.RunWith(db).Exec()
+			}
 			if err != nil {
-				rollbackAndFatal(tx, fmt.Errorf("Could not log migration in database as having run: %s", err))
+				err = fmt.Errorf("Could not log migration in database as having run: %s", err)
+				if runInTx {
+					rollbackAndFatal(tx, err)
+				} else {
+					log.Fatal(err)
+				}
 				return
 			}
-			err = tx.Commit()
-			if err != nil {
-				log.Fatalf("Could not commit transaction: %s", err)
-				return
+			if runInTx {
+				err = tx.Commit()
+				if err != nil {
+					log.Fatalf("Could not commit transaction: %s", err)
+					return
+				}
 			}
 		} else {
 			log.Printf("Skipping %s, already ran...", migrationFilename)
@@ -107,10 +131,5 @@ func migrate(cfg *config) {
 }
 
 func rollbackAndFatal(tx *sql.Tx, err error) {
-	rerr := tx.Rollback()
-	if rerr != nil {
-		log.Fatalf("Could not rollback transaction: %s; Original error: %s", rerr, err)
-	} else {
-		log.Fatal(err)
-	}
+	log.Fatal(common.TryToRollback(tx, err))
 }

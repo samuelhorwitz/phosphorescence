@@ -1,37 +1,37 @@
-package scripts
+package models
 
 import (
 	"database/sql"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	_ "github.com/lib/pq"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
-	"github.com/satori/go.uuid"
 	"log"
 )
 
-var scriptsNamespace = uuid.NewV5(common.PhosphorUUIDV5Namespace, "scripts")
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 var (
 	s3Service  *s3.S3
+	s3Uploader *s3manager.Uploader
 	postgresDB *sql.DB
 )
 
 type Config struct {
 	SpacesID                 string
 	SpacesSecret             string
-	SpacesEndpoint           string
-	SpacesRegion             string
+	SpacesScriptsEndpoint    string
+	SpacesScriptsRegion      string
 	PostgresConnectionString string
 }
 
 func Initialize(cfg *Config) {
 	s3Session, err := common.InitializeS3(&common.AWSConfig{
 		Config: &aws.Config{
-			Endpoint: aws.String(cfg.SpacesEndpoint),
-			Region:   aws.String(cfg.SpacesRegion),
+			Endpoint: aws.String(cfg.SpacesScriptsEndpoint),
+			Region:   aws.String(cfg.SpacesScriptsRegion),
 		},
 		AccessKeyID:     cfg.SpacesID,
 		SecretAccessKey: cfg.SpacesSecret,
@@ -41,6 +41,7 @@ func Initialize(cfg *Config) {
 		return
 	}
 	s3Service = s3.New(s3Session)
+	s3Uploader = s3manager.NewUploader(s3Session)
 	postgresDB, err = sql.Open("postgres", cfg.PostgresConnectionString)
 	if err != nil {
 		log.Fatalf("Could not initialize Postgres: %s", err)
