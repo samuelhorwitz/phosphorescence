@@ -11,7 +11,9 @@ export async function initialize(countryCode) {
         return;
     }
     initializeCalled = true;
-    let response = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
+    let tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
+    let {tracksUrl} = await tracksUrlResponse.json();
+    let response = await fetch(tracksUrl);
     let encodedTracks = await response.arrayBuffer();
     let recordCrateWorker = new RecordCrateWorker();
     await new Promise((resolve, reject) => {

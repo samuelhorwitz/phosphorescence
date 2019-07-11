@@ -13,6 +13,8 @@ WORKDIR /app
 COPY . /app
 ARG EOS_ORIGIN
 ENV EOS_ORIGIN=${EOS_ORIGIN}
+ARG API_ORIGIN
+ENV API_ORIGIN=${API_ORIGIN}
 ENV NODE_ENV=production
 RUN npm run build
 RUN npm run build-monaco
