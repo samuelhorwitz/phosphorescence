@@ -1,0 +1,1 @@
+alter type version_type add value 'fork';

@@ -32,13 +32,24 @@ func JSON(w http.ResponseWriter, data interface{}) {
 
 func Fail(w http.ResponseWriter, err error, status int) {
 	log.Printf("Request failed, returning %d: %s", status, err)
-	http.Error(w, "error", status)
+	w.Header().Set("Content-Type", "application/json")
+	http.Error(w, `{"error":true}`, status)
 }
 
-func RollbackAndFail(w http.ResponseWriter, tx *sql.Tx, err error, status int) {
+func TryToRollback(tx *sql.Tx, err error) error {
 	rollbackErr := tx.Rollback()
 	if rollbackErr != nil {
 		err = fmt.Errorf("Rollback failed: %s; Original Error: %s", rollbackErr, err)
 	}
-	Fail(w, err, status)
+	return err
+}
+
+func ParseScriptVersion(versionStr string) time.Time {
+	var version time.Time
+	if versionStr != "" {
+		if tentativeVersion, err := time.Parse(time.RFC3339, versionStr); err == nil {
+			version = tentativeVersion
+		}
+	}
+	return version
 }

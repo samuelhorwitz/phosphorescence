@@ -49,6 +49,7 @@ module.exports = {
   },
   env: {
     EOS_ORIGIN: process.env.EOS_ORIGIN,
-    API_ORIGIN: process.env.API_ORIGIN
+    API_ORIGIN: process.env.API_ORIGIN,
+    SCRIPTS_ORIGIN: process.env.SCRIPTS_ORIGIN
   }
 };
