@@ -23,3 +23,7 @@ eos/Dockerfile
 jobs/.gitignore
 jobs/node_modules/*
 pgdata/*
+api/.gitignore
+api/Dockerfile
+api/vendor/*
+api/api

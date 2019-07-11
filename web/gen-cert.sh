@@ -10,7 +10,7 @@ cat > openssl.cnf <<-EOF
   [req_distinguished_name]
   CN = *.phosphor.localhost
   [v3_req]
-  keyUsage = keyEncipherment, dataEncipherment
+  keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment, dataEncipherment, keyAgreement
   extendedKeyUsage = serverAuth
   subjectAltName = @alt_names
   [alt_names]
@@ -20,8 +20,8 @@ EOF
 
 openssl req \
   -new \
-  -newkey rsa:2048 \
-  -sha1 \
+  -newkey rsa:4096 \
+  -sha256 \
   -days 3650 \
   -nodes \
   -x509 \
@@ -41,7 +41,7 @@ cat > openssl.cnf <<-EOF
   [req_distinguished_name]
   CN = *.eos.localhost
   [v3_req]
-  keyUsage = keyEncipherment, dataEncipherment
+  keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment, dataEncipherment, keyAgreement
   extendedKeyUsage = serverAuth
   subjectAltName = @alt_names
   [alt_names]
@@ -51,8 +51,8 @@ EOF
 
 openssl req \
   -new \
-  -newkey rsa:2048 \
-  -sha1 \
+  -newkey rsa:4096 \
+  -sha256 \
   -days 3650 \
   -nodes \
   -x509 \

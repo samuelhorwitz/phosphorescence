@@ -6,6 +6,6 @@ The web application builds out a _k_-d tree across some dimensions and the playl
 
 Built in is the deletion of tracks that have already been picked from the tree as well as some helper functionality that allows ignoring tracks which are similarly "tagged". A tag is basically a reduction of a track name/artist into something which will be equivalent across releases/remixes/etc to avoid the obvious issue of 50 remixes of the same track just coming one after another (as this sort of releasing is common in the genre).
 
-Although not currently public, it will be possible for a user to program their own playlist builders using all of the tooling from right in the browser itself.
+It is possible for a user to program their own playlist builders using all of the tooling from right in the browser itself.
 
 Also, when a user visits the site they are handed a cache of Spotify tracks to build the tree from, which is filtered client-side by region (so a user will not get tracks unplayable in their region). This cache is re-populated nightly and in the US has about 15k reduced to 11k tracks, after region filtering, at the time of this writing.
