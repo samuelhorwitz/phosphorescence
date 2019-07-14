@@ -12,6 +12,8 @@ import (
 
 type User struct {
 	SpotifyID string `json:"spotifyId"`
+	Name      string `json:"name"`
+	Country   string `json:"country"`
 }
 
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +22,17 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
 		return
 	}
-	common.JSON(w, map[string]interface{}{"user": User{SpotifyID: spotifyID}})
+	name, ok := r.Context().Value(middleware.SpotifyNameContextKey).(string)
+	if !ok {
+		common.Fail(w, errors.New("No Spotify name on request context"), http.StatusInternalServerError)
+		return
+	}
+	country, ok := r.Context().Value(middleware.SpotifyCountryContextKey).(string)
+	if !ok {
+		common.Fail(w, errors.New("No Spotify country on request context"), http.StatusInternalServerError)
+		return
+	}
+	common.JSON(w, map[string]interface{}{"user": User{SpotifyID: spotifyID, Name: name, Country: country}})
 }
 
 func ListCurrentUserScripts(w http.ResponseWriter, r *http.Request) {

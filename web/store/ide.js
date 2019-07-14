@@ -2,7 +2,6 @@ export const state = () => ({
     script: '',
     dimensions: null,
     numberOfTracks: 10,
-    user: null,
     scriptData: null,
     scriptVersionData: null
 });
@@ -29,9 +28,6 @@ export const mutations = {
             state.numberOfTracks = parseInt(oldNumberOfTracks, 10);
         }
     },
-    user(state, user) {
-        state.user = user;
-    },
     scriptData(state, scriptData) {
         state.scriptData = scriptData;
     },
@@ -41,10 +37,10 @@ export const mutations = {
 };
 
 export const getters = {
-    isScriptOwnedByUser(state) {
-        if (!state.user || !state.scriptData) {
+    isScriptOwnedByUser(state, getters, rootState) {
+        if (!rootState.user.user || !state.scriptData) {
             return false;
         }
-        return state.user.spotifyId == state.scriptData.authorSpotifyId;
+        return rootState.user.user.spotifyId == state.scriptData.authorSpotifyId;
     },
 }

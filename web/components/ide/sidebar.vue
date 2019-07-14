@@ -21,12 +21,12 @@
                 <div v-if="$store.state.ide.scriptData == null" class="buttonContainer">
                     <button @click="saveNew">Save New Script</button>
                 </div>
-                <div v-if="$store.state.ide.scriptData != null && $store.state.ide.user && $store.getters['ide/isScriptOwnedByUser']" class="buttonContainer">
+                <div v-if="$store.state.ide.scriptData != null && $store.state.user.user && $store.getters['ide/isScriptOwnedByUser']" class="buttonContainer">
                     <button @click="saveDraft">Save Draft</button>
                     <button @click="publish">Publish</button>
                     <button @click="duplicate">Duplicate</button>
                 </div>
-                <div v-if="$store.state.ide.scriptData != null && $store.state.ide.user && !$store.getters['ide/isScriptOwnedByUser']" class="buttonContainer">
+                <div v-if="$store.state.ide.scriptData != null && $store.state.user.user && !$store.getters['ide/isScriptOwnedByUser']" class="buttonContainer">
                     <button @click="fork">Fork</button>
                 </div>
             </form>
