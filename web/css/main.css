@@ -63,3 +63,11 @@ article.authPage {
     border: 7px outset magenta;
     width: 50em;
 }
+
+body.scrollablePage {
+    overflow-y: auto;
+}
+
+body.scrollablePage img.spotifyLogoImg {
+    display: none;
+}

@@ -10,7 +10,7 @@
                 <p>We are not affiliated with Spotify, however we depend on their API and their embedded web player, both of which may collect user data through your usage of our website. Please refer to <a target="_blank" href="https://www.spotify.com/is/legal/privacy-policy/">Spotify's Privacy Policy</a>.</p>
                 <p>Our website may link to external sites that are not operated by us. Please be aware that we have no control over the content and practices of these sites, and cannot accept responsibility or liability for their respective privacy policies.</p>
                 <p>You are free to refuse our request for your personal information, with the understanding that we may be unable to provide you with some of your desired services.</p>
-                <p>Your continued use of our website will be regarded as acceptance of our practices around privacy and personal information. If you have any questions about how we handle user data and personal information, feel free to contact us.</p>
+                <p>Your continued use of our website will be regarded as acceptance of our practices around privacy and personal information. If you have any questions about how we handle user data and personal information, feel free to <a href="mailto:support@phosphor.me">contact us</a>.</p>
                 <p>This policy is effective as of 23 January 2019.</p>
             </div>
         </article>
