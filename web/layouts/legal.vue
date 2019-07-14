@@ -17,6 +17,13 @@
             logo,
             foot
         },
+        head() {
+            return {
+                bodyAttrs: {
+                    class: 'scrollablePage'
+                }
+            }
+        },
         created() {
             this.$store.dispatch('loading/endLoadAfterDelay');
         }

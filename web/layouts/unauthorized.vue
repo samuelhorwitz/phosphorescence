@@ -16,6 +16,13 @@
         components: {
             logo,
             foot
+        },
+        head() {
+            return {
+                bodyAttrs: {
+                    class: 'scrollablePage'
+                }
+            }
         }
     };
 </script>
