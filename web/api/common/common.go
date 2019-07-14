@@ -12,8 +12,16 @@ import (
 
 var PhosphorUUIDV5Namespace = uuid.NewV5(uuid.NamespaceDNS, "phosphor.me")
 
-var SpotifyClient = &http.Client{
-	Timeout: time.Second * 2,
+var SpotifyClient *http.Client
+
+type Config struct {
+	SpotifyTimeout time.Duration
+}
+
+func Initialize(cfg *Config) {
+	SpotifyClient = &http.Client{
+		Timeout: cfg.SpotifyTimeout,
+	}
 }
 
 func JSONRaw(w http.ResponseWriter, body []byte) {
