@@ -55,7 +55,7 @@
 </style>
 
 <script>
-    import {authorizeUser} from '~/assets/session';
+    import {authorizeUserRedirect} from '~/assets/session';
 
     export default {
         layout: 'unauthorized',
@@ -66,7 +66,7 @@
         methods: {
             login() {
                 this.$store.dispatch('loading/loadFlash');
-                authorizeUser();
+                authorizeUserRedirect();
             }
         }
     };
