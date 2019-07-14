@@ -18,7 +18,7 @@
                     </thead>
                     <tbody>
                         <tr v-for="(track, index) in $store.state.idetracks.playlist" @click="inspect(track)" :class="{selected: !!inspectedTrack && (track.track.id == inspectedTrack.track.id)}">
-                            <td class="number" @mouseover="hoverIndex = index" @mouseout="hoverIndex = null">
+                            <td class="number" @mouseenter="hoverIndex = index" @mouseleave="hoverIndex = null">
                                 <span v-if="hoverIndex == index"><svg @click="play(index, track)" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title>Play Track</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg></span>
                                 <span>{{index + 1}}</span>
                             </td>
