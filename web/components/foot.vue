@@ -1,8 +1,8 @@
 <template>
     <footer>
         <ol>
-            <li><span @click="flash" @mouseover="tosHover = true" @mouseout="tosHover = false" class="wrapper"><nuxt-link to="/legal/tos"><glitch :text="'[Terms of Service]'" :enable="tosHover"/></nuxt-link></span></li>
-            <li ><span @click="flash" @mouseover="privacyHover = true" @mouseout="privacyHover = false" class="wrapper"><nuxt-link to="/legal/privacy"><glitch :text="'[Privacy]'" :enable="privacyHover"/></nuxt-link></span></li>
+            <li><span @click="flash" @mouseover="tosHover = true" @mouseout="tosHover = false" class="wrapper"><nuxt-link to="/legal/tos" target="_blank"><glitch :text="'[Terms of Service]'" :enable="tosHover"/></nuxt-link></span></li>
+            <li ><span @click="flash" @mouseover="privacyHover = true" @mouseout="privacyHover = false" class="wrapper"><nuxt-link to="/legal/privacy" target="_blank"><glitch :text="'[Privacy]'" :enable="privacyHover"/></nuxt-link></span></li>
             <li><span @mouseover="githubHover = true" @mouseout="githubHover = false" class="wrapper"><a target="_blank" href="https://github.com/samuelhorwitz/phosphorescence"><glitch :text="'[GitHub]'" :enable="githubHover"/></a></span></li>
             <li class="spotify">
                 <div class="spotifyLogo">
