@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
+	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"log"
 	"net/http"
@@ -36,6 +37,11 @@ func main() {
 		log.Fatalf("Could not parse PG conn lifetime: %s", err)
 		return
 	}
+	rateLimit, err := strconv.Atoi(os.Getenv("RATE_LIMIT_PER_SECOND"))
+	if err != nil {
+		log.Fatalf("Could not parse rate limit: %s", err)
+		return
+	}
 	cfg := &config{
 		isProduction:                         isProduction,
 		phosphorOrigin:                       os.Getenv("PHOSPHOR_ORIGIN"),
@@ -54,6 +60,8 @@ func main() {
 		readTimeout:                          5 * time.Second,
 		writeTimeout:                         10 * time.Second,
 		idleTimeout:                          120 * time.Second,
+		rateLimitPerSecond:                   rateLimit,
+		redisHost:                            os.Getenv("REDIS_HOST"),
 	}
 	migrate(cfg)
 	initialize(cfg)
@@ -63,6 +71,10 @@ func main() {
 func initialize(cfg *config) {
 	common.Initialize(&common.Config{
 		SpotifyTimeout: cfg.writeTimeout,
+	})
+	middleware.Initialize(&middleware.Config{
+		RateLimitPerSecond: cfg.rateLimitPerSecond,
+		RedisHost:          cfg.redisHost,
 	})
 	spotify.Initialize(&spotify.Config{
 		IsProduction:    cfg.isProduction,

@@ -11,7 +11,7 @@ import (
 )
 
 func Tokens(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest("POST", "https://accounts.spotify.com/api/token", strings.NewReader(getSpotifyTokenRequestBody(r)))
+	req, err := http.NewRequestWithContext(r.Context(), "POST", "https://accounts.spotify.com/api/token", strings.NewReader(getSpotifyTokenRequestBody(r)))
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not build Spotify token request: %s", err), http.StatusInternalServerError)
 		return

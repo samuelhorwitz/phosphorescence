@@ -1,5 +1,5 @@
 # ---- Base Node ----
-FROM golang:1.12-alpine3.10 AS base
+FROM golang:1.13beta1-alpine3.10 AS base
 WORKDIR /app
 
 # ---- Dependencies ----

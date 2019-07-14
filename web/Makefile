@@ -42,3 +42,6 @@ deploy:
 
 postgres-local:
 	docker run --rm --name phosphor-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=phosphor -d -p 5432:5432 -v ${PWD}/pgdata:/var/lib/postgresql/data postgres
+
+redis-local:
+	docker run -d -p 6379:6379 --name phosphor-redis redis

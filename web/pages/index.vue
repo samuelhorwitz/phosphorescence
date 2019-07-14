@@ -176,6 +176,8 @@
 </style>
 
 <script>
+    import {accessTokenExists, refreshUser} from '~/assets/session';
+
     export default {
         data() {
             return {
@@ -233,6 +235,17 @@
             if (this.showAlbumsMql) {
                 this.showAlbumsMql.removeListener(this.handleShowAlbumsChange);
             }
+        },
+        async fetch({store, error}) {
+            if (!accessTokenExists()) {
+                await refreshUser();
+            }
+            let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
+            if (!userResponse.ok) {
+                return error({statusCode: userResponse.status, message: "Could not get user information"});
+            }
+            let {user} = await userResponse.json();
+            store.commit('user/user', user);
         }
     };
 </script>

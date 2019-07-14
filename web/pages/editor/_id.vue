@@ -21,7 +21,7 @@
                 return error({statusCode: userResponse.status, message: "Could not get user information"});
             }
             let {user} = await userResponse.json();
-            store.commit('ide/user', user);
+            store.commit('user/user', user);
             if (scriptId != null) {
                 let scriptResponse = await fetch(`${process.env.API_ORIGIN}/script/${scriptId}`, {credentials: 'include'});
                 if (!scriptResponse.ok) {

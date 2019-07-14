@@ -2,8 +2,9 @@
     <div class="pageWrapper">
         <article class="authPage">
             <h2 class="pageHeader">Settings</h2>
-            <p>You are logged in as the Spotify user {{name}}.</p>
+            <p>You are logged in as the Spotify user <a target="_blank" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
             <p>Currently, all settings are stored locally on the device and automatically updated as they are changed.</p>
+            <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
         </article>
     </div>
 </template>
@@ -15,25 +16,14 @@
 </style>
 
 <script>
-    import {getAccessToken} from '~/assets/session';
-
     export default {
-        data() {
-            return {
-                name: '█████ █████'
-            };
-        },
-        async created() {
-            let response = await fetch('https://api.spotify.com/v1/me', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${await getAccessToken()}`
-                }
-            });
-            let {display_name} = await response.json();
-            setTimeout(() => {
-                this.name = display_name;
-            }, 500);
+        async fetch({store, error}) {
+            let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
+            if (!userResponse.ok) {
+                return error({statusCode: userResponse.status, message: "Could not get user information"});
+            }
+            let {user} = await userResponse.json();
+            store.commit('user/user', user);
         }
     };
 </script>
