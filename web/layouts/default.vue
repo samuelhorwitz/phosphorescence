@@ -1,5 +1,8 @@
 <template>
     <div class="mainContainer">
+        <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
+            Drop your track!
+        </div>
         <logo></logo>
         <toolbar></toolbar>
         <main>
@@ -17,6 +20,36 @@
         grid-template-columns: 10fr 1fr;
         grid-template-rows: min-content min-content minmax(100px, 1fr) min-content min-content;
         height: 100vh;
+    }
+
+    .dropzone {
+        display: none;
+        z-index: 1000000000;
+        color: white;
+        font-family: 'Caveat';
+        font-size: 5em;
+        outline: none;
+        cursor: pointer;
+        text-shadow: -1px -1px 0 midnightblue, 1px -1px 0 midnightblue, -1px 1px 0 midnightblue, 1px 1px 0 midnightblue;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dropzone * {
+        pointer-events: none;
+    }
+
+    .dropzone.dropzoneReady {
+        display: flex;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    .dropzone.dropHoverActive {
+        background-color: rgba(255, 0, 255, 0.75);
+        border: 20px dashed aqua;
     }
 
     main {
@@ -93,6 +126,12 @@
                 refreshUser();
             }
         },
+        data() {
+            return {
+                dragStarted: false,
+                isDropHovering: false
+            };
+        },
         async created() {
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
@@ -105,18 +144,35 @@
             this.$store.dispatch('loading/endLoadAfterDelay');
         },
         mounted() {
-            document.body.addEventListener('dragover', this.preventDefault);
-            document.body.addEventListener('drop', this.handleDrop);
+            document.body.addEventListener('dragenter', this.handleWindowDragenter);
+            document.body.addEventListener('dragover', this.handleWindowDragover);
+            document.body.addEventListener('drop', this.handleWindowDrop);
         },
         beforeDestroy() {
-            document.body.removeEventListener('dragover', this.preventDefault);
-            document.body.removeEventListener('drop', this.handleDrop);
+            document.body.removeEventListener('dragenter', this.handleWindowDragenter);
+            document.body.removeEventListener('dragover', this.handleWindowDragover);
+            document.body.removeEventListener('drop', this.handleWindowDrop);
         },
         methods: {
-            preventDefault(e) {
+            handleWindowDragenter() {
+                this.dragStarted = true;
+            },
+            handleWindowDragover(e) {
                 e.preventDefault();
             },
+            handleWindowDrop(e) {
+                e.preventDefault();
+            },
+            handleDragenter() {
+                this.isDropHovering = true;
+            },
+            handleDragleave() {
+                this.isDropHovering = false;
+                this.dragStarted = false;
+            },
             async handleDrop(e) {
+                this.isDropHovering = false;
+                this.dragStarted = false;
                 this.$store.commit('loading/startLoad');
                 e.preventDefault();
                 let url = e.dataTransfer.getData('text/x-spotify-tracks');
