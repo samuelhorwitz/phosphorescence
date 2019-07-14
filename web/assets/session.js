@@ -27,9 +27,13 @@ export function authorizeUser() {
             clearInterval(intervalId);
             document.head.removeChild(iframe);
             reject();
-            location.href = `${process.env.API_ORIGIN}/spotify/authorize`;
+            authorizeUserRedirect();
         }, 5000);
     });
+}
+
+export function authorizeUserRedirect() {
+    location.href = `${process.env.API_ORIGIN}/spotify/authorize`;
 }
 
 function setCookies(access, refresh, expires) {
