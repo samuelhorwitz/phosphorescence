@@ -1,5 +1,9 @@
 package main
 
+import (
+	"time"
+)
+
 type config struct {
 	isProduction                         bool
 	phosphorOrigin                       string
@@ -15,4 +19,7 @@ type config struct {
 	postgresMaxOpenConnections           int
 	postgresMaxIdleConnections           int
 	postgresMaxConnectionLifetimeMinutes int
+	readTimeout                          time.Duration
+	writeTimeout                         time.Duration
+	idleTimeout                          time.Duration
 }

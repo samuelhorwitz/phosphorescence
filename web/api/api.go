@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
+	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -49,6 +51,9 @@ func main() {
 		postgresMaxOpenConnections:           pgMaxOpen,
 		postgresMaxIdleConnections:           pgMaxIdle,
 		postgresMaxConnectionLifetimeMinutes: pgLifetime,
+		readTimeout:                          5 * time.Second,
+		writeTimeout:                         10 * time.Second,
+		idleTimeout:                          120 * time.Second,
 	}
 	migrate(cfg)
 	initialize(cfg)
@@ -56,6 +61,9 @@ func main() {
 }
 
 func initialize(cfg *config) {
+	common.Initialize(&common.Config{
+		SpotifyTimeout: cfg.writeTimeout,
+	})
 	spotify.Initialize(&spotify.Config{
 		IsProduction:    cfg.isProduction,
 		SpotifyClientID: cfg.spotifyClientID,
@@ -80,11 +88,18 @@ func initialize(cfg *config) {
 
 func run(cfg *config) {
 	host := getHost(cfg)
+	srv := &http.Server{
+		Addr:         host,
+		Handler:      initializeRoutes(cfg),
+		ReadTimeout:  cfg.readTimeout,
+		WriteTimeout: cfg.writeTimeout,
+		IdleTimeout:  cfg.idleTimeout,
+	}
 	log.Printf("API listening on %s.", host)
 	if cfg.isProduction {
-		log.Fatal(http.ListenAndServe(host, initializeRoutes(cfg)))
+		log.Fatal(srv.ListenAndServe())
 	} else {
-		log.Fatal(http.ListenAndServeTLS(host, "phosphor.localhost.crt", "phosphor.localhost.key", initializeRoutes(cfg)))
+		log.Fatal(srv.ListenAndServeTLS("phosphor.localhost.crt", "phosphor.localhost.key"))
 	}
 }
 
