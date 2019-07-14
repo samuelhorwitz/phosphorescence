@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"log"
+	"time"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
@@ -25,6 +26,9 @@ type Config struct {
 	SpacesScriptsEndpoint    string
 	SpacesScriptsRegion      string
 	PostgresConnectionString string
+	PostgresMaxOpen          int
+	PostgresMaxIdle          int
+	PostgreMaxLifetime       int
 }
 
 func Initialize(cfg *Config) {
@@ -47,4 +51,7 @@ func Initialize(cfg *Config) {
 		log.Fatalf("Could not initialize Postgres: %s", err)
 		return
 	}
+	postgresDB.SetMaxOpenConns(cfg.PostgresMaxOpen)
+	postgresDB.SetMaxIdleConns(cfg.PostgresMaxIdle)
+	postgresDB.SetConnMaxLifetime(time.Duration(cfg.PostgreMaxLifetime) * time.Minute)
 }
