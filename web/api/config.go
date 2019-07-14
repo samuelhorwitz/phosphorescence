@@ -5,7 +5,6 @@ type config struct {
 	phosphorOrigin           string
 	spotifyClientID          string
 	spotifySecret            string
-	apiOrigin                string
 	spacesID                 string
 	spacesSecret             string
 	spacesTracksEndpoint     string

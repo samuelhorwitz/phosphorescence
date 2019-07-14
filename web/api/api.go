@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/samuelhorwitz/phosphorescence/api/scripts"
-	"github.com/samuelhorwitz/phosphorescence/api/spotify"
+	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
+	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"log"
 	"net/http"
 	"os"
@@ -23,7 +23,6 @@ func main() {
 		phosphorOrigin:           os.Getenv("PHOSPHOR_ORIGIN"),
 		spotifyClientID:          os.Getenv("SPOTIFY_CLIENT_ID"),
 		spotifySecret:            os.Getenv("SPOTIFY_SECRET"),
-		apiOrigin:                os.Getenv("API_ORIGIN"),
 		spacesID:                 os.Getenv("SPACES_ID"),
 		spacesSecret:             os.Getenv("SPACES_SECRET"),
 		spacesTracksEndpoint:     os.Getenv("SPACES_TRACKS_ENDPOINT"),
@@ -43,18 +42,17 @@ func initialize(cfg *config) {
 		SpotifyClientID: cfg.spotifyClientID,
 		SpotifySecret:   cfg.spotifySecret,
 		PhosphorOrigin:  cfg.phosphorOrigin,
-		APIOrigin:       cfg.apiOrigin,
 		SpacesID:        cfg.spacesID,
 		SpacesSecret:    cfg.spacesSecret,
 		SpacesEndpoint:  cfg.spacesTracksEndpoint,
 		SpacesRegion:    cfg.spacesTracksRegion,
 	})
-	scripts.Initialize(&scripts.Config{
+	models.Initialize(&models.Config{
 		SpacesID:                 cfg.spacesID,
 		SpacesSecret:             cfg.spacesSecret,
 		PostgresConnectionString: cfg.postgresConnectionString,
-		SpacesEndpoint:           cfg.spacesScriptsEndpoint,
-		SpacesRegion:             cfg.spacesScriptsRegion,
+		SpacesScriptsEndpoint:    cfg.spacesScriptsEndpoint,
+		SpacesScriptsRegion:      cfg.spacesScriptsRegion,
 	})
 }
 
