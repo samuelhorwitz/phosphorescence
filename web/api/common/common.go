@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -64,4 +65,15 @@ func ParseScriptVersion(versionStr string) time.Time {
 		}
 	}
 	return version
+}
+
+func HandlerTimeoutCancelContext(r *http.Request) context.Context {
+	reqCtx, reqCancel := context.WithCancel(context.Background())
+	go func() {
+		select {
+		case <-r.Context().Done():
+			reqCancel()
+		}
+	}()
+	return reqCtx
 }

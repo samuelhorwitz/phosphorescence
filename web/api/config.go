@@ -22,6 +22,7 @@ type config struct {
 	readTimeout                          time.Duration
 	writeTimeout                         time.Duration
 	idleTimeout                          time.Duration
+	handlerTimeout                       time.Duration
 	rateLimitPerSecond                   int
 	redisHost                            string
 }

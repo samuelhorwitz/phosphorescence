@@ -21,7 +21,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	var rawTrackData json.RawMessage
 	var featuresData json.RawMessage
 	{
-		req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID), nil)
+		req, err := http.NewRequestWithContext(common.HandlerTimeoutCancelContext(r), "GET", fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID), nil)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not build Spotify track request: %s", err), http.StatusInternalServerError)
 			return
@@ -45,7 +45,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		rawTrackData = json.RawMessage(body)
 	}
 	{
-		req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/audio-features?ids=%s", trackID), nil)
+		req, err := http.NewRequestWithContext(common.HandlerTimeoutCancelContext(r), "GET", fmt.Sprintf("https://api.spotify.com/v1/audio-features?ids=%s", trackID), nil)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not build Spotify track audio feature request: %s", err), http.StatusInternalServerError)
 			return
