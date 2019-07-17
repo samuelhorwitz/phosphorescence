@@ -51,7 +51,7 @@ func Authenticate(next http.Handler) http.Handler {
 			Country string `json:"country"`
 		}
 		if authenticateOnSpotify {
-			req, err := http.NewRequestWithContext(common.HandlerTimeoutCancelContext(r), "GET", "https://api.spotify.com/v1/me", nil)
+			req, err := http.NewRequestWithContext(r.Context(), "GET", "https://api.spotify.com/v1/me", nil)
 			if err != nil {
 				common.Fail(w, fmt.Errorf("Could not build Spotify profile request: %s", err), http.StatusInternalServerError)
 				return

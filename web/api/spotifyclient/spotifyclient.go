@@ -15,9 +15,23 @@ type SpotifyClient struct {
 	wg      waitGroupCond
 }
 
-func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
-	// Make the base context have a timeout.
-	baseCtx, _ := context.WithTimeout(baseReq.Context(), c.Timeout)
+func (c *SpotifyClient) Do(baseReq *http.Request) (res *http.Response, err error) {
+	// Set a timeout around the multiple request resiliency.
+	baseCtx, cancel := context.WithTimeout(baseReq.Context(), c.Timeout)
+	// We cannot just `defer cancel()` as normal because the Body
+	// being read is part of the context deadline in an http.Response.
+	// Instead, we need to have a slightly more complicated defer
+	// which immediately cancels on no body or no response, and
+	// otherwise overwrites the io.ReadCloser with our own which
+	// cancels on Close (something all good callers should be doing
+	// already for http requests).
+	defer func() {
+		if res == nil || res.Body == nil {
+			cancel()
+		} else {
+			res.Body = cleanupReadCloser{res.Body, cancel}
+		}
+	}()
 	// Build our response and error channels.
 	responseChan := make(chan *http.Response, 1)
 	errorChan := make(chan error, 1)
@@ -123,9 +137,9 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 	// Wait for a response, an error response, an externally cancelled
 	// context, or a resiliency retry timeout.
 	select {
-	case res := <-responseChan:
+	case res = <-responseChan:
 		return res, nil
-	case err := <-errorChan:
+	case err = <-errorChan:
 		return nil, Error{err}
 	case <-baseCtx.Done():
 		return nil, Error{baseCtx.Err()}
