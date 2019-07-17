@@ -29,7 +29,7 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (res *http.Response, err error
 		if res == nil || res.Body == nil {
 			cancel()
 		} else {
-			res.Body = cleanupReadCloser{res.Body, cancel}
+			res.Body = readCloser{res.Body, cancel}
 		}
 	}()
 	// Build our response and error channels.

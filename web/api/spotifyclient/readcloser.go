@@ -5,16 +5,16 @@ import (
 	"io"
 )
 
-type cleanupReadCloser struct {
+type readCloser struct {
 	body   io.ReadCloser
 	cancel context.CancelFunc
 }
 
-func (rc cleanupReadCloser) Read(p []byte) (int, error) {
+func (rc readCloser) Read(p []byte) (int, error) {
 	return rc.body.Read(p)
 }
 
-func (rc cleanupReadCloser) Close() error {
+func (rc readCloser) Close() error {
 	rc.cancel()
 	return rc.body.Close()
 }
