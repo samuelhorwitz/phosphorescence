@@ -16,13 +16,8 @@ type SpotifyClient struct {
 }
 
 func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
-	// Create a timeout timer which gets cleaned up when the request is
-	// complete.
-	timer := time.NewTimer(c.Timeout)
-	defer timer.Stop()
-	// Grab a reference to the base context to use as a parent for all
-	// other contexts.
-	baseCtx := baseReq.Context()
+	// Make the base context have a timeout.
+	baseCtx, _ := context.WithTimeout(baseReq.Context(), c.Timeout)
 	// Build our response and error channels.
 	responseChan := make(chan *http.Response, 1)
 	errorChan := make(chan error, 1)
@@ -64,27 +59,8 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 				return
 			default:
 			}
-			// Clone the original request with a cancelable context
-			// allowing us to kill the client requests if the function
-			// is complete (due to parent timeout, resiliency timeout, etc).
-			reqCtx, reqCancel := context.WithCancel(baseCtx)
-			go func() {
-				// Block until entire request is done for any reason
-				select {
-				case <-done:
-				}
-				// Then, if the request is done due to some cancellation,
-				// try and cancel the current request. Otherwise, exit
-				// Go routine.
-				select {
-				case <-baseCtx.Done():
-					reqCancel()
-				case <-timer.C:
-					reqCancel()
-				default:
-				}
-			}()
-			req := baseReq.Clone(reqCtx)
+			// Clone the original request.
+			req := baseReq.Clone(baseCtx)
 			// Set the body if one exists. If there's a body but not
 			// a GetBody function, we error. A lot of builtins will
 			// automatically set GetBody but the user will have to
@@ -150,11 +126,9 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 	case res := <-responseChan:
 		return res, nil
 	case err := <-errorChan:
-		return nil, Error{err, false}
+		return nil, Error{err}
 	case <-baseCtx.Done():
-		return nil, Error{baseCtx.Err(), false}
-	case <-timer.C:
-		return nil, Error{ErrTimeout, true}
+		return nil, Error{baseCtx.Err()}
 	}
 }
 

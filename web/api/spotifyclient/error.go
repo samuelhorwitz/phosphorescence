@@ -6,11 +6,9 @@ import (
 )
 
 var ErrNoGetBody = errors.New("no GetBody function defined but request has body, cannot clone")
-var ErrTimeout = errors.New("resiliency deadline exceeded")
 
 type Error struct {
-	err     error
-	timeout bool
+	err error
 }
 
 func (e Error) Error() string {
@@ -19,7 +17,7 @@ func (e Error) Error() string {
 
 func (e Error) Timeout() bool {
 	netErr, ok := e.err.(net.Error)
-	return e.timeout || (ok && netErr.Timeout())
+	return ok && netErr.Timeout()
 }
 
 func (e Error) Temporary() bool {
