@@ -147,8 +147,10 @@
             document.body.removeEventListener('drop', this.handleWindowDrop);
         },
         methods: {
-            handleWindowDragenter() {
-                this.dragStarted = true;
+            handleWindowDragenter(e) {
+                if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {
+                    this.dragStarted = true;
+                }
             },
             handleWindowDragover(e) {
                 e.preventDefault();
@@ -156,8 +158,10 @@
             handleWindowDrop(e) {
                 e.preventDefault();
             },
-            handleDragenter() {
-                this.isDropHovering = true;
+            handleDragenter(e) {
+                if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {
+                    this.isDropHovering = true;
+                }
             },
             handleDragleave() {
                 this.isDropHovering = false;
@@ -169,6 +173,9 @@
                 this.$store.commit('loading/startLoad');
                 e.preventDefault();
                 let url = e.dataTransfer.getData('text/x-spotify-tracks');
+                if (!url) {
+                    return;
+                }
                 let trackParts = url.split('/');
                 let trackId = trackParts[trackParts.length - 1];
                 let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${trackId}`, {credentials: 'include'});
