@@ -162,6 +162,7 @@ func TestSpotifyClientTimeout(t *testing.T) {
 		t.Fatalf("Bad request: %s", err)
 	}
 	_, err = client.Do(req)
+	t.Log(err)
 	if err, ok := err.(net.Error); !ok || !err.Timeout() {
 		t.Fatalf("Expected Spotify client timeout hit")
 	}
@@ -215,6 +216,7 @@ func TestExternalCancellation(t *testing.T) {
 	}()
 	cancel()
 	err = <-c
+	t.Log(err)
 	if err, ok := err.(net.Error); !ok || !err.Timeout() {
 		t.Fatalf("Expected external cancellation")
 	}
