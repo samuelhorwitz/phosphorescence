@@ -70,6 +70,7 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 				}
 			} else if req.Body != nil {
 				errorChan <- ErrNoGetBody
+				return
 			}
 			// Send off the request.
 			res, err := c.Client.Do(req)
