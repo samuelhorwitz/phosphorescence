@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
 	"github.com/satori/go.uuid"
 	"log"
 	"net/http"
@@ -12,15 +13,18 @@ import (
 
 var PhosphorUUIDV5Namespace = uuid.NewV5(uuid.NamespaceDNS, "phosphor.me")
 
-var SpotifyClient *http.Client
+var SpotifyClient *spotifyclient.SpotifyClient
 
 type Config struct {
 	SpotifyTimeout time.Duration
 }
 
 func Initialize(cfg *Config) {
-	SpotifyClient = &http.Client{
+	SpotifyClient = &spotifyclient.SpotifyClient{
 		Timeout: cfg.SpotifyTimeout,
+		Client: &http.Client{
+			Timeout: cfg.SpotifyTimeout,
+		},
 	}
 }
 

@@ -338,7 +338,6 @@
 </style>
 
 <script>
-    import {getUsersCountry} from '~/assets/session';
     import {initialize, loadNewPlaylist} from '~/assets/recordcrate';
     import {terminatePlaylistBuilding} from '~/assets/eos';
     import player from '~/components/ide/player';
@@ -420,7 +419,7 @@
             }
         },
         async created() {
-            await initialize(await getUsersCountry());
+            await initialize(this.$store.state.user.user.country);
             this.$store.commit('idetracks/restore');
         },
         mounted() {

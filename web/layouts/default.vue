@@ -104,8 +104,6 @@
 
 <script>
     import {initialize, builders, loadNewPlaylist, processTrack} from '~/assets/recordcrate';
-    import {accessTokenExists, refreshUser, getUsersCountry, getTrackWithFeatures} from '~/assets/session';
-    import {spider} from '~/assets/spotify';
     import logo from '~/components/logo';
     import toolbar from '~/components/toolbar';
     import album from '~/components/album';
@@ -121,11 +119,6 @@
             foot
         },
         middleware: 'authenticated',
-        beforeCreate() {
-            if (!accessTokenExists()) {
-                refreshUser();
-            }
-        },
         data() {
             return {
                 dragStarted: false,
@@ -136,7 +129,7 @@
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
-            await initialize(await getUsersCountry());
+            await initialize(this.$store.state.user.user.country);
             if (!this.$store.getters['tracks/playlistLoaded']) {
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
@@ -178,8 +171,9 @@
                 let url = e.dataTransfer.getData('text/x-spotify-tracks');
                 let trackParts = url.split('/');
                 let trackId = trackParts[trackParts.length - 1];
-                let track = await getTrackWithFeatures(trackId);
-                let processedTrack = await processTrack(await getUsersCountry(), track);
+                let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${trackId}`, {credentials: 'include'});
+                let {track} = await trackResponse.json();
+                let processedTrack = await processTrack(this.$store.state.user.user.country, track);
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.dispatch('loading/endLoadAfterDelay');
