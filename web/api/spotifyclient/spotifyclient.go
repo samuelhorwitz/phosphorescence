@@ -1,6 +1,7 @@
 package spotifyclient
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,12 +16,20 @@ type SpotifyClient struct {
 }
 
 func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
-	// Timer for timing out and context reference for detecting timeouts
+	// Create a timeout timer which gets cleaned up when the request is
+	// complete.
 	timer := time.NewTimer(c.Timeout)
 	defer timer.Stop()
-	ctx := baseReq.Context()
+	// Grab a reference to the base context to use as a parent for all
+	// other contexts.
+	baseCtx := baseReq.Context()
+	// Build our response and error channels.
 	responseChan := make(chan *http.Response, 1)
 	errorChan := make(chan error, 1)
+	// Create a done signal channel for alerting any Go routines that
+	// this function has completed and they should clean up.
+	done := make(chan struct{})
+	defer close(done)
 	// Send all requests in a Go routine and respond in channels.
 	go func() {
 		for {
@@ -44,19 +53,38 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 			// might be discarded due to bad luck.
 			select {
 			case <-waitChan:
-			case <-ctx.Done():
+			case <-done:
 			}
 			// Here we actually handle cancellation. We got past the
 			// block above, now let's see if it was cancellation that
 			// triggered our continuation. If so, return and end this
 			// Go routine. Otherwise, keep going.
 			select {
-			case <-ctx.Done():
+			case <-done:
 				return
 			default:
 			}
-			// Clone the original request.
-			req := baseReq.Clone(ctx)
+			// Clone the original request with a cancelable context
+			// allowing us to kill the client requests if the function
+			// is complete (due to parent timeout, resiliency timeout, etc).
+			reqCtx, reqCancel := context.WithCancel(baseCtx)
+			go func() {
+				// Block until entire request is done for any reason
+				select {
+				case <-done:
+				}
+				// Then, if the request is done due to some cancellation,
+				// try and cancel the current request. Otherwise, exit
+				// Go routine.
+				select {
+				case <-baseCtx.Done():
+					reqCancel()
+				case <-timer.C:
+					reqCancel()
+				default:
+				}
+			}()
+			req := baseReq.Clone(reqCtx)
 			// Set the body if one exists. If there's a body but not
 			// a GetBody function, we error. A lot of builtins will
 			// automatically set GetBody but the user will have to
@@ -78,7 +106,7 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 			// to resolve or error? If so, let's exit early and end this
 			// Go routine.
 			select {
-			case <-ctx.Done():
+			case <-done:
 				// We were cancelled, so let's do some safety checks in
 				// case error (which we don't care about now) was set
 				// and res or it's Body was nil (Body may be nil if error,
@@ -123,8 +151,8 @@ func (c *SpotifyClient) Do(baseReq *http.Request) (*http.Response, error) {
 		return res, nil
 	case err := <-errorChan:
 		return nil, Error{err, false}
-	case <-ctx.Done():
-		return nil, Error{ctx.Err(), false}
+	case <-baseCtx.Done():
+		return nil, Error{baseCtx.Err(), false}
 	case <-timer.C:
 		return nil, Error{ErrTimeout, true}
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-chi/chi"
+	chimiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/phosphor"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
@@ -19,6 +20,7 @@ func initializeRoutes(cfg *config) http.Handler {
 	})
 	r.Use(cors.Handler)
 	r.Use(middleware.CSP(cfg.phosphorOrigin))
+	r.Use(chimiddleware.Timeout(cfg.handlerTimeout))
 	r.Route("/spotify", func(r chi.Router) {
 		r.Get("/authorize", spotify.Authorize)
 		r.Get("/tokens", spotify.Tokens)

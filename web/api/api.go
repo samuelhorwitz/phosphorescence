@@ -60,6 +60,7 @@ func main() {
 		readTimeout:                          5 * time.Second,
 		writeTimeout:                         10 * time.Second,
 		idleTimeout:                          120 * time.Second,
+		handlerTimeout:                       5 * time.Second,
 		rateLimitPerSecond:                   rateLimit,
 		redisHost:                            os.Getenv("REDIS_HOST"),
 	}
@@ -70,7 +71,7 @@ func main() {
 
 func initialize(cfg *config) {
 	common.Initialize(&common.Config{
-		SpotifyTimeout: cfg.writeTimeout,
+		SpotifyTimeout: cfg.handlerTimeout,
 	})
 	middleware.Initialize(&middleware.Config{
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
