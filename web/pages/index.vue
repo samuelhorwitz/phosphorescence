@@ -50,6 +50,7 @@
         display: flex;
         align-items: flex-start;
         height: 100%;
+        margin-left: 2em;
     }
 
     ol {
@@ -138,17 +139,9 @@
         border-bottom: 1px solid rgba(245,188,251,.8);
     }
 
-    .tableWrapper {
-        max-width: 600px;
-    }
-
-    @media only screen and (min-width: 1499px), (max-width: 1099px) and (min-height: 450px) {
+    @media only screen and (min-width: 1199px), (max-width: 1099px) and (min-height: 450px) {
         article {
             margin: 0px 2em;
-        }
-
-        .tableWrapper {
-            max-width: unset;
         }
     }
 
