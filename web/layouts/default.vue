@@ -18,8 +18,15 @@
     .mainContainer {
         display: grid;
         grid-template-columns: 10fr 1fr;
-        grid-template-rows: min-content min-content minmax(100px, 1fr) min-content min-content;
         height: 100vh;
+    }
+
+    body.playerConnected .mainContainer {
+        grid-template-rows: min-content min-content minmax(100px, 1fr) min-content min-content;
+    }
+
+    body:not(.playerConnected) .mainContainer {
+        grid-template-rows: min-content min-content minmax(100px, 1fr) min-content;
     }
 
     .dropzone {
@@ -52,46 +59,81 @@
         border: 20px dashed aqua;
     }
 
-    main {
+    body.playerConnected main {
         grid-column: 1 / 2;
+    }
+
+    body:not(.playerConnected) main {
+        grid-column: 1 / 3;
     }
 
     @media only screen and (min-height: 450px) and (max-width: 1099px) {
         .mainContainer {
             grid-template-columns: 100%;
+        }
+
+        body.playerConnected .mainContainer {
             grid-template-rows: min-content min-content minmax(100px, 1fr) 100px min-content min-content;
         }
 
-        main {
-            grid-column: 1 / 2;
+        body:not(.playerConnected) .mainContainer {
+            grid-template-rows: min-content min-content minmax(100px, 1fr) min-content;
         }
     }
 
     @media only screen and (max-height: 449px) {
         .mainContainer {
             grid-template-columns: 28vw minmax(40vw, 10fr) min-content;
+        }
+
+        body.playerConnected .mainContainer {
             grid-template-rows: max-content minmax(100px, 1fr) max-content max-content;
         }
 
+        body:not(.playerConnected) .mainContainer {
+            grid-template-rows: max-content minmax(100px, 1fr) max-content;
+        }
+
         main {
-            grid-column: 1 / 3;
             grid-row: 2 / 3;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 1em 0;
         }
+
+        body.playerConnected main {
+            grid-column: 1 / 3;
+        }
+
+        body:not(.playerConnected) main {
+            grid-column: 1 / 3;
+        }
+    }
+
+    @media only screen and (max-height: 449px) and (max-width: 1199px) {
+        .mainContainer {
+            grid-template-columns: 28vw minmax(30vw, 10fr) min-content;
+        }
     }
 
     @media only screen and (max-width: 949px) and (min-height: 275px) and (max-height: 449px) {
-        main {
+        body.playerConnected main {
             display: none;
+        }
+
+        body:not(.playerConnected) .mainContainer {
+            grid-template-rows: max-content minmax(100px, 1fr);
         }
     }
 
     @media only screen and (max-height: 274px) {
-        main {
+        body.playerConnected main {
             display: none;
+        }
+
+        body:not(.playerConnected) .mainContainer {
+            grid-template-rows: max-content minmax(100px, 1fr);
         }
     }
 
@@ -119,6 +161,13 @@
             foot
         },
         middleware: 'authenticated',
+        head() {
+            return {
+                bodyAttrs: {
+                    class: this.$store.getters['tracks/isPlayerConnected'] ? 'playerConnected' : ''
+                }
+            }
+        },
         data() {
             return {
                 dragStarted: false,

@@ -21,11 +21,11 @@
             <div class="bg bg-inverse"></div>
             <ul class="advanced">
                 <li class="advancedMenuItem">
-                    <label for="tracksPerPlaylist">Number of Tracks</label>
+                    <label for="tracksPerPlaylist">Tracks</label>
                     <input name="tracksPerPlaylist" type="number" v-model="tracksPerPlaylist">
                 </li>
                 <li class="advancedMenuItem">
-                    <label for="seedStyle">Seed style</label>
+                    <label for="seedStyle">Style</label>
                     <select name="seedStyle" v-model="seedStyle">
                         <option :value="null">Random</option>
                         <option :value="'chillout'">Chillout</option>
@@ -74,7 +74,9 @@
     }
 
     .advancedMenuItem {
-        display: inline;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: bold;
         color: white;
         margin-right: 2em;
@@ -158,7 +160,8 @@
     label {
         font-family: 'Montserrat';
         font-size: 1.3em;
-        margin-bottom: 0.7em;
+        white-space: nowrap;
+        margin-right: 0.5em;
     }
 
     input {
@@ -180,6 +183,50 @@
         border-radius: 0px;
         border: 3px outset gray;
         background-color: dimgray;
+    }
+
+    @media only screen and (max-width: 329px) {
+        .container {
+            font-size: 7.5px;
+        }
+
+        .menuItem {
+            margin-right: 0.5em;
+        }
+
+        .advancedWrapper {
+            font-size: 8px;
+        }
+
+        .advancedMenuItem label {
+            font-size: 5.5px;
+        }
+
+        .advancedMenuItem select {
+            height: 1.75em;
+        }
+    }
+
+    @media only screen and (min-width: 330px) and (max-width: 419px) {
+        .container {
+            font-size: 9px;
+        }
+
+        .menuItem {
+            margin-right: 0.5em;
+        }
+
+        .advancedWrapper {
+            font-size: 8px;
+        }
+
+        .advancedMenuItem label {
+            font-size: 6.5px;
+        }
+
+        .advancedMenuItem select {
+            height: 2em;
+        }
     }
 
     @media only screen and (max-height: 449px) {
@@ -244,6 +291,32 @@
     @media only screen and (min-height: 450px) and (max-width: 1099px) {
         .container {
             grid-column: 1 / 2;
+        }
+    }
+
+    @media only screen and (max-height: 449px) and (min-width: 950px) and (max-width: 1099px) {
+        body.playerConnected .menuItem.logout {
+            display: none;
+        }
+    }
+
+    @media only screen and (min-width: 420px) and (max-width: 599px) and (min-height: 450px) {
+        .container {
+            font-size: 12px;
+        }
+
+        .menuItem {
+            margin-right: 0.5em;
+        }
+    }
+
+    @media only screen and (min-width: 600px) and (max-width: 899px) and (min-height: 450px) {
+        .container {
+            font-size: 16px;
+        }
+
+        .menuItem {
+            margin-right: 0.5em;
         }
     }
 </style>

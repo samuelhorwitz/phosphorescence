@@ -13,6 +13,15 @@
     h2 {
         margin-bottom: 0.3em;
     }
+
+    .pageWrapper {
+        margin-left: 2em;
+        margin-right: 2em;
+    }
+
+    .authPage {
+        margin: 0px;
+    }
 </style>
 
 <script>

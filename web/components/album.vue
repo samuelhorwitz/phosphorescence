@@ -7,6 +7,10 @@
 </template>
 
 <style scoped>
+    body:not(.playerConnected) aside {
+        display: none;
+    }
+
     aside {
         max-height: 100%;
         display: flex;
@@ -45,9 +49,10 @@
 
     @media only screen and (max-width: 1099px) and (min-height: 450px) {
         aside {
-            width: 100%;
             flex-basis: 25%;
             flex-grow: 0;
+            grid-column: 1 / 2;
+            margin: 0px 2em;
         }
 
         .art-wrapper-link {
@@ -63,6 +68,12 @@
         aside {
             flex: 0;
             margin-left: 0.5em;
+        }
+    }
+
+    @media only screen and (max-height: 449px) {
+        aside {
+            margin-right: 1em;
         }
     }
 
@@ -113,22 +124,6 @@
     @media only screen and (max-width: 449px) and (max-height: 249px) {
         aside {
             margin: 0 1em;
-        }
-    }
-
- /*   @media only screen and (min-height: 449px) and (max-width: 1099px) {
-        aside {
-            grid-column: 1 / 4;
-        }
-    }*/
-
-    @media only screen and (min-height: 450px) and (max-width: 1099px) {
-        aside {
-            grid-column: 1 / 2;
-        }
-
-        .art-wrapper-link {
-            width: 94vw;
         }
     }
 </style>

@@ -4,6 +4,12 @@ const STOPPED = 0;
 const PLAYING = 1;
 const PAUSED = 2;
 
+const NOT_READY = 0;
+const CONNECTED = 1;
+const DISCONNECTED = 2;
+
+let player;
+
 export function initialize(storagePrefix) {
     return {
         state: getState(),
@@ -19,8 +25,10 @@ const getState = () => () => ({
     playback: STOPPED,
     deviceId: null,
     spotifyState: null,
-    spotifyFullyRestored: false,
-    spotifyAppearsDown: false
+    spotifyAppearsDown: false,
+    playerState: NOT_READY,
+    neighborSeekLocked: false,
+    deviceName: 'Phosphorescence'
 });
 
 const getMutations = storagePrefix => Object.assign({
@@ -83,16 +91,29 @@ const getMutations = storagePrefix => Object.assign({
     deviceId(state, deviceId) {
         state.deviceId = deviceId;
     },
-    spotifyFullyRestored(state) {
-        state.spotifyFullyRestored = true;
+    connected(state) {
+        state.playerState = CONNECTED;
+    },
+    disconnected(state) {
+        state.playerState = DISCONNECTED;
+    },
+    lockNeighborSeeking(state) {
+        state.neighborSeekLocked = true;
+    },
+    unlockNeighborSeeking(state) {
+        state.neighborSeekLocked = false;
     }
 });
 
 const getActions = () => Object.assign({
+    registerPlayer({commit}, pl) {
+        player = pl;
+        commit('connected');
+    },
     async play({commit, dispatch, getters, state}) {
         commit('loading/startLoad', null, {root: true});
         commit('play');
-        let response = await fetch(`https://api.spotify.com/v1/me/player/play${getters.deviceIdAsQueryString}`, {
+        let response = await fetch('https://api.spotify.com/v1/me/player/play', {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${await getAccessToken()}`
@@ -110,42 +131,24 @@ const getActions = () => Object.assign({
     async resume({commit, dispatch, getters}) {
         commit('loading/startLoad', null, {root: true});
         commit('play');
-        let response = await fetch(`https://api.spotify.com/v1/me/player/play${getters.deviceIdAsQueryString}`, {
-            method: 'PUT',
-            headers: {
-                Authorization: `Bearer ${await getAccessToken()}`
-            }
-        });
-        if (response && response.status >= 500) {
-            commit('stopBecauseBroken');
+        if (player) {
+            await player.resume();
         }
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
     async pause({commit, dispatch, getters}) {
         commit('loading/startLoad', null, {root: true});
         commit('pause');
-        let response = await fetch(`https://api.spotify.com/v1/me/player/pause${getters.deviceIdAsQueryString}`, {
-            method: 'PUT',
-            headers: {
-                Authorization: `Bearer ${await getAccessToken()}`
-            }
-        });
-        if (response && response.status >= 500) {
-            commit('stopBecauseBroken');
+        if (player) {
+            await player.pause();
         }
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
     async stop({commit, dispatch, getters}) {
         commit('loading/startLoad', null, {root: true});
         commit('stop');
-        let response = await fetch(`https://api.spotify.com/v1/me/player/pause${getters.deviceIdAsQueryString}`, {
-            method: 'PUT',
-            headers: {
-                Authorization: `Bearer ${await getAccessToken()}`
-            }
-        });
-        if (response && response.status >= 500) {
-            commit('stopBecauseBroken');
+        if (player) {
+            await player.pause();
         }
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
@@ -156,18 +159,7 @@ const getActions = () => Object.assign({
         commit('loading/startLoad', null, {root: true});
         commit('nextTrack');
         if (!getters.stopped) {
-            let response = await fetch(`https://api.spotify.com/v1/me/player/next${getters.deviceIdAsQueryString}`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${await getAccessToken()}`
-                }
-            });
-            if (response && response.status >= 500) {
-                commit('stopBecauseBroken');
-            }
-            else {
-                commit('play');
-            }
+            await seekToCurrentTrack(state, commit);
         }
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
@@ -178,18 +170,7 @@ const getActions = () => Object.assign({
         commit('loading/startLoad', null, {root: true});
         commit('previousTrack');
         if (!getters.stopped) {
-            let response = await fetch(`https://api.spotify.com/v1/me/player/previous${getters.deviceIdAsQueryString}`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${await getAccessToken()}`
-                }
-            });
-            if (response && response.status >= 500) {
-                commit('stopBecauseBroken');
-            }
-            else {
-                commit('play');
-            }
+            await seekToCurrentTrack(state, commit);
         }
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
@@ -200,52 +181,8 @@ const getActions = () => Object.assign({
         commit('loading/startLoad', null, {root: true});
         commit('seekTrack', cursor);
         if (!getters.stopped) {
-            let response = await fetch(`https://api.spotify.com/v1/me/player/play${getters.deviceIdAsQueryString}`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${await getAccessToken()}`
-                },
-                body: JSON.stringify({
-                    uris: state.playlist.map(track => track.track.uri),
-                    offset: {position: state.currentTrackCursor}
-                })
-            });
-            if (response && response.status >= 500) {
-                commit('stopBecauseBroken');
-            }
-            else {
-                commit('play');
-            }
+            await seekToCurrentTrack(state, commit);
         }
-        dispatch('loading/endLoadAfterDelay', null, {root: true});
-    },
-    async restoreSpotifyState({commit, dispatch, getters, state, nextTick}) {
-        commit('loading/startLoad', null, {root: true});
-        let response = await fetch('https://api.spotify.com/v1/me/player', {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${await getAccessToken()}`
-            }
-        });
-        if (false && response && response.status == 200) {
-            let currentSpotifyState = await response.json();
-            if (currentSpotifyState.currently_playing_type == 'track') {
-                commit('seekTrack', getters.getPlaylistCursorById(currentSpotifyState.item.id));
-                let response = await fetch('https://api.spotify.com/v1/me/player', {
-                    method: 'PUT',
-                    headers: {
-                        Authorization: `Bearer ${await getAccessToken()}`
-                    },
-                    body: JSON.stringify({
-                        device_ids: [state.deviceId]
-                    })
-                });
-            }
-        }
-        else if (false && state.spotifyState) {
-            commit('seekTrack', getters.getPlaylistCursorById(state.spotifyState.track_window.current_track.id));
-        }
-        commit('spotifyFullyRestored');
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
     loadPlaylist({commit, dispatch}, playlist) {
@@ -256,7 +193,7 @@ const getActions = () => Object.assign({
 
 const getGetters = () => Object.assign({
     currentTrack(state) {
-        if (!state.playlist || !state.spotifyFullyRestored) {
+        if (!state.playlist) {
             return null;
         }
         return state.playlist[state.currentTrackCursor];
@@ -282,17 +219,19 @@ const getGetters = () => Object.assign({
     deviceLoaded(state) {
         return !!state.deviceId;
     },
-    deviceIdAsQueryString(state) {
-        let queryString = '';
-        if (state.deviceId) {
-            queryString = `?device_id=${state.deviceId}`;
-        }
-        return queryString;
+    isPlayerConnected(state) {
+        return state.playerState == CONNECTED;
+    },
+    isPlayerDisconnected(state) {
+        return state.playerState == NOT_READY || state.playerState == DISCONNECTED;
     },
     getPlaylistCursorById: state => id => state.playlist ? state.playlist.findIndex(track => track.track.id == id) : null
 });
 
 function canSkipBackward(state) {
+    if (state.neighborSeekLocked) {
+        return false;
+    }
     if (!state.playlist) {
         return false;
     }
@@ -300,6 +239,9 @@ function canSkipBackward(state) {
 }
 
 function canSkipForward(state) {
+    if (state.neighborSeekLocked) {
+        return false;
+    }
     if (!state.playlist) {
         return false;
     }
@@ -311,4 +253,29 @@ function isCursorInRange(state, cursor) {
         return false;
     }
     return cursor >= 0 && cursor <= state.playlist.length - 1;
+}
+
+async function seekToCurrentTrack(state, commit) {
+    commit('lockNeighborSeeking');
+    let response = await fetch('https://api.spotify.com/v1/me/player/play', {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${await getAccessToken()}`
+        },
+        body: JSON.stringify({
+            uris: state.playlist.map(track => track.track.uri),
+            offset: {position: state.currentTrackCursor}
+        })
+    });
+    if (response && response.status >= 500) {
+        commit('stopBecauseBroken');
+    }
+    else {
+        commit('play');
+    }
+    // Seeking responds before seek is guaranteed, throttle seek requests
+    // to prevent weird sync-y issues. We could reach out and check but it
+    // is one more request to Spotify so let's keep it simple.
+    await new Promise(resolve => setTimeout(resolve, 500));
+    commit('unlockNeighborSeeking');
 }
