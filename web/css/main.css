@@ -17,9 +17,21 @@ body {
     font-size: 16px;
 }
 
-@media only screen and (max-width: 599px) and (min-height: 450px) {
+@media only screen and (max-width: 329px) {
     body {
-        font-size: 6px;
+        font-size: 5px;
+    }
+}
+
+@media only screen and (min-width: 330px) and (max-width: 419px) {
+    body {
+        font-size: 6.5px;
+    }
+}
+
+@media only screen and (min-width: 420px) and (max-width: 599px) and (min-height: 450px) {
+    body {
+        font-size: 9px;
     }
 }
 
@@ -61,7 +73,7 @@ article.authPage {
     justify-content: flex-start;
     flex-direction: column;
     border: 7px outset magenta;
-    width: 50em;
+    font-size: 16px;
 }
 
 body.scrollablePage {

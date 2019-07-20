@@ -309,7 +309,9 @@
             }
         },
         async created() {
-            this.destroyer = await initializePlayer(this.$store, 'idetracks');
+            let playerWrapper = await initializePlayer(this.$store, 'idetracks');
+            this.destroyer = playerWrapper.destroyer;
+            this.$store.dispatch('idetracks/registerPlayer', playerWrapper.player);
         },
         beforeDestroy() {
             if (this.destroyer) {

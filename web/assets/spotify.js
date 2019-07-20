@@ -1,13 +1,14 @@
 import {getAccessToken, quickReturnAccessTokenWithoutGuarantee} from '~/assets/session';
 
 export async function initializePlayer(store, storePrefix) {
-    let script;
-    store.dispatch(`${storePrefix}/restoreSpotifyState`);
+    let script, player;
     await new Promise((resolve, reject) => {
         window.onSpotifyWebPlaybackSDKReady = async () => {
             let deviceId;
             try {
-                deviceId = await initializePlayerListeners(store, storePrefix);
+                let res = await initializePlayerListeners(store, storePrefix);
+                player = res.player;
+                deviceId = res.deviceId;
             }
             catch ({message, reauth}) {
                 console.error(message);
@@ -17,6 +18,10 @@ export async function initializePlayer(store, storePrefix) {
                 }
                 return;
             }
+            await fetch(`${process.env.API_ORIGIN}/device/${deviceId}?playState=pause`, {
+                method: 'PUT',
+                credentials: 'include'
+            });
             store.commit(`${storePrefix}/deviceId`, deviceId);
             resolve();
         };
@@ -24,8 +29,12 @@ export async function initializePlayer(store, storePrefix) {
         script.src = 'https://sdk.scdn.co/spotify-player.js';
         document.head.appendChild(script);
     });
-    return () => {
-        document.head.removeChild(script);
+    return {
+        destroyer: () => {
+            player.disconnect();
+            document.head.removeChild(script);
+        },
+        player
     };
 }
 
@@ -48,22 +57,35 @@ async function initializePlayerListeners(store, storePrefix) {
 
         // Playback status updates
         player.addListener('player_state_changed', state => {
+            console.log('Player state changed');
             if (!state) {
+                console.log('Device disconnected');
+                store.commit(`${storePrefix}/disconnected`);
                 return;
             }
             console.log(state);
+            store.commit(`${storePrefix}/connected`);
             let ourCurrentTrack = store.getters[`${storePrefix}/currentTrack`];
+            let trackOkay = true;
             if (ourCurrentTrack && state.track_window.current_track.id != ourCurrentTrack.track.id) {
                 let newCursor = store.getters[`${storePrefix}/getPlaylistCursorById`](state.track_window.current_track.id);
                 if (newCursor) {
-                    store.commit(`${storePrefix}/seekTrack`, newCursor);
+                    if (newCursor != -1) {
+                        store.commit(`${storePrefix}/seekTrack`, newCursor);
+                    } else {
+                        // TODO alert user that this song cannot be played in Phosphorescence as it's not in the current lineup.
+                        store.dispatch(`${storePrefix}/stop`);
+                        trackOkay = false;
+                    }
                 }
             }
-            if (state.paused && !store.getters[`${storePrefix}/paused`]) {
-                store.commit(`${storePrefix}/pause`);
-            }
-            else if (!state.paused && store.getters[`${storePrefix}/paused`]) {
-                store.commit(`${storePrefix}/resume`);
+            if (trackOkay) {
+                if (state.paused && !(store.getters[`${storePrefix}/paused`] || store.getters[`${storePrefix}/stopped`])) {
+                    store.commit(`${storePrefix}/pause`);
+                }
+                else if (!state.paused && (store.getters[`${storePrefix}/paused`] || store.getters[`${storePrefix}/stopped`])) {
+                    store.commit(`${storePrefix}/resume`);
+                }
             }
             store.commit(`${storePrefix}/lastKnownSpotifyState`, state);
         });
@@ -71,7 +93,7 @@ async function initializePlayerListeners(store, storePrefix) {
         // Ready
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
-            resolve(device_id);
+            resolve({player, deviceId: device_id});
         });
 
         // Not Ready
