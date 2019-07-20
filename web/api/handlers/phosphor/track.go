@@ -7,12 +7,21 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
+	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 	"io/ioutil"
 	"net/http"
 )
 
 func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	trackID := chi.URLParam(r, "trackID")
+	// First let's check if the track is in our huge cache of tracks
+	// and return it if it is, no Spotify request needed.
+	track, ok := tracks.GetTrack(trackID)
+	if ok {
+		common.JSON(w, map[string]interface{}{"track": track})
+		return
+	}
+	// We don't have that track cached, so let's reach out to Spotify
 	spotifyToken, ok := r.Context().Value(middleware.SpotifyTokenContextKey).(string)
 	if !ok {
 		common.Fail(w, errors.New("No Spotify token on request context"), http.StatusInternalServerError)
@@ -34,7 +43,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		}
 		defer res.Body.Close()
 		if res.StatusCode != http.StatusOK {
-			common.Fail(w, fmt.Errorf("Spotify track request responded with %d", res.StatusCode), http.StatusForbidden)
+			common.Fail(w, fmt.Errorf("Spotify track request responded with %d", res.StatusCode), http.StatusInternalServerError)
 			return
 		}
 		body, err := ioutil.ReadAll(res.Body)
@@ -58,7 +67,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		}
 		defer res.Body.Close()
 		if res.StatusCode != http.StatusOK {
-			common.Fail(w, fmt.Errorf("Spotify track audio feature request responded with %d", res.StatusCode), http.StatusForbidden)
+			common.Fail(w, fmt.Errorf("Spotify track audio feature request responded with %d", res.StatusCode), http.StatusInternalServerError)
 			return
 		}
 		body, err := ioutil.ReadAll(res.Body)
@@ -75,10 +84,14 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(parsedBody.AudioFeatures) == 0 {
-			common.Fail(w, fmt.Errorf("No Spotify track audio features on response: %s", err), http.StatusInternalServerError)
+			common.Fail(w, fmt.Errorf("No Spotify track audio features on response: %s", err), http.StatusNotFound)
 			return
 		}
 		featuresData = parsedBody.AudioFeatures[0]
+		if string(featuresData) == "null" {
+			common.Fail(w, errors.New("Null audio features for track"), http.StatusNotFound)
+			return
+		}
 	}
 	common.JSON(w, map[string]interface{}{"track": struct {
 		Track    json.RawMessage `json:"track"`
