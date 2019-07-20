@@ -1,0 +1,7 @@
+github.com/aws/aws-sdk-go v1.21.1 h1:IOFDnCEDybcw4V8nbKqyyjBu+vpu7hFYSfZqNuogi7I=
+github.com/aws/aws-sdk-go v1.21.1/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
+github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
+github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
+github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
+github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
+github.com/samuelhorwitz/phosphorescence v0.0.0-20190718024941-2d3f3bcbc6d0 h1:ETFVOaMr4mRZ6fRnchLT3GXAR4lSSvB2vho9sYLU6Jo=

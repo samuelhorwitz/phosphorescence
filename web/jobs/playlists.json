@@ -1,7 +1,7 @@
-module.exports = {
+{
 	"whitelists": [
 		"0nBZNL98G6zFt76htSPTmk", // Phosphorescence Seeder
-		"1knjXQhIb46e09GbnTi2w0", // Phosphorescence York Seeder (York chillout compilations and originals)
+		"1knjXQhIb46e09GbnTi2w0" // Phosphorescence York Seeder (York chillout compilations and originals)
 	],
 	"seeders": [
 		"5lSgExb6yTKfLusGag7bm7", // Armada Trance Top 1000
@@ -43,20 +43,23 @@ module.exports = {
 		"78AFAJFvRzboZfEDnAkkFn", // Trance Anthems 90s-00s
 		"72DnoMQTeGRgLbLk7WlKol", // Trance/90s
 		"6kaLL9VKSZK37QtuCqdqZX", // Euphoric Chillout Trance
-		"708Lw1vngitikCt5JxqDsD", // Aly & Fila Chillout
+		"708Lw1vngitikCt5JxqDsD" // Aly & Fila Chillout
 	],
 	"blacklists": [
-		"4NTy5kvMHlsVUyXiCRbzfW", // Phosphorescence Blacklist
+		"4NTy5kvMHlsVUyXiCRbzfW" // Phosphorescence Blacklist
+	],
+	"artistBlacklists": [
+		"1yXD9tSi0HJKK9B4j8s0Hz" // Phosphorescence Artist Blacklist
 	],
 	"subgenres": {
 		"chill": [
 			"0IJUUs6IqIPk9tS5nau0Rj", // Armada Chill
-			"68BiK8KG3otORDaYB3ZaO9", // Armada Chillout Top 1000
+			"68BiK8KG3otORDaYB3ZaO9" // Armada Chillout Top 1000
 		],
 		"psy": [
 			"06IaXoRhHIvrCi8g4fmjel", // Psy/Goa/Prog/Dark-trance
 			"4Xq4VM7PpM63Rl1LYNWBIO", // Psytrance (Goa, Minimal, Progressive, Dark, Chill...)
-			"3T1e2xXlbVJ6AXbqALUSfr", // Psytrance, progresive, goa, psybient, fullon, forest, dark and rest
+			"3T1e2xXlbVJ6AXbqALUSfr" // Psytrance, progresive, goa, psybient, fullon, forest, dark and rest
 		]
 	}
 }
