@@ -15,7 +15,10 @@ var PhosphorUUIDV5Namespace = uuid.NewV5(uuid.NamespaceDNS, "phosphor.me")
 
 var SpotifyClient *spotifyclient.SpotifyClient
 
+var isProduction bool
+
 type Config struct {
+	IsProduction   bool
 	SpotifyTimeout time.Duration
 }
 
@@ -26,6 +29,7 @@ func Initialize(cfg *Config) {
 			Timeout: cfg.SpotifyTimeout,
 		},
 	}
+	isProduction = cfg.IsProduction
 }
 
 func JSONRaw(w http.ResponseWriter, body []byte) {
@@ -43,7 +47,9 @@ func JSON(w http.ResponseWriter, data interface{}) {
 }
 
 func Fail(w http.ResponseWriter, err error, status int) {
-	log.Printf("Request failed, returning %d: %s", status, err)
+	if !isProduction {
+		log.Printf("Request failed, returning %d: %s", status, err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	http.Error(w, `{"error":true}`, status)
 }

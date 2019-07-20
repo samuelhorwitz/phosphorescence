@@ -72,6 +72,7 @@ func main() {
 
 func initialize(cfg *config) {
 	common.Initialize(&common.Config{
+		IsProduction:   cfg.isProduction,
 		SpotifyTimeout: cfg.handlerTimeout,
 	})
 	middleware.Initialize(&middleware.Config{
