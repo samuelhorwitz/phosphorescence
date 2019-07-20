@@ -7,6 +7,7 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
+	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 	"log"
 	"net/http"
 	"os"
@@ -96,6 +97,12 @@ func initialize(cfg *config) {
 		PostgreMaxLifetime:       cfg.postgresMaxConnectionLifetimeMinutes,
 		SpacesScriptsEndpoint:    cfg.spacesScriptsEndpoint,
 		SpacesScriptsRegion:      cfg.spacesScriptsRegion,
+	})
+	tracks.Initialize(&tracks.Config{
+		SpacesID:       cfg.spacesID,
+		SpacesSecret:   cfg.spacesSecret,
+		SpacesEndpoint: cfg.spacesTracksEndpoint,
+		SpacesRegion:   cfg.spacesTracksRegion,
 	})
 }
 
