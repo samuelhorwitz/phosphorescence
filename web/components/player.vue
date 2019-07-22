@@ -508,15 +508,25 @@
             },
             async transferDevice(deviceId) {
                 this.hideActiveDevice = true;
-                this.$store.commit('tracks/play');
+                let shouldPlayAfterTransfer = true;
+                let playState = 'paused';
+                if (this.$store.getters['tracks/playing'] || this.$store.getters['tracks/paused']) {
+                    this.$store.commit('tracks/play');
+                    playState = 'play';
+                    shouldPlayAfterTransfer = false;
+                }
                 let devicesResponse = await fetch(`${process.env.API_ORIGIN}/device/${deviceId}?playState=play`, {
                     method: 'PUT',
                     credentials: 'include'
                 });
+                if (shouldPlayAfterTransfer) {
+                    this.$store.dispatch('tracks/play');
+                }
                 let {devices} = await devicesResponse.json();
                 this.setDevices(devices);
                 this.hideActiveDevice = false;
                 this.devicesMenu = false;
+                this.checkShouldScroll();
             },
             checkShouldScroll() {
                 setTimeout(() => {
