@@ -508,7 +508,7 @@
                     method: 'PUT',
                     credentials: 'include'
                 });
-                await new Promise(resolve => setTimeout(resolve, 250));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 await this.refreshDevices();
                 this.hideActiveDevice = false;
                 this.devicesMenu = false;
