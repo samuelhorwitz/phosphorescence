@@ -471,7 +471,9 @@
                 if (this.devicesLoaded) {
                     return;
                 }
-                await this.refreshDevices();
+                if (this.devicesMenu) {
+                    await this.refreshDevices();
+                }
                 this.devicesLoaded = true;
             },
             async refreshDevices() {
