@@ -22,7 +22,7 @@ type Config struct {
 
 func Initialize(cfg *Config) {
 	phosphorLimiter = tollbooth.NewLimiter(float64(cfg.RateLimitPerSecond), nil)
-	spotifyLimiter = tollbooth.NewLimiter(1, nil)
+	spotifyLimiter = tollbooth.NewLimiter(4, nil)
 	redisPool = &redis.Pool{
 		MaxIdle:   80,
 		MaxActive: 12000,

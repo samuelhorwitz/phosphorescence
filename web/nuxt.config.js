@@ -6,7 +6,7 @@ module.exports = {
     title: 'Phosphorescence - Trance Playlist Builder',
     meta: [
       { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
       { name: 'msapplication-TileColor', content: '#281b3d' },
       { name: 'msapplication-TileImage', content: '/ms-icon-144x144.png' },
       { name: 'theme-color', content: '#281b3d' }

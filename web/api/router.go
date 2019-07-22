@@ -85,5 +85,13 @@ func initializeRoutes(cfg *config) http.Handler {
 	}
 	r.Route("/track", trackRouter)
 	r.Route("/tracks", trackRouter)
+	deviceRouter := func(r chi.Router) {
+		r.Use(middleware.Authenticate)
+		r.Use(middleware.SpotifyLimiter)
+		r.Get("/", phosphor.ListSpotifyDevices)
+		r.Put("/{deviceID}", phosphor.TransferPlayback)
+	}
+	r.Route("/device", deviceRouter)
+	r.Route("/devices", deviceRouter)
 	return r
 }

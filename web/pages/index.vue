@@ -1,5 +1,5 @@
 <template>
-    <article v-show="$store.getters['tracks/playlistLoaded'] && $store.state.tracks.spotifyFullyRestored">
+    <article v-show="$store.getters['tracks/playlistLoaded']">
         <div class="tableWrapper" ref="tableWrapper">
             <table>
                 <thead>
@@ -12,7 +12,7 @@
                         <th>
                             Artist
                         </th>
-                        <th v-show="showAlbums">
+                        <th class="album">
                             Album
                         </th>
                     </tr>
@@ -28,7 +28,7 @@
                                 </li>
                             </ol>
                         </td>
-                        <td v-show="showAlbums" :title="track.track.album.name"><a target="_blank" :href="track.track.album.external_urls.spotify">{{track.track.album.name}}</a></td>
+                        <td class="album" :title="track.track.album.name"><a target="_blank" :href="track.track.album.external_urls.spotify">{{track.track.album.name}}</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -50,7 +50,7 @@
         display: flex;
         align-items: flex-start;
         height: 100%;
-        margin-left: 2em;
+        margin: 0px 2em;
     }
 
     ol {
@@ -89,6 +89,7 @@
         border-spacing: 0px;
         border-collapse: unset;
         table-layout: fixed;
+        font-size: 16px;
     }
 
     th {
@@ -158,12 +159,20 @@
     }
 
     @media only screen and (max-height: 999px) {
-        .tableWrapper {
-            max-height: 600px;
-        }
-
         .tracks {
             align-items: center;
+        }
+    }
+
+    @media only screen and (max-width: 1099px) {
+        body:not(.playerConnected) th.album, body:not(.playerConnected) td.album {
+            display: none;
+        }
+    }
+
+    @media only screen and (max-width: 1499px) {
+        body.playerConnected th.album, body.playerConnected td.album {
+            display: none;
         }
     }
 </style>
@@ -172,12 +181,6 @@
     import {accessTokenExists, refreshUser} from '~/assets/session';
 
     export default {
-        data() {
-            return {
-                showAlbumsMql: null,
-                showAlbums: false
-            };
-        },
         watch: {
             currentTrack() {
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');
@@ -188,6 +191,9 @@
         },
         computed: {
             currentTrack() {
+                if (this.$store.getters['tracks/isPlayerDisconnected']) {
+                    return null;
+                }
                 return this.$store.getters['tracks/currentTrack'];
             },
             currentTrackImage() {
@@ -214,19 +220,6 @@
             },
             seekTrack(i) {
                 this.$store.dispatch('tracks/seekTrack', i);
-            },
-            handleShowAlbumsChange({matches}) {
-                this.showAlbums = matches;
-            }
-        },
-        created() {
-            this.showAlbumsMql = matchMedia('only screen and (max-width: 1099px), (min-width: 1499px)');
-            this.handleShowAlbumsChange(this.showAlbumsMql);
-            this.showAlbumsMql.addListener(this.handleShowAlbumsChange);
-        },
-        beforeDestroy() {
-            if (this.showAlbumsMql) {
-                this.showAlbumsMql.removeListener(this.handleShowAlbumsChange);
             }
         },
         async fetch({store, error}) {
