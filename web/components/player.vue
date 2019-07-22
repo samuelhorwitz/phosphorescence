@@ -480,6 +480,9 @@
                 if (!devices) {
                     return;
                 }
+                this.setDevices(devices);
+            },
+            setDevices(devices) {
                 let primaryDevice;
                 let allDevices = [];
                 for (let device of devices) {
@@ -504,12 +507,12 @@
             async transferDevice(deviceId) {
                 this.hideActiveDevice = true;
                 this.$store.commit('tracks/play');
-                await fetch(`${process.env.API_ORIGIN}/device/${deviceId}?playState=play`, {
+                let devicesResponse = await fetch(`${process.env.API_ORIGIN}/device/${deviceId}?playState=play`, {
                     method: 'PUT',
                     credentials: 'include'
                 });
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                await this.refreshDevices();
+                let {devices} = await devicesResponse.json();
+                this.setDevices(devices);
                 this.hideActiveDevice = false;
                 this.devicesMenu = false;
             },

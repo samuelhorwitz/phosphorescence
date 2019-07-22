@@ -9,6 +9,7 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -71,6 +72,7 @@ func main() {
 }
 
 func initialize(cfg *config) {
+	rand.Seed(time.Now().UnixNano())
 	common.Initialize(&common.Config{
 		IsProduction:   cfg.isProduction,
 		SpotifyTimeout: cfg.handlerTimeout,
