@@ -13,11 +13,25 @@ import (
 )
 
 func GetTrackData(w http.ResponseWriter, r *http.Request) {
+	country, ok := r.Context().Value(middleware.SpotifyCountryContextKey).(string)
+	if !ok {
+		common.Fail(w, errors.New("No Spotify country on request context"), http.StatusInternalServerError)
+		return
+	}
 	trackID := chi.URLParam(r, "trackID")
 	// First let's check if the track is in our huge cache of tracks
 	// and return it if it is, no Spotify request needed.
 	track, ok := tracks.GetTrack(trackID)
 	if ok {
+		canPlay, err := checkIfTrackPlayableInRegion(country, track.Track)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not check if track playable in region: %s", err), http.StatusInternalServerError)
+			return
+		}
+		if !canPlay {
+			common.Fail(w, fmt.Errorf("Track not playable in region %s", country), http.StatusNotFound)
+			return
+		}
 		common.JSON(w, map[string]interface{}{"track": track})
 		return
 	}
@@ -52,6 +66,15 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		rawTrackData = json.RawMessage(body)
+	}
+	canPlay, err := checkIfTrackPlayableInRegion(country, rawTrackData)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Could not check if track playable in region: %s", err), http.StatusInternalServerError)
+		return
+	}
+	if !canPlay {
+		common.Fail(w, fmt.Errorf("Track not playable in region %s", country), http.StatusNotFound)
+		return
 	}
 	{
 		req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/audio-features?ids=%s", trackID), nil)
@@ -100,4 +123,20 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		Track:    rawTrackData,
 		Features: featuresData,
 	}})
+}
+
+func checkIfTrackPlayableInRegion(country string, track json.RawMessage) (bool, error) {
+	var parsedBody struct {
+		AvailableMarkets []string `json:"available_markets"`
+	}
+	err := json.Unmarshal(track, &parsedBody)
+	if err != nil {
+		return false, fmt.Errorf("Could not parse Spotify track response: %s", err)
+	}
+	for _, market := range parsedBody.AvailableMarkets {
+		if market == country {
+			return true, nil
+		}
+	}
+	return false, nil
 }

@@ -22,12 +22,12 @@ func Authenticate(next http.Handler) http.Handler {
 		var spotifyToken string
 		spotifyTokenCookie, err := r.Cookie("spotify_access")
 		if err != nil {
-			common.Fail(w, errors.New("No token"), http.StatusForbidden)
+			common.Fail(w, errors.New("No token"), http.StatusUnauthorized)
 			return
 		}
 		spotifyToken = spotifyTokenCookie.Value
 		if spotifyToken == "" {
-			common.Fail(w, errors.New("Empty token"), http.StatusForbidden)
+			common.Fail(w, errors.New("Empty token"), http.StatusUnauthorized)
 			return
 		}
 		authenticateOnSpotify := false
@@ -64,7 +64,7 @@ func Authenticate(next http.Handler) http.Handler {
 			}
 			defer res.Body.Close()
 			if res.StatusCode != http.StatusOK {
-				common.Fail(w, fmt.Errorf("Spotify profile request responded with %d", res.StatusCode), http.StatusForbidden)
+				common.Fail(w, fmt.Errorf("Spotify profile request responded with %d", res.StatusCode), http.StatusInternalServerError)
 				return
 			}
 			body, err := ioutil.ReadAll(res.Body)
