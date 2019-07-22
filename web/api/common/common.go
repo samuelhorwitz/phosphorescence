@@ -7,6 +7,8 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
 	"github.com/satori/go.uuid"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -70,4 +72,19 @@ func ParseScriptVersion(versionStr string) time.Time {
 		}
 	}
 	return version
+}
+
+func ExponentialBackoff(initialWait, baseDuration time.Duration, fn func(func(error)) bool) (err error) {
+	time.Sleep(initialWait)
+	shouldBreak := false
+	escape := func(escapeErr error) {
+		shouldBreak = true
+		err = escapeErr
+	}
+	count := 0
+	for !shouldBreak && !fn(escape) {
+		count++
+		time.Sleep(baseDuration * time.Duration(math.Pow(2.0, float64(rand.Intn(count+1)))-1))
+	}
+	return
 }
