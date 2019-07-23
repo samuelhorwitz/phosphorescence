@@ -8,8 +8,13 @@ let tracksReady = new Promise(resolve => tracksReadyResolver = resolve);
 async function cleanup() {
     // Since we cannot completely sandbox this origin, users may create Indexed DBs or caches.
     // We don't want them to do that and will destroy them.
-    (await indexedDB.databases()).forEach(db => indexedDB.deleteDatabase(db.name));
-    (await caches.keys()).forEach(cache => caches.delete(cache));
+    let indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    if (indexedDB && indexedDB.databases) {
+        (await indexedDB.databases()).forEach(db => indexedDB.deleteDatabase(db.name));
+    }
+    if (caches) {
+        (await caches.keys()).forEach(cache => caches.delete(cache));
+    }
 }
 
 addEventListener('message', async ({origin, data}) => {
