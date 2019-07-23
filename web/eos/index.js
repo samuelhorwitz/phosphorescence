@@ -5,26 +5,17 @@ let additionalTracks = {};
 let tracksReadyResolver;
 let tracksReady = new Promise(resolve => tracksReadyResolver = resolve);
 
-async function cleanup() {
-    // Since we cannot completely sandbox this origin, users may create Indexed DBs or caches.
-    // We don't want them to do that and will destroy them.
-    (await indexedDB.databases()).forEach(db => indexedDB.deleteDatabase(db.name));
-    (await caches.keys()).forEach(cache => caches.delete(cache));
-}
-
 addEventListener('message', async ({origin, data}) => {
     if (origin !== process.env.PHOSPHOR_ORIGIN) {
         return;
     }
     let {responsePort} = data;
     if (data.type === 'buildPlaylist') {
-        await cleanup();
         let finished = false;
         let runner = new RunnerWorker();
         async function killRunnerAndCleanup() {
             runner.terminate();
             finished = true;
-            await cleanup();
         }
         let secret = crypto.getRandomValues(new Uint8Array(32)).reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
         runner.addEventListener('message', async e => {
