@@ -209,7 +209,7 @@
 
     @media only screen and (min-width: 330px) and (max-width: 419px) {
         .container {
-            font-size: 9px;
+            font-size: 7px;
         }
 
         .menuItem {

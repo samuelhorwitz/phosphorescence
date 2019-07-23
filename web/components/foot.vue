@@ -42,6 +42,7 @@
         height: 3.2em;
         grid-column: 1 / 3;
         display: flex;
+        position: relative;
     }
 
     ol {
@@ -80,9 +81,18 @@
 
     @media only screen and (max-height: 449px) {
         footer {
-            grid-column: 1 / 3;
+            grid-column: 1 / 4;
             grid-row: 4 / 5;
             margin-top: auto;
+        }
+
+        ol {
+            justify-content: flex-start;
+            margin-left: 2em;
+        }
+
+        li {
+            flex: 0;
         }
 
         li.spotify {
@@ -124,7 +134,7 @@
 
     @media only screen and (max-width: 1099px) {
         footer {
-            grid-column: 1 / 2;
+            grid-column: 1 / 4;
         }
 
         ol {

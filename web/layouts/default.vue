@@ -1,5 +1,5 @@
 <template>
-    <div class="mainContainer">
+    <div class="mainContainer" ref="mainContainer">
         <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
             Drop your track!
         </div>
@@ -170,6 +170,7 @@
         },
         data() {
             return {
+                destroyResizeListener: false,
                 dragStarted: false,
                 isDropHovering: false
             };
@@ -189,13 +190,24 @@
             document.body.addEventListener('dragenter', this.handleWindowDragenter);
             document.body.addEventListener('dragover', this.handleWindowDragover);
             document.body.addEventListener('drop', this.handleWindowDrop);
+            if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
+                document.body.addEventListener('resize', this.handleResize);
+                this.handleResize();
+                this.destroyResizeListener = true;
+            }
         },
         beforeDestroy() {
             document.body.removeEventListener('dragenter', this.handleWindowDragenter);
             document.body.removeEventListener('dragover', this.handleWindowDragover);
             document.body.removeEventListener('drop', this.handleWindowDrop);
+            if (this.destroyResizeListener) {
+                document.body.removeEventListener('resize', this.handleResize);
+            }
         },
         methods: {
+            handleResize(e) {
+                this.$refs.mainContainer.style.height = `${window.innerHeight}px`;
+            },
             handleWindowDragenter(e) {
                 if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {
                     this.dragStarted = true;

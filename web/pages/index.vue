@@ -140,7 +140,7 @@
         border-bottom: 1px solid rgba(245,188,251,.8);
     }
 
-    @media only screen and (min-width: 1199px), (max-width: 1099px) and (min-height: 450px) {
+    @media only screen and (min-width: 1199px), (max-width: 1099px) and (min-height: 550px) {
         article {
             margin: 0px 2em;
         }
