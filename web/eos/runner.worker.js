@@ -1,3 +1,69 @@
+let safePostMessage = self.postMessage;
+let checksFailed = true;
+
+// First lets lockdown and run sanity checks
+(async () => {
+    ['indexedDB', 'caches', 'CacheStorage', 'Caches', 'postMessage', 'close'].forEach(o => {
+        let t = self;
+        while (!!Object.getOwnPropertyDescriptor(t, o) || !!t.__lookupGetter__(o)) {
+            Object.defineProperty(t, o, {
+                get() {
+                    throw new Error(`Disallowed Exception: You cannot use global property ${o} in a track builder script`);
+                },
+                configurable: false
+            });
+            t = Object.getPrototypeOf(t);
+        }
+    });
+
+    // Test data offloading CSP
+    let failedChecks = {
+        remoteConnectionCheck: true,
+        idbCheck: true,
+        caches: true,
+        postMessage: true
+    }
+
+    try {
+        let response = await fetch('http://example.com');
+    } catch (e) {
+        failedChecks.remoteConnectionCheck = false;
+    }
+
+    try {
+        indexedDB;
+    } catch (e) {
+        failedChecks.idbCheck = false;
+    }
+
+    try {
+        caches;
+    } catch (e) {
+        failedChecks.caches = false;
+    }
+
+    try {
+        postMessage('foo');
+    } catch (e) {
+        failedChecks.postMessage = false;
+    }
+
+    for (let key in failedChecks) {
+        let failedCheck = failedChecks[key];
+        if (failedCheck) {
+            return;
+        }
+    }
+
+    // This shouldn't work and if it does the user is taken away from the page anyway
+    // to the "safe" URL of example.com which is owned by web standards org.
+    location = 'https://example.com';
+
+    // Everything is okay
+    checksFailed = false;
+})();
+
+// Now lets run code
 (() => {
     const kdTree = require('./kdtree').default;
     const {getTrackTag} = require('../common/normalize');
@@ -17,9 +83,14 @@
         // The message handlers set up to listen to this worker pass in a secret they expect back
         // on response which lives inside this closure and cannot be accessed by user code.
         let secret = data.secret;
+        if (checksFailed) {
+            console.error('Could not build playlist: checks failed');
+            safePostMessage({type: 'playlistError', error: 'checks failed', secret});
+            return;
+        }
         if (data.type !== 'buildPlaylist') {
             console.error('Could not build playlist, unexpected request', data.type);
-            self.postMessage({type: 'playlistError', error: 'unexpected request type', secret});
+            safePostMessage({type: 'playlistError', error: 'unexpected request type', secret});
             return;
         }
         let trackData = await new Promise(async resolve => {
@@ -61,10 +132,10 @@
         }
         catch (e) {
             console.error('Could not build playlist:', e);
-            self.postMessage({type: 'playlistError', error: e.message, secret});
+            safePostMessage({type: 'playlistError', error: e.message, secret});
             return;
         }
-        self.postMessage({type: 'playlist', playlist, dimensions: tree.getDimensions(), secret});
+        safePostMessage({type: 'playlist', playlist, dimensions: tree.getDimensions(), secret});
     });
 
     async function buildPlaylist(script, goalTracks, firstTrack) {
