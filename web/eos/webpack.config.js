@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 require('dotenv').config({path: path.resolve(process.cwd(), '../.env')});
 
 module.exports = () => {
@@ -15,7 +16,11 @@ module.exports = () => {
                 template: './index.ejs',
                 inject: 'head',
                 filename: 'index.html'
-            })
+            }),
+            new CopyWebpackPlugin([{
+                from: 'robots.txt',
+                to: './'
+            }])
         ],
         output: {
             path: path.resolve(__dirname, 'dist'),

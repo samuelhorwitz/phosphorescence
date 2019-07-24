@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi"
 	chimiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -93,5 +94,8 @@ func initializeRoutes(cfg *config) http.Handler {
 	}
 	r.Route("/device", deviceRouter)
 	r.Route("/devices", deviceRouter)
+	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "User-agent: *\nDisallow: /\n")
+	})
 	return r
 }
