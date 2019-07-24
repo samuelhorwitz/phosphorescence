@@ -81,12 +81,12 @@ func TransferPlayback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var devicesBody json.RawMessage
-	err = common.ExponentialBackoff(250*time.Millisecond, 100*time.Millisecond, func(escape func(error)) bool {
-		devicesBody, err = getDevices(r.Context(), spotifyToken)
+	time.Sleep(250 * time.Millisecond)
+	common.ExponentialBackoff(100*time.Millisecond, func() bool {
+		devicesBody, err := getDevices(r.Context(), spotifyToken)
 		if err != nil {
-			escape(err)
-			return false
+			common.Fail(w, fmt.Errorf("Could not get devices: %s", err), http.StatusInternalServerError)
+			return true
 		}
 		var deviceResponse struct {
 			Devices []struct {
@@ -96,25 +96,26 @@ func TransferPlayback(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.Unmarshal(devicesBody, &deviceResponse)
 		if err != nil {
-			escape(err)
-			return false
+			common.Fail(w, fmt.Errorf("Could not parse devices response: %s", err), http.StatusInternalServerError)
+			return true
 		}
+		deviceStillExists := false
 		for _, device := range deviceResponse.Devices {
 			if device.ID == deviceID {
+				deviceStillExists = true
 				if device.IsActive {
+					common.JSONRaw(w, devicesBody)
 					return true
-				} else {
-					break
 				}
+				break
 			}
+		}
+		if !deviceStillExists {
+			common.FailWithRawJSON(w, fmt.Errorf("Device %s does not exist", deviceID), devicesBody, http.StatusNotFound)
+			return true
 		}
 		return false
 	})
-	if err != nil {
-		common.Fail(w, fmt.Errorf("Could not get devices: %s", err), http.StatusInternalServerError)
-		return
-	}
-	common.JSONRaw(w, devicesBody)
 }
 
 func getDevices(ctx context.Context, spotifyToken string) (json.RawMessage, error) {
