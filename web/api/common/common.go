@@ -56,6 +56,26 @@ func Fail(w http.ResponseWriter, err error, status int) {
 	http.Error(w, `{"error":true}`, status)
 }
 
+func FailWithRawJSON(w http.ResponseWriter, err error, body []byte, status int) {
+	if !isProduction {
+		log.Printf("Request failed, returning %d: %s", status, err)
+	}
+	var parsedBody map[string]interface{}
+	err = json.Unmarshal(body, &parsedBody)
+	if err != nil {
+		Fail(w, fmt.Errorf("Could not unmarshal JSON: %s", err), http.StatusInternalServerError)
+		return
+	}
+	parsedBody["error"] = true
+	jsonResponse, err := json.Marshal(parsedBody)
+	if err != nil {
+		Fail(w, fmt.Errorf("Could not marshal JSON response: %s", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	http.Error(w, string(jsonResponse), status)
+}
+
 func TryToRollback(tx *sql.Tx, err error) error {
 	rollbackErr := tx.Rollback()
 	if rollbackErr != nil {
@@ -74,17 +94,10 @@ func ParseScriptVersion(versionStr string) time.Time {
 	return version
 }
 
-func ExponentialBackoff(initialWait, baseDuration time.Duration, fn func(func(error)) bool) (err error) {
-	time.Sleep(initialWait)
-	shouldBreak := false
-	escape := func(escapeErr error) {
-		shouldBreak = true
-		err = escapeErr
-	}
+func ExponentialBackoff(baseDuration time.Duration, fn func() bool) {
 	count := 0
-	for !shouldBreak && !fn(escape) {
+	for !fn() {
 		count++
 		time.Sleep(baseDuration * time.Duration(math.Pow(2.0, float64(rand.Intn(count+1)))-1))
 	}
-	return
 }
