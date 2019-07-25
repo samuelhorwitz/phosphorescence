@@ -22,10 +22,19 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Use(cors.Handler)
 	r.Use(middleware.CSP(cfg.phosphorOrigin))
 	r.Use(chimiddleware.Timeout(cfg.handlerTimeout))
+	r.Use(chimiddleware.NoCache)
+	r.Use(middleware.IPLimiter)
 	r.Route("/spotify", func(r chi.Router) {
-		r.Get("/authorize", spotify.Authorize)
-		r.Get("/tokens", spotify.Tokens)
-		r.With(middleware.Authenticate).Get("/tracks", spotify.Tracks)
+		r.Route("/authorize", func(r chi.Router) {
+			r.Get("/", spotify.Authorize)
+			r.Get("/redirect", spotify.AuthorizeRedirect)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Session)
+			r.Get("/logout", spotify.Logout)
+			r.Get("/tracks", spotify.Tracks)
+			r.Get("/token", spotify.Token)
+		})
 	})
 	versionRouter := func(r chi.Router) {
 		r.Group(func(r chi.Router) {
@@ -49,7 +58,8 @@ func initializeRoutes(cfg *config) http.Handler {
 		})
 	}
 	scriptRouter := func(r chi.Router) {
-		r.Use(middleware.Authenticate)
+		r.Use(middleware.Session)
+		r.Use(middleware.AuthenticatedSession)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Paginate)
 			r.Get("/", phosphor.ListPublicScripts)
@@ -74,20 +84,20 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Route("/script", scriptRouter)
 	r.Route("/scripts", scriptRouter)
 	userRouter := func(r chi.Router) {
-		r.Use(middleware.Authenticate)
+		r.Use(middleware.Session)
 		r.Get("/me", phosphor.GetCurrentUser)
 	}
 	r.Route("/user", userRouter)
 	r.Route("/users", userRouter)
 	trackRouter := func(r chi.Router) {
-		r.Use(middleware.Authenticate)
+		r.Use(middleware.Session)
 		r.Use(middleware.SpotifyLimiter)
 		r.Get("/{trackID}", phosphor.GetTrackData)
 	}
 	r.Route("/track", trackRouter)
 	r.Route("/tracks", trackRouter)
 	deviceRouter := func(r chi.Router) {
-		r.Use(middleware.Authenticate)
+		r.Use(middleware.Session)
 		r.Use(middleware.SpotifyLimiter)
 		r.Get("/", phosphor.ListSpotifyDevices)
 		r.Put("/{deviceID}", phosphor.TransferPlayback)

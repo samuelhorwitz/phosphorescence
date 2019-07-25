@@ -7,15 +7,16 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 	"io/ioutil"
 	"net/http"
 )
 
 func GetTrackData(w http.ResponseWriter, r *http.Request) {
-	country, ok := r.Context().Value(middleware.SpotifyCountryContextKey).(string)
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify country on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	trackID := chi.URLParam(r, "trackID")
@@ -23,24 +24,19 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	// and return it if it is, no Spotify request needed.
 	track, ok := tracks.GetTrack(trackID)
 	if ok {
-		canPlay, err := checkIfTrackPlayableInRegion(country, track.Track)
+		canPlay, err := checkIfTrackPlayableInRegion(sess.SpotifyCountry, track.Track)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not check if track playable in region: %s", err), http.StatusInternalServerError)
 			return
 		}
 		if !canPlay {
-			common.Fail(w, fmt.Errorf("Track not playable in region %s", country), http.StatusNotFound)
+			common.Fail(w, fmt.Errorf("Track not playable in region %s", sess.SpotifyCountry), http.StatusNotFound)
 			return
 		}
 		common.JSON(w, map[string]interface{}{"track": track})
 		return
 	}
 	// We don't have that track cached, so let's reach out to Spotify
-	spotifyToken, ok := r.Context().Value(middleware.SpotifyTokenContextKey).(string)
-	if !ok {
-		common.Fail(w, errors.New("No Spotify token on request context"), http.StatusInternalServerError)
-		return
-	}
 	var rawTrackData json.RawMessage
 	var featuresData json.RawMessage
 	{
@@ -49,7 +45,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 			common.Fail(w, fmt.Errorf("Could not build Spotify track request: %s", err), http.StatusInternalServerError)
 			return
 		}
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", spotifyToken))
+		sess.SpotifyToken.SetAuthHeader(req)
 		res, err := common.SpotifyClient.Do(req)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not make Spotify track request: %s", err), http.StatusInternalServerError)
@@ -67,13 +63,13 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		}
 		rawTrackData = json.RawMessage(body)
 	}
-	canPlay, err := checkIfTrackPlayableInRegion(country, rawTrackData)
+	canPlay, err := checkIfTrackPlayableInRegion(sess.SpotifyCountry, rawTrackData)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not check if track playable in region: %s", err), http.StatusInternalServerError)
 		return
 	}
 	if !canPlay {
-		common.Fail(w, fmt.Errorf("Track not playable in region %s", country), http.StatusNotFound)
+		common.Fail(w, fmt.Errorf("Track not playable in region %s", sess.SpotifyCountry), http.StatusNotFound)
 		return
 	}
 	{
@@ -82,7 +78,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 			common.Fail(w, fmt.Errorf("Could not build Spotify track audio feature request: %s", err), http.StatusInternalServerError)
 			return
 		}
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", spotifyToken))
+		sess.SpotifyToken.SetAuthHeader(req)
 		res, err := common.SpotifyClient.Do(req)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not make Spotify track audio feature request: %s", err), http.StatusInternalServerError)

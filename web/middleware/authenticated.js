@@ -1,7 +1,7 @@
 import {isNewUser} from '~/assets/session';
 
-export default function({redirect}) {
-    if (isNewUser()) {
+export default async function({redirect}) {
+    if (await isNewUser()) {
         return redirect('/auth');
     }
 };

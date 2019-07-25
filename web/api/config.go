@@ -7,6 +7,8 @@ import (
 type config struct {
 	isProduction                         bool
 	phosphorOrigin                       string
+	apiOrigin                            string
+	cookieDomain                         string
 	spotifyClientID                      string
 	spotifySecret                        string
 	spacesID                             string
@@ -25,4 +27,5 @@ type config struct {
 	handlerTimeout                       time.Duration
 	rateLimitPerSecond                   int
 	redisHost                            string
+	authStateSecret                      string
 }

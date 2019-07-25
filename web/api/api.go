@@ -7,6 +7,8 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
+	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 	"log"
 	"math/rand"
@@ -47,6 +49,8 @@ func main() {
 	cfg := &config{
 		isProduction:                         isProduction,
 		phosphorOrigin:                       os.Getenv("PHOSPHOR_ORIGIN"),
+		apiOrigin:                            os.Getenv("API_ORIGIN"),
+		cookieDomain:                         os.Getenv("COOKIE_DOMAIN"),
 		spotifyClientID:                      os.Getenv("SPOTIFY_CLIENT_ID"),
 		spotifySecret:                        os.Getenv("SPOTIFY_SECRET"),
 		spacesID:                             os.Getenv("SPACES_ID"),
@@ -65,6 +69,7 @@ func main() {
 		handlerTimeout:                       5 * time.Second,
 		rateLimitPerSecond:                   rateLimit,
 		redisHost:                            os.Getenv("REDIS_HOST"),
+		authStateSecret:                      os.Getenv("AUTH_STATE_SECRET"),
 	}
 	migrate(cfg)
 	initialize(cfg)
@@ -76,20 +81,28 @@ func initialize(cfg *config) {
 	common.Initialize(&common.Config{
 		IsProduction:   cfg.isProduction,
 		SpotifyTimeout: cfg.handlerTimeout,
+		RedisHost:      cfg.redisHost,
 	})
 	middleware.Initialize(&middleware.Config{
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
-		RedisHost:          cfg.redisHost,
 	})
 	spotify.Initialize(&spotify.Config{
 		IsProduction:    cfg.isProduction,
-		SpotifyClientID: cfg.spotifyClientID,
-		SpotifySecret:   cfg.spotifySecret,
 		PhosphorOrigin:  cfg.phosphorOrigin,
 		SpacesID:        cfg.spacesID,
 		SpacesSecret:    cfg.spacesSecret,
 		SpacesEndpoint:  cfg.spacesTracksEndpoint,
 		SpacesRegion:    cfg.spacesTracksRegion,
+		AuthStateSecret: cfg.authStateSecret,
+	})
+	spotifyclient.Initialize(&spotifyclient.Config{
+		SpotifyClientID: cfg.spotifyClientID,
+		SpotifySecret:   cfg.spotifySecret,
+		APIOrigin:       cfg.apiOrigin,
+		BaseHTTPTimeout: cfg.handlerTimeout,
+	})
+	session.Initialize(&session.Config{
+		CookieDomain: cfg.cookieDomain,
 	})
 	models.Initialize(&models.Config{
 		SpacesID:                 cfg.spacesID,

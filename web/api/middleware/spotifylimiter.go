@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"github.com/didip/tollbooth"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"net/http"
 )
 
 func SpotifyLimiter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		spotifyID, ok := r.Context().Value(SpotifyIDContextKey).(string)
+		sess, ok := r.Context().Value(SessionContextKey).(*session.Session)
 		if !ok {
-			common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+			common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 			return
 		}
-		lmtErr := tollbooth.LimitByKeys(spotifyLimiter, []string{spotifyID})
+		lmtErr := tollbooth.LimitByKeys(spotifyLimiter, []string{sess.SpotifyID})
 		if lmtErr != nil {
 			spotifyLimiter.ExecOnLimitReached(w, r)
 			common.Fail(w, fmt.Errorf("Phosphorescence Spotify API rate limiting hit: %s", lmtErr.Message), lmtErr.StatusCode)

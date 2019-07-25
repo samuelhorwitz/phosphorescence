@@ -4,7 +4,7 @@
 
 <script>
     import editor from '~/components/ide/editor';
-    import {accessTokenExists, refreshUser} from '~/assets/session';
+    import {getAccessToken} from '~/assets/session';
 
     export default {
         layout: 'ide',
@@ -12,9 +12,7 @@
             editor
         },
         async fetch({store, params, error}) {
-            if (!accessTokenExists()) {
-                await refreshUser();
-            }
+            await getAccessToken();
             let {id: scriptId} = params;
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
             if (!userResponse.ok) {
