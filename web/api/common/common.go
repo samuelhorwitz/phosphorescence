@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/gomodule/redigo/redis"
 	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
 	"github.com/satori/go.uuid"
 	"log"
@@ -15,13 +16,16 @@ import (
 
 var PhosphorUUIDV5Namespace = uuid.NewV5(uuid.NamespaceDNS, "phosphor.me")
 
-var SpotifyClient *spotifyclient.SpotifyClient
-
-var isProduction bool
+var (
+	SpotifyClient *spotifyclient.SpotifyClient
+	isProduction  bool
+	RedisPool     *redis.Pool
+)
 
 type Config struct {
 	IsProduction   bool
 	SpotifyTimeout time.Duration
+	RedisHost      string
 }
 
 func Initialize(cfg *Config) {
@@ -32,6 +36,17 @@ func Initialize(cfg *Config) {
 		},
 	}
 	isProduction = cfg.IsProduction
+	RedisPool = &redis.Pool{
+		MaxIdle:   80,
+		MaxActive: 12000,
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", cfg.RedisHost)
+			if err != nil {
+				log.Fatalf("Could not connect to Redis: %s", err)
+			}
+			return c, err
+		},
+	}
 }
 
 func JSONRaw(w http.ResponseWriter, body []byte) {

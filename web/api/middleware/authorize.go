@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/satori/go.uuid"
 	"net/http"
 )
@@ -16,9 +17,9 @@ const ScriptVersionContextKey = contextKey("scriptVersion")
 
 func AuthorizeReadScript(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		spotifyID, ok := r.Context().Value(SpotifyIDContextKey).(string)
+		sess, ok := r.Context().Value(AuthenticatedSessionContextKey).(*session.Session)
 		if !ok {
-			common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+			common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 			return
 		}
 		scriptID, err := uuid.FromString(chi.URLParam(r, "scriptID"))
@@ -26,7 +27,7 @@ func AuthorizeReadScript(next http.Handler) http.Handler {
 			common.Fail(w, errors.New("Invalid script ID"), http.StatusBadRequest)
 			return
 		}
-		script, ok, err := models.GetScriptWithAuthorizationCheck(spotifyID, scriptID)
+		script, ok, err := models.GetScriptWithAuthorizationCheck(sess.SpotifyID, scriptID)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Cannot check script authorization: %s", err), http.StatusInternalServerError)
 			return
@@ -42,9 +43,9 @@ func AuthorizeReadScript(next http.Handler) http.Handler {
 
 func AuthorizePrivateScriptActions(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		spotifyID, ok := r.Context().Value(SpotifyIDContextKey).(string)
+		sess, ok := r.Context().Value(AuthenticatedSessionContextKey).(*session.Session)
 		if !ok {
-			common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+			common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 			return
 		}
 		script, ok := r.Context().Value(ScriptContextKey).(models.Script)
@@ -52,7 +53,7 @@ func AuthorizePrivateScriptActions(next http.Handler) http.Handler {
 			common.Fail(w, errors.New("No script on request context"), http.StatusInternalServerError)
 			return
 		}
-		if script.AuthorSpotifyID.String != spotifyID {
+		if script.AuthorSpotifyID.String != sess.SpotifyID {
 			common.Fail(w, errors.New("User is not author of script"), http.StatusForbidden)
 			return
 		}
@@ -62,9 +63,9 @@ func AuthorizePrivateScriptActions(next http.Handler) http.Handler {
 
 func AuthorizeReadScriptVersion(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		spotifyID, ok := r.Context().Value(SpotifyIDContextKey).(string)
+		sess, ok := r.Context().Value(AuthenticatedSessionContextKey).(*session.Session)
 		if !ok {
-			common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+			common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 			return
 		}
 		script, ok := r.Context().Value(ScriptContextKey).(models.Script)
@@ -73,7 +74,7 @@ func AuthorizeReadScriptVersion(next http.Handler) http.Handler {
 			return
 		}
 		scriptVersionID := common.ParseScriptVersion(chi.URLParam(r, "scriptVersionID"))
-		scriptVersion, ok, err := models.GetScriptVersionWithAuthorizationCheck(spotifyID, script.ID, scriptVersionID)
+		scriptVersion, ok, err := models.GetScriptVersionWithAuthorizationCheck(sess.SpotifyID, script.ID, scriptVersionID)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Cannot check script version authorization: %s", err), http.StatusInternalServerError)
 			return

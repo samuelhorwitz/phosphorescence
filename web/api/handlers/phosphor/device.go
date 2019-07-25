@@ -9,6 +9,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
+	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -16,9 +18,9 @@ import (
 )
 
 func TransferPlayback(w http.ResponseWriter, r *http.Request) {
-	spotifyToken, ok := r.Context().Value(middleware.SpotifyTokenContextKey).(string)
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify token on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	deviceID := chi.URLParam(r, "deviceID")
@@ -43,7 +45,7 @@ func TransferPlayback(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not build Spotify device transfer request: %s", err), http.StatusInternalServerError)
 		return
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", spotifyToken))
+	sess.SpotifyToken.SetAuthHeader(req)
 	res, err := common.SpotifyClient.Do(req)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not make Spotify device transfer request: %s", err), http.StatusInternalServerError)
@@ -69,7 +71,7 @@ func TransferPlayback(w http.ResponseWriter, r *http.Request) {
 			common.Fail(w, fmt.Errorf("Could not build Spotify pause request: %s", err), http.StatusInternalServerError)
 			return
 		}
-		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", spotifyToken))
+		sess.SpotifyToken.SetAuthHeader(req)
 		res, err := common.SpotifyClient.Do(req)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not make Spotify pause request: %s", err), http.StatusInternalServerError)
@@ -83,7 +85,7 @@ func TransferPlayback(w http.ResponseWriter, r *http.Request) {
 	}
 	time.Sleep(250 * time.Millisecond)
 	common.ExponentialBackoff(100*time.Millisecond, func() bool {
-		devicesBody, err := getDevices(r.Context(), spotifyToken)
+		devicesBody, err := getDevices(r.Context(), sess.SpotifyToken)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not get devices: %s", err), http.StatusInternalServerError)
 			return true
@@ -118,12 +120,12 @@ func TransferPlayback(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getDevices(ctx context.Context, spotifyToken string) (json.RawMessage, error) {
+func getDevices(ctx context.Context, token *oauth2.Token) (json.RawMessage, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.spotify.com/v1/me/player/devices", nil)
 	if err != nil {
 		return json.RawMessage{}, fmt.Errorf("Could not build Spotify devices request: %s", err)
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", spotifyToken))
+	token.SetAuthHeader(req)
 	res, err := common.SpotifyClient.Do(req)
 	if err != nil {
 		return json.RawMessage{}, fmt.Errorf("Could not make Spotify devices request: %s", err)
