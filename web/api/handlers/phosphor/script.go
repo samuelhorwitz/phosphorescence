@@ -7,6 +7,7 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -92,9 +93,9 @@ func ListPublicScripts(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateScript(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	body, err := ioutil.ReadAll(r.Body)
@@ -115,7 +116,7 @@ func CreateScript(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("Script cannot be empty"), http.StatusBadRequest)
 		return
 	}
-	createDetails, err := models.CreateScript(spotifyID, requestBody.Name, requestBody.Script)
+	createDetails, err := models.CreateScript(sess.SpotifyID, requestBody.Name, requestBody.Script)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not create script: %s", err), http.StatusInternalServerError)
 		return
@@ -227,9 +228,9 @@ func DeleteScriptVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func ForkScript(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	existingScript, ok := r.Context().Value(middleware.ScriptContextKey).(models.Script)
@@ -238,7 +239,7 @@ func ForkScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	scriptVersionID := common.ParseScriptVersion(r.URL.Query().Get("version"))
-	forkDetails, err := models.ForkScript(spotifyID, existingScript.ID, existingScript.Name.String, scriptVersionID, true)
+	forkDetails, err := models.ForkScript(sess.SpotifyID, existingScript.ID, existingScript.Name.String, scriptVersionID, true)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not fork script: %s", err), http.StatusInternalServerError)
 		return
@@ -247,9 +248,9 @@ func ForkScript(w http.ResponseWriter, r *http.Request) {
 }
 
 func ForkScriptVersion(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	existingScript, ok := r.Context().Value(middleware.ScriptContextKey).(models.Script)
@@ -262,7 +263,7 @@ func ForkScriptVersion(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("No script version on request context"), http.StatusInternalServerError)
 		return
 	}
-	forkDetails, err := models.ForkScript(spotifyID, existingScript.ID, existingScript.Name.String, scriptVersion.CreatedAt, true)
+	forkDetails, err := models.ForkScript(sess.SpotifyID, existingScript.ID, existingScript.Name.String, scriptVersion.CreatedAt, true)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not fork script: %s", err), http.StatusInternalServerError)
 		return
@@ -271,9 +272,9 @@ func ForkScriptVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func DuplicateScript(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	existingScript, ok := r.Context().Value(middleware.ScriptContextKey).(models.Script)
@@ -301,7 +302,7 @@ func DuplicateScript(w http.ResponseWriter, r *http.Request) {
 		name = existingScript.Name.String
 	}
 	scriptVersionID := common.ParseScriptVersion(r.URL.Query().Get("version"))
-	forkDetails, err := models.ForkScript(spotifyID, existingScript.ID, name, scriptVersionID, false)
+	forkDetails, err := models.ForkScript(sess.SpotifyID, existingScript.ID, name, scriptVersionID, false)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not duplicate script: %s", err), http.StatusInternalServerError)
 		return
@@ -310,9 +311,9 @@ func DuplicateScript(w http.ResponseWriter, r *http.Request) {
 }
 
 func DuplicateScriptVersion(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	existingScript, ok := r.Context().Value(middleware.ScriptContextKey).(models.Script)
@@ -344,7 +345,7 @@ func DuplicateScriptVersion(w http.ResponseWriter, r *http.Request) {
 	} else {
 		name = existingScript.Name.String
 	}
-	forkDetails, err := models.ForkScript(spotifyID, existingScript.ID, name, scriptVersion.CreatedAt, false)
+	forkDetails, err := models.ForkScript(sess.SpotifyID, existingScript.ID, name, scriptVersion.CreatedAt, false)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not duplicate script: %s", err), http.StatusInternalServerError)
 		return

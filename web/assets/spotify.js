@@ -1,4 +1,4 @@
-import {getAccessToken, quickReturnAccessTokenWithoutGuarantee} from '~/assets/session';
+import {getAccessToken} from '~/assets/session';
 
 export async function initializePlayer(store, storePrefix) {
     let script, player;
@@ -42,7 +42,7 @@ async function initializePlayerListeners(store, storePrefix) {
     return new Promise((resolve, reject) => {
         let player = new Spotify.Player({
             name: 'Phosphorescence',
-            getOAuthToken: cb => cb(quickReturnAccessTokenWithoutGuarantee())
+            getOAuthToken: async cb => cb(await getAccessToken())
         });
         player.addListener('initialization_error', async ({ message }) => {
             reject({message});

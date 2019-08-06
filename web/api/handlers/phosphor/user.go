@@ -6,6 +6,7 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"net/http"
 	"time"
 )
@@ -17,28 +18,24 @@ type User struct {
 }
 
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
-	name, ok := r.Context().Value(middleware.SpotifyNameContextKey).(string)
-	if !ok {
-		common.Fail(w, errors.New("No Spotify name on request context"), http.StatusInternalServerError)
-		return
-	}
-	country, ok := r.Context().Value(middleware.SpotifyCountryContextKey).(string)
-	if !ok {
-		common.Fail(w, errors.New("No Spotify country on request context"), http.StatusInternalServerError)
-		return
-	}
-	common.JSON(w, map[string]interface{}{"user": User{SpotifyID: spotifyID, Name: name, Country: country}})
+	common.JSON(w, map[string]interface{}{
+		"user": User{
+			SpotifyID: sess.SpotifyID,
+			Name:      sess.SpotifyName,
+			Country:   sess.SpotifyCountry,
+		},
+	})
 }
 
 func ListCurrentUserScripts(w http.ResponseWriter, r *http.Request) {
-	spotifyID, ok := r.Context().Value(middleware.SpotifyIDContextKey).(string)
+	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify ID on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
 	count, _ := r.Context().Value(middleware.PageCountContextKey).(uint64)
@@ -51,7 +48,7 @@ func ListCurrentUserScripts(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("No page cursor on request context"), http.StatusInternalServerError)
 		return
 	}
-	scripts, err := models.GetScriptsBySpotifyUserID(spotifyID, count, from, true)
+	scripts, err := models.GetScriptsBySpotifyUserID(sess.SpotifyID, count, from, true)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not get scripts for user: %s", err), http.StatusInternalServerError)
 		return
@@ -60,12 +57,12 @@ func ListCurrentUserScripts(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListSpotifyDevices(w http.ResponseWriter, r *http.Request) {
-	spotifyToken, ok := r.Context().Value(middleware.SpotifyTokenContextKey).(string)
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
 	if !ok {
-		common.Fail(w, errors.New("No Spotify token on request context"), http.StatusInternalServerError)
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
-	body, err := getDevices(r.Context(), spotifyToken)
+	body, err := getDevices(r.Context(), sess.SpotifyToken)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Unable to get devices: %s", err), http.StatusInternalServerError)
 		return

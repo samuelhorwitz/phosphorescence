@@ -11,6 +11,10 @@
             Certain features, such as in-browser streaming, are only available to paid accounts.</p>
             <p>We will not store more information than necessary to provide you with this service, nor will we use or sell your information for advertising or other purposes.</p>
             <p>Please be sure to read our <nuxt-link to="/legal/tos">Terms of Service</nuxt-link> and <nuxt-link to="/legal/privacy">Privacy Policy</nuxt-link>.</p>
+            <label for="rememberMe">
+                <input type="checkbox" id="rememberMe" v-model="rememberMe">
+                Remember Me <em>(do not check if using a public computer)</em>
+            </label>
             <button @click="login">Login With Spotify</button>
         </article>
     </div>
@@ -60,13 +64,18 @@
     export default {
         layout: 'unauthorized',
         middleware: 'unauthenticated',
+        data() {
+            return {
+                rememberMe: false
+            };
+        },
         created() {
             this.$store.dispatch('loading/endLoadAfterDelay');
         },
         methods: {
             login() {
                 this.$store.dispatch('loading/loadFlash');
-                authorizeUserRedirect();
+                authorizeUserRedirect(this.rememberMe);
             }
         }
     };

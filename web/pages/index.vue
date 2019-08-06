@@ -178,7 +178,7 @@
 </style>
 
 <script>
-    import {accessTokenExists, refreshUser} from '~/assets/session';
+    import {getAccessToken} from '~/assets/session';
 
     export default {
         watch: {
@@ -223,9 +223,7 @@
             }
         },
         async fetch({store, error}) {
-            if (!accessTokenExists()) {
-                await refreshUser();
-            }
+            await getAccessToken();
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
             if (!userResponse.ok) {
                 return error({statusCode: userResponse.status, message: "Could not get user information"});
