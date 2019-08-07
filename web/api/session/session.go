@@ -282,7 +282,11 @@ func cloneSession(w http.ResponseWriter, fixedSessionKeyToClone string) error {
 	if err != nil {
 		return fmt.Errorf("Could not dump old fixed session: %s", err)
 	}
-	_, err = redisConn.Do("RESTORE", newFixedSessionKey, 0, oldFixedSession)
+	redisConn.Send("MULTI")
+	redisConn.Send("RESTORE", newFixedSessionKey, 0, oldFixedSession)
+	redisConn.Send("HDEL", newFixedSessionKey, sessionPointerKey)
+	redisConn.Send("HDEL", newFixedSessionKey, refreshPointerKey)
+	_, err = redisConn.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Could not restore old fixed session to new key: %s", err)
 	}
@@ -300,7 +304,7 @@ func authenticateSession(fixedSessionKey string) error {
 	if err != nil {
 		return fmt.Errorf("Could not authenticate session: %s", err)
 	}
-	sessionPointerID, err := redis.String(redisConn.Do("HGET", fixedSessionKey, sessionPointerKey))
+	sessionPointerID, _ := redis.String(redisConn.Do("HGET", fixedSessionKey, sessionPointerKey))
 	_, err = redisConn.Do("DEL", sessionPointerID)
 	if err != nil {
 		return fmt.Errorf("Could not delete sessions: %s", err)

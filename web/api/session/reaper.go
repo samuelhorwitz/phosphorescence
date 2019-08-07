@@ -64,6 +64,9 @@ func reap(iter int) int {
 			}
 		}
 		if refCount == 0 {
+			if !isProduction {
+				log.Printf("Cleaning up %s", session)
+			}
 			_, err = redisConn.Do("DEL", session)
 			if err != nil {
 				if !isProduction {
