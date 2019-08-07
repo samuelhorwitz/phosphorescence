@@ -101,9 +101,12 @@ func Find(w http.ResponseWriter, r *http.Request, sessionID string, refreshID st
 func Destroy(w http.ResponseWriter, sessionID string, refreshID string) {
 	redisConn := common.RedisPool.Get()
 	defer redisConn.Close()
+	sessionKey := getSessionPointerKey(sessionID)
+	fixedSessionKey, _ := redis.String(redisConn.Do("GET", sessionKey))
 	redisConn.Send("MULTI")
-	redisConn.Send("DEL", getSessionPointerKey(sessionID))
+	redisConn.Send("DEL", sessionKey)
 	redisConn.Send("DEL", getRefreshKey(refreshID))
+	redisConn.Send("DEL", fixedSessionKey)
 	redisConn.Do("EXEC") // Ignore Redis failure, delete cookies no matter what
 	clearCookies(w)
 }
