@@ -21,5 +21,5 @@ export async function isNewUser() {
 export function logout() {
     sessionStorage.clear();
     localStorage.clear();
-    location.href = `${process.env.API_ORIGIN}/spotify/logout`;
+    location.href = `${process.env.API_ORIGIN}/authenticate/logout`;
 }

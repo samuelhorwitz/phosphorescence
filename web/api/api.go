@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
+	"github.com/samuelhorwitz/phosphorescence/api/handlers/phosphor"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
@@ -69,7 +70,7 @@ func main() {
 		handlerTimeout:                       5 * time.Second,
 		rateLimitPerSecond:                   rateLimit,
 		redisHost:                            os.Getenv("REDIS_HOST"),
-		authStateSecret:                      os.Getenv("AUTH_STATE_SECRET"),
+		mailgunAPIKey:                        os.Getenv("MAILGUN_API_KEY"),
 	}
 	migrate(cfg)
 	initialize(cfg)
@@ -87,13 +88,17 @@ func initialize(cfg *config) {
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
 	})
 	spotify.Initialize(&spotify.Config{
-		IsProduction:    cfg.isProduction,
-		PhosphorOrigin:  cfg.phosphorOrigin,
-		SpacesID:        cfg.spacesID,
-		SpacesSecret:    cfg.spacesSecret,
-		SpacesEndpoint:  cfg.spacesTracksEndpoint,
-		SpacesRegion:    cfg.spacesTracksRegion,
-		AuthStateSecret: cfg.authStateSecret,
+		IsProduction:   cfg.isProduction,
+		PhosphorOrigin: cfg.phosphorOrigin,
+		SpacesID:       cfg.spacesID,
+		SpacesSecret:   cfg.spacesSecret,
+		SpacesEndpoint: cfg.spacesTracksEndpoint,
+		SpacesRegion:   cfg.spacesTracksRegion,
+	})
+	phosphor.Initialize(&phosphor.Config{
+		IsProduction:   cfg.isProduction,
+		PhosphorOrigin: cfg.phosphorOrigin,
+		MailgunAPIKey:  cfg.mailgunAPIKey,
 	})
 	spotifyclient.Initialize(&spotifyclient.Config{
 		SpotifyClientID: cfg.spotifyClientID,
@@ -103,6 +108,7 @@ func initialize(cfg *config) {
 	})
 	session.Initialize(&session.Config{
 		CookieDomain: cfg.cookieDomain,
+		IsProduction: cfg.isProduction,
 	})
 	models.Initialize(&models.Config{
 		SpacesID:                 cfg.spacesID,

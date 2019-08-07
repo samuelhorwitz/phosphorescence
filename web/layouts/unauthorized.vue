@@ -23,6 +23,9 @@
                     class: 'scrollablePage'
                 }
             }
+        },
+        created() {
+            this.$store.dispatch('loading/endLoadAfterDelay');
         }
     };
 </script>

@@ -18,11 +18,11 @@ func Session(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionID := ""
 		refreshID := ""
-		sessionIDCookie, err := r.Cookie("sid")
+		sessionIDCookie, err := r.Cookie(session.SessionCookieName)
 		if err == nil {
 			sessionID = sessionIDCookie.Value
 		}
-		refreshIDCookie, err := r.Cookie("ref")
+		refreshIDCookie, err := r.Cookie(session.RefreshCookieName)
 		if err == nil {
 			refreshID = refreshIDCookie.Value
 		}
