@@ -27,5 +27,5 @@ type config struct {
 	handlerTimeout                       time.Duration
 	rateLimitPerSecond                   int
 	redisHost                            string
-	authStateSecret                      string
+	mailgunAPIKey                        string
 }

@@ -31,10 +31,17 @@ func initializeRoutes(cfg *config) http.Handler {
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
-			r.Get("/logout", spotify.Logout)
 			r.Get("/tracks", spotify.Tracks)
 			r.Get("/token", spotify.Token)
 		})
+	})
+	r.Route("/authenticate", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Session)
+			r.Post("/", phosphor.Authenticate)
+			r.Get("/logout", phosphor.Logout)
+		})
+		r.Get("/{magicLink}", phosphor.AuthenticateRedirect)
 	})
 	versionRouter := func(r chi.Router) {
 		r.Group(func(r chi.Router) {

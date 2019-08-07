@@ -12,9 +12,10 @@ import (
 )
 
 type User struct {
-	SpotifyID string `json:"spotifyId"`
-	Name      string `json:"name"`
-	Country   string `json:"country"`
+	SpotifyID     string `json:"spotifyId"`
+	Name          string `json:"name"`
+	Country       string `json:"country"`
+	Authenticated bool   `json:"authenticated"`
 }
 
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -25,9 +26,10 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 	common.JSON(w, map[string]interface{}{
 		"user": User{
-			SpotifyID: sess.SpotifyID,
-			Name:      sess.SpotifyName,
-			Country:   sess.SpotifyCountry,
+			SpotifyID:     sess.SpotifyID,
+			Name:          sess.SpotifyName,
+			Country:       sess.SpotifyCountry,
+			Authenticated: sess.Authenticated,
 		},
 	})
 }
