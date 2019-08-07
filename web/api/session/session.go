@@ -39,33 +39,45 @@ type user struct {
 	ID      string `json:"id"`
 	Name    string `json:"display_name"`
 	Country string `json:"country"`
+	Email   string `json:"email"`
 }
 
 const (
-	sessionExpiration   = 3 * time.Hour
-	refreshExpiration   = 4 * time.Hour
-	permanentExpiration = 10 * 365 * 24 * time.Hour
+	sessionExpiration      = 3 * time.Hour
+	permanentExpiration    = 10 * 365 * 24 * time.Hour
+	authRedirectExpiration = 2 * time.Minute
+	magicLinkExpiration    = 10 * time.Minute
 )
 
 const (
-	sessionCookieName = "sid"
-	refreshCookieName = "ref"
+	SessionCookieName = "sid"
+	RefreshCookieName = "ref"
+)
+
+const (
+	fixedSessionPrefix = "fixedsession"
+	sessionPointerKey  = "session_pointer"
+	refreshPointerKey  = "refresh_pointer"
 )
 
 var (
 	cookieDomain string
+	isProduction bool
 )
 
 type Config struct {
 	CookieDomain string
+	IsProduction bool
 }
 
 func Initialize(cfg *Config) {
 	cookieDomain = cfg.CookieDomain
+	isProduction = cfg.IsProduction
+	initializeReaper()
 }
 
 func Create(w http.ResponseWriter, r *http.Request, token *oauth2.Token, permanent bool) error {
-	_, _, err := createSession(w, r, token, permanent)
+	_, err := createSession(w, r, token, permanent)
 	if err != nil {
 		return fmt.Errorf("Could not create session: %s", err)
 	}
@@ -74,7 +86,7 @@ func Create(w http.ResponseWriter, r *http.Request, token *oauth2.Token, permane
 
 func Find(w http.ResponseWriter, r *http.Request, sessionID string, refreshID string) (*Session, error) {
 	if sessionID != "" {
-		sess, err := liveSession(sessionID, refreshID)
+		sess, err := liveSession(sessionID)
 		if err == nil {
 			return sess, nil
 		}
@@ -86,39 +98,117 @@ func Find(w http.ResponseWriter, r *http.Request, sessionID string, refreshID st
 	return nil, errors.New("No session or refresh IDs")
 }
 
-func Destroy(w http.ResponseWriter, sess *Session, refreshID string) {
+func Destroy(w http.ResponseWriter, sessionID string, refreshID string) {
 	redisConn := common.RedisPool.Get()
 	defer redisConn.Close()
 	redisConn.Send("MULTI")
-	redisConn.Send("DEL", getSessionKey(sess.ID))
+	redisConn.Send("DEL", getSessionPointerKey(sessionID))
 	redisConn.Send("DEL", getRefreshKey(refreshID))
 	redisConn.Do("EXEC") // Ignore Redis failure, delete cookies no matter what
 	clearCookies(w)
 }
 
-func createSession(w http.ResponseWriter, r *http.Request, token *oauth2.Token, permanent bool) (_ string, _ string, err error) {
+func CreateMagicLink(sess *Session) (string, error) {
 	redisConn := common.RedisPool.Get()
 	defer redisConn.Close()
-	sessionIDBytes := make([]byte, 32)
-	_, err = rand.Read(sessionIDBytes)
+	sessionKey := getSessionPointerKey(sess.ID)
+	fixedSessionKey, err := redis.String(redisConn.Do("GET", sessionKey))
 	if err != nil {
-		return "", "", fmt.Errorf("Could not create session id: %s", err)
+		return "", fmt.Errorf("Could not get session from pointer: %s", err)
 	}
-	sessionID := hex.EncodeToString(sessionIDBytes)
-	refreshIDBytes := make([]byte, 32)
-	_, err = rand.Read(refreshIDBytes)
+	magicLinkBytes := make([]byte, 32)
+	_, err = rand.Read(magicLinkBytes)
 	if err != nil {
-		return "", "", fmt.Errorf("Could not create refresh id: %s", err)
+		return "", fmt.Errorf("Could not create magic link: %s", err)
 	}
-	refreshID := hex.EncodeToString(refreshIDBytes)
+	magicLink := hex.EncodeToString(magicLinkBytes)
+	magicLinkKey := getMagicLinkKey(magicLink)
+	_, err = redisConn.Do("SETEX", magicLinkKey, uint64((magicLinkExpiration).Seconds()), fixedSessionKey)
+	if err != nil {
+		return "", fmt.Errorf("Could not add magic link to Redis: %s", err)
+	}
+	return magicLink, nil
+}
+
+func Upgrade(w http.ResponseWriter, sess *Session, magicLink string) error {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	magicLinkKey := getMagicLinkKey(magicLink)
+	var sessionID string
+	if sess != nil {
+		sessionID = sess.ID
+	}
+	handleSessionKey := getSessionPointerKey(sessionID)
+	handlerFixedSessionKey, _ := redis.String(redisConn.Do("GET", handleSessionKey))
+	initiatorFixedSessionKey, err := redis.String(redisConn.Do("GET", magicLinkKey))
+	if err != nil {
+		return fmt.Errorf("Could not find magic link in Redis: %s", err)
+	}
+	_, err = redisConn.Do("DEL", magicLinkKey)
+	if err != nil {
+		return fmt.Errorf("Could not delete magic link from Redis: %s", err)
+	}
+	err = authenticateSession(initiatorFixedSessionKey)
+	if err != nil {
+		return fmt.Errorf("Could not authenticate initiator session: %s", err)
+	}
+	if handlerFixedSessionKey == initiatorFixedSessionKey {
+		return nil
+	}
+	err = cloneSession(w, initiatorFixedSessionKey)
+	if err != nil {
+		return fmt.Errorf("Could not clone initiator session for handler: %s", err)
+	}
+	return nil
+}
+
+func CreateAuthRedirect(permanent bool) (string, error) {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	stateBytes := make([]byte, 32)
+	_, err := rand.Read(stateBytes)
+	if err != nil {
+		return "", fmt.Errorf("Could not create state token: %s", err)
+	}
+	state := hex.EncodeToString(stateBytes)
+	stateKey := getStateKey(state)
+	_, err = redisConn.Do("SETEX", stateKey, uint64((authRedirectExpiration).Seconds()), permanent)
+	if err != nil {
+		return "", fmt.Errorf("Could not add state token to Redis: %s", err)
+	}
+	return state, nil
+}
+
+func CheckAuthRedirect(state string) (bool, error) {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	stateKey := getStateKey(state)
+	isPermanent, err := redis.Bool(redisConn.Do("GET", stateKey))
+	if err != nil {
+		return false, fmt.Errorf("Could not find state in Redis: %s", err)
+	}
+	_, err = redisConn.Do("DEL", stateKey)
+	if err != nil {
+		return false, fmt.Errorf("Could not delete state in Redis: %s", err)
+	}
+	return isPermanent, nil
+}
+
+func createSession(w http.ResponseWriter, r *http.Request, token *oauth2.Token, permanent bool) (_ string, err error) {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	fixedSessionIDBytes := make([]byte, 32)
+	_, err = rand.Read(fixedSessionIDBytes)
+	if err != nil {
+		return "", fmt.Errorf("Could not create fixed session id: %s", err)
+	}
+	fixedSessionID := hex.EncodeToString(fixedSessionIDBytes)
 	user, err := getUser(r, token)
 	if err != nil {
-		return "", "", fmt.Errorf("Could not get user data from Spotify: %s", err)
+		return "", fmt.Errorf("Could not get user data from Spotify: %s", err)
 	}
-	sessionKey := getSessionKey(sessionID)
-	refreshKey := getRefreshKey(refreshID)
-	redisConn.Send("MULTI")
-	redisConn.Send("HMSET", sessionKey,
+	fixedSessionKey := getSessionKey(user.ID, fixedSessionID)
+	_, err = redisConn.Do("HMSET", fixedSessionKey,
 		"spotify_id", user.ID,
 		"spotify_name", user.Name,
 		"spotify_country", user.Country,
@@ -127,57 +217,124 @@ func createSession(w http.ResponseWriter, r *http.Request, token *oauth2.Token, 
 		"spotify_token_expiry", token.Expiry.Unix(),
 		"permanent", permanent,
 	)
-	redisConn.Send("EXPIRE", sessionKey, uint64(sessionExpiration.Seconds()))
-	redisConn.Send("HMSET", refreshKey,
-		"spotify_access_token", token.AccessToken,
-		"spotify_refresh_token", token.RefreshToken,
-		"spotify_token_expiry", token.Expiry.Unix(),
-		"permanent", permanent,
-	)
-	if !permanent {
-		redisConn.Send("EXPIRE", refreshKey, uint64(refreshExpiration.Seconds()))
-	}
-	_, err = redisConn.Do("EXEC")
 	if err != nil {
-		return "", "", fmt.Errorf("Could not save session: %s", err)
+		return "", fmt.Errorf("Could not save session: %s", err)
 	}
-	setCookies(w, sessionID, refreshID, permanent)
-	return sessionID, refreshID, nil
+	return createSessionPointer(w, fixedSessionKey, permanent)
 }
 
-func liveSession(sessionID string, refreshID string) (*Session, error) {
+func createSessionPointer(w http.ResponseWriter, fixedSessionKey string, permanent bool) (_ string, err error) {
 	redisConn := common.RedisPool.Get()
 	defer redisConn.Close()
-	sessionKey := getSessionKey(sessionID)
-	refreshKey := getRefreshKey(refreshID)
-	var rawSess rawSession
-	sessionData, err := redis.Values(redisConn.Do("HGETALL", sessionKey))
+	sessionIDBytes := make([]byte, 32)
+	_, err = rand.Read(sessionIDBytes)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find live session: %s", err)
+		return "", fmt.Errorf("Could not create session id: %s", err)
+	}
+	sessionID := hex.EncodeToString(sessionIDBytes)
+	refreshIDBytes := make([]byte, 32)
+	_, err = rand.Read(refreshIDBytes)
+	if err != nil {
+		return "", fmt.Errorf("Could not create refresh id: %s", err)
+	}
+	refreshID := hex.EncodeToString(refreshIDBytes)
+	sessionKey := getSessionPointerKey(sessionID)
+	refreshKey := getRefreshKey(refreshID)
+	redisConn.Send("MULTI")
+	redisConn.Send("HMGET", fixedSessionKey, sessionPointerKey, refreshPointerKey)
+	redisConn.Send("SETEX", sessionKey, uint64(sessionExpiration.Seconds()), fixedSessionKey)
+	redisConn.Send("SET", refreshKey, fixedSessionKey)
+	if !permanent {
+		redisConn.Send("EXPIRE", refreshKey, uint64((sessionExpiration + (1 * time.Hour)).Seconds()))
+	}
+	redisConn.Send("HMSET", fixedSessionKey, sessionPointerKey, sessionKey, refreshPointerKey, refreshKey)
+	res, err := redis.Values(redisConn.Do("EXEC"))
+	if err != nil {
+		return "", fmt.Errorf("Could not save session pointers: %s", err)
+	}
+	pointers, err := redis.Values(res[0], nil)
+	if err != nil {
+		return "", fmt.Errorf("Could not get old session pointers: %s", err)
+	}
+	_, err = redisConn.Do("DEL", pointers...)
+	if err != nil {
+		return "", fmt.Errorf("Could not delete old session pointers: %s", err)
+	}
+	setCookies(w, sessionID, refreshID, permanent)
+	return sessionID, nil
+}
+
+func cloneSession(w http.ResponseWriter, fixedSessionKeyToClone string) error {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	spotifyUserID, err := redis.String(redisConn.Do("HGET", fixedSessionKeyToClone, "spotify_id"))
+	if err != nil {
+		return fmt.Errorf("Could not get Spotify user ID: %s", err)
+	}
+	newFixedSessionIDBytes := make([]byte, 32)
+	_, err = rand.Read(newFixedSessionIDBytes)
+	if err != nil {
+		return fmt.Errorf("Could not create new fixed session id: %s", err)
+	}
+	newFixedSessionID := hex.EncodeToString(newFixedSessionIDBytes)
+	newFixedSessionKey := getSessionKey(spotifyUserID, newFixedSessionID)
+	oldFixedSession, err := redis.String(redisConn.Do("DUMP", fixedSessionKeyToClone))
+	if err != nil {
+		return fmt.Errorf("Could not dump old fixed session: %s", err)
+	}
+	_, err = redisConn.Do("RESTORE", newFixedSessionKey, 0, oldFixedSession)
+	if err != nil {
+		return fmt.Errorf("Could not restore old fixed session to new key: %s", err)
+	}
+	_, err = createSessionPointer(w, newFixedSessionKey, true)
+	if err != nil {
+		return fmt.Errorf("Could not create session pointer: %s", err)
+	}
+	return nil
+}
+
+func authenticateSession(fixedSessionKey string) error {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	_, err := redisConn.Do("HSET", fixedSessionKey, "authenticated", true)
+	if err != nil {
+		return fmt.Errorf("Could not authenticate session: %s", err)
+	}
+	sessionPointerID, err := redis.String(redisConn.Do("HGET", fixedSessionKey, sessionPointerKey))
+	_, err = redisConn.Do("DEL", sessionPointerID)
+	if err != nil {
+		return fmt.Errorf("Could not delete sessions: %s", err)
+	}
+	return nil
+}
+
+func liveSession(sessionID string) (*Session, error) {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	sessionKey := getSessionPointerKey(sessionID)
+	fixedSessionKey, err := redis.String(redisConn.Do("GET", sessionKey))
+	if err != nil {
+		return nil, fmt.Errorf("Could not get session from pointer: %s", err)
+	}
+	var rawSess rawSession
+	sessionData, err := redis.Values(redisConn.Do("HGETALL", fixedSessionKey))
+	if err != nil {
+		return nil, fmt.Errorf("Could not get session data: %s", err)
 	}
 	err = redis.ScanStruct(sessionData, &rawSess)
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse live session: %s", err)
+		return nil, fmt.Errorf("Could not parse fixed session: %s", err)
 	}
 	sess, isRefreshed, err := rawSess.session(sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("Could not rehydrate live session: %s", err)
 	}
 	if isRefreshed {
-		redisConn.Send("MULTI")
-		redisConn.Send("HMSET", sessionKey,
+		_, err = redisConn.Do("HMSET", fixedSessionKey,
 			"spotify_access_token", sess.SpotifyToken.AccessToken,
 			"spotify_refresh_token", sess.SpotifyToken.RefreshToken,
 			"spotify_token_expiry", sess.SpotifyToken.Expiry.Unix(),
 		)
-		if refreshID != "" {
-			redisConn.Send("HMSET", refreshKey,
-				"spotify_access_token", sess.SpotifyToken.AccessToken,
-				"spotify_refresh_token", sess.SpotifyToken.RefreshToken,
-				"spotify_token_expiry", sess.SpotifyToken.Expiry.Unix(),
-			)
-		}
-		_, err = redisConn.Do("EXEC")
 		if err != nil {
 			return nil, fmt.Errorf("Could not update live session: %s", err)
 		}
@@ -189,61 +346,66 @@ func reviveSession(w http.ResponseWriter, r *http.Request, refreshID string) (*S
 	redisConn := common.RedisPool.Get()
 	defer redisConn.Close()
 	refreshKey := getRefreshKey(refreshID)
-	refreshData, err := redis.Values(redisConn.Do("HGETALL", refreshKey))
+	fixedSessionKey, err := redis.String(redisConn.Do("GET", refreshKey))
 	if err != nil {
-		return nil, fmt.Errorf("No refresh data: %s", err)
+		return nil, fmt.Errorf("Could not get session from refresh pointer: %s", err)
 	}
 	_, err = redisConn.Do("DEL", refreshKey)
 	if err != nil {
 		return nil, fmt.Errorf("Could not delete refresh data: %s", err)
 	}
-	var refresh rawSession
-	err = redis.ScanStruct(refreshData, &refresh)
+	sessionData, err := redis.Values(redisConn.Do("HGETALL", fixedSessionKey))
 	if err != nil {
-		return nil, fmt.Errorf("Could not scan refresh data: %s", err)
+		return nil, fmt.Errorf("Could not get session data: %s", err)
 	}
-	token, _, err := refresh.token()
+	var rawSess rawSession
+	err = redis.ScanStruct(sessionData, &rawSess)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get token from refresh data: %s", err)
+		return nil, fmt.Errorf("Could not parse fixed session: %s", err)
 	}
-	sessionID, newRefreshID, err := createSession(w, r, token, refresh.Permanent)
+	sessionID, err := createSessionPointer(w, fixedSessionKey, rawSess.Permanent)
 	if err != nil {
-		return nil, fmt.Errorf("Could not revive session: %s", err)
+		return nil, fmt.Errorf("Could not create session pointers: %s", err)
 	}
-	return liveSession(sessionID, newRefreshID)
+	return liveSession(sessionID)
 }
 
 func setCookies(w http.ResponseWriter, sessionID string, refreshID string, permanent bool) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     sessionCookieName,
+	sessionCookie := &http.Cookie{
+		Name:     SessionCookieName,
 		Value:    sessionID,
 		Domain:   cookieDomain,
 		Path:     "/",
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
+	}
+	if isProduction {
+		sessionCookie.SameSite = http.SameSiteLaxMode
+	}
+	http.SetCookie(w, sessionCookie)
 	refreshCookie := &http.Cookie{
-		Name:     refreshCookieName,
+		Name:     RefreshCookieName,
 		Value:    refreshID,
 		Domain:   cookieDomain,
 		Path:     "/",
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
 	}
 	if permanent {
 		refreshCookie.Expires = time.Now().Add(permanentExpiration)
 		refreshCookie.MaxAge = int(permanentExpiration.Seconds())
+	}
+	if isProduction {
+		refreshCookie.SameSite = http.SameSiteLaxMode
 	}
 	http.SetCookie(w, refreshCookie)
 }
 
 func clearCookies(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionCookieName,
+		Name:     SessionCookieName,
 		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour),
+		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		Domain:   cookieDomain,
 		Path:     "/",
@@ -252,9 +414,9 @@ func clearCookies(w http.ResponseWriter) {
 		SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:     refreshCookieName,
+		Name:     RefreshCookieName,
 		Value:    "",
-		Expires:  time.Now().Add(-1 * time.Hour),
+		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		Domain:   cookieDomain,
 		Path:     "/",
@@ -264,12 +426,24 @@ func clearCookies(w http.ResponseWriter) {
 	})
 }
 
-func getSessionKey(sessionID string) string {
-	return fmt.Sprintf("session:%s", sessionID)
+func getSessionKey(spotifyUserID, fixedSessionID string) string {
+	return fmt.Sprintf("%s:%s:%s", fixedSessionPrefix, spotifyUserID, fixedSessionID)
+}
+
+func getSessionPointerKey(sessionID string) string {
+	return fmt.Sprintf("sessionptr:%s", sessionID)
 }
 
 func getRefreshKey(refreshID string) string {
-	return fmt.Sprintf("refresh:%s", refreshID)
+	return fmt.Sprintf("refreshptr:%s", refreshID)
+}
+
+func getMagicLinkKey(magicLink string) string {
+	return fmt.Sprintf("magiclink:%s", magicLink)
+}
+
+func getStateKey(state string) string {
+	return fmt.Sprintf("state:%s", state)
 }
 
 func (r rawSession) session(id string) (_ *Session, isRefreshed bool, err error) {
@@ -288,6 +462,14 @@ func (r rawSession) token() (*oauth2.Token, bool, error) {
 		RefreshToken: r.SpotifyRefreshToken,
 		Expiry:       time.Unix(r.SpotifyTokenExpiry, 0),
 	})
+}
+
+func (s Session) GetEmail(r *http.Request) (string, error) {
+	user, err := getUser(r, s.SpotifyToken)
+	if err != nil {
+		return "", fmt.Errorf("Could not get user email from Spotify: %s", err)
+	}
+	return user.Email, nil
 }
 
 func refreshIfNeeded(token *oauth2.Token) (*oauth2.Token, bool, error) {
@@ -316,10 +498,10 @@ func getUser(r *http.Request, token *oauth2.Token) (user, error) {
 	if err != nil {
 		return user{}, fmt.Errorf("Could not read Spotify profile response: %s", err)
 	}
-	var parsedBody user
-	err = json.Unmarshal(body, &parsedBody)
+	var parsedUser user
+	err = json.Unmarshal(body, &parsedUser)
 	if err != nil {
 		return user{}, fmt.Errorf("Could not parse Spotify profile response: %s", err)
 	}
-	return parsedBody, nil
+	return parsedUser, nil
 }
