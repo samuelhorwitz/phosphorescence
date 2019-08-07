@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +21,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
+	utcOffsetMinutes, _ := strconv.ParseInt(r.URL.Query().Get("utcOffsetMinutes"), 10, 64)
 	email, err := sess.GetEmail(r)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not get user email: %s", err), http.StatusInternalServerError)
@@ -30,7 +32,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not create magic link: %s", err), http.StatusInternalServerError)
 		return
 	}
-	err = sendMail(sess.SpotifyName, email, magicLink)
+	err = sendMail(sess.SpotifyName, email, magicLink, utcOffsetMinutes)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not email user: %s", err), http.StatusInternalServerError)
 		return
@@ -63,11 +65,11 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, phosphorOrigin, http.StatusFound)
 }
 
-func sendMail(name string, email string, magicLink string) error {
+func sendMail(name string, email string, magicLink string, utcOffsetMinutes int64) error {
 	form := url.Values{}
 	form.Add("from", `"Samuel @ Phosphorescence" <noreply@phosphor.me>`)
 	form.Add("to", fmt.Sprintf(`"%s" <%s>`, strings.Replace(name, `"`, "", -1), strings.Replace(email, ">", "", -1)))
-	form.Add("subject", fmt.Sprintf("Phosphorescence Log In Magic Link (Attempt at %s)", time.Now().Format("3:04 PM on Monday, January _2")))
+	form.Add("subject", fmt.Sprintf("Phosphorescence Log In Magic Link (Attempt at %s)", time.Now().UTC().Add(time.Duration(utcOffsetMinutes)*time.Minute).Format("3:04 PM on Monday, January _2")))
 	form.Add("template", "magiclinklogin")
 	form.Add("h:X-Mailgun-Variables", fmt.Sprintf(`{"token": "%s"}`, magicLink))
 	req, err := http.NewRequest("POST", "https://api.mailgun.net/v3/phosphor.me/messages", strings.NewReader(form.Encode()))

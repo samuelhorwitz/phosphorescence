@@ -82,7 +82,7 @@
         methods: {
             async sendAuthEmail() {
                 this.authenticateClicked = true;
-                let emailResponse = await fetch(`${process.env.API_ORIGIN}/authenticate`, {
+                let emailResponse = await fetch(`${process.env.API_ORIGIN}/authenticate?utcOffsetMinutes=-${new Date().getTimezoneOffset()}`, {
                     method: 'POST',
                     credentials: 'include'
                 });
