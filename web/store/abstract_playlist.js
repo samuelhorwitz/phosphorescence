@@ -56,6 +56,11 @@ const getMutations = storagePrefix => Object.assign({
         state.currentTrackCursor = 0;
         state.playback = STOPPED;
     },
+    clearPlaylist(state) {
+        state.playlist = null;
+        state.currentTrackCursor = 0;
+        state.playback = STOPPED;
+    },
     restore(state) {
         let playlist = sessionStorage.getItem(`${storagePrefix}/currentPlaylist`);
         if (playlist) {
@@ -187,6 +192,10 @@ const getActions = () => Object.assign({
     },
     loadPlaylist({commit, dispatch}, playlist) {
         commit('loadPlaylist', playlist);
+        dispatch('stop');
+    },
+    clearPlaylist({commit, dispatch}) {
+        commit('clearPlaylist');
         dispatch('stop');
     }
 });

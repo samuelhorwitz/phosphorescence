@@ -1,6 +1,6 @@
 <template>
-    <article v-show="$store.getters['tracks/playlistLoaded']">
-        <div class="tableWrapper" ref="tableWrapper">
+    <article :class="{loading: !$store.getters['tracks/playlistLoaded']}">
+        <div class="tableWrapper" ref="tableWrapper" v-show="$store.getters['tracks/playlistLoaded']">
             <table>
                 <thead>
                     <tr>
@@ -23,7 +23,7 @@
                         <td :title="track.track.name"><a target="_blank" :href="track.track.external_urls.spotify">{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
                             <ol>
-                                <li v-for="artist in track.track.artists">
+                                <li class="artist" v-for="artist in track.track.artists">
                                     <a target="_blank" :href="artist.external_urls.spotify">{{artist.name}}</a>
                                 </li>
                             </ol>
@@ -33,10 +33,48 @@
                 </tbody>
             </table>
         </div>
+        <aside class="loading" v-show="!$store.getters['tracks/playlistLoaded']">
+            <h2>Loading</h2>
+            <ul>
+                <li class="loadingMessage" v-for="loadMessage in $store.state.loading.descriptions">
+                    {{loadMessage.description}}...
+                </li>
+            </ul>
+            <progress max="100" :value="$store.getters['loading/progress']">{{$store.getters['loading/progress']}}%</progress>
+        </aside>
     </article>
 </template>
 
 <style scoped>
+    article.loading {
+        align-items: center;
+        justify-content: center;
+    }
+
+    aside.loading {
+        overflow: auto;
+        border: 7px outset aquamarine;
+        box-sizing: border-box;
+        background-color: magenta;
+        padding: 1em;
+        width: 50%;
+        font-size: 16px;
+    }
+
+    aside.loading h2 {
+        text-align: center;
+        padding: 0px;
+        margin: 0px;
+    }
+
+    li.loadingMessage {
+        display: block;
+    }
+
+    progress {
+        width: 100%;
+    }
+
     a {
         color: white;
         text-decoration: none;
@@ -60,11 +98,11 @@
         display: inline;
     }
 
-    li {
+    li.artist {
         display: inline;
     }
 
-    li:not(:last-child)::after {
+    li.artist:not(:last-child)::after {
         content: ', ';
         display: inline;
     }
