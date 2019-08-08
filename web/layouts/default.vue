@@ -5,7 +5,7 @@
         </div>
         <logo></logo>
         <toolbar></toolbar>
-        <main>
+        <main :class="{playlistLoaded: $store.getters['tracks/playlistLoaded']}">
             <nuxt/>
         </main>
         <album></album>
@@ -59,11 +59,12 @@
         border: 20px dashed aqua;
     }
 
-    body.playerConnected main {
+    body.playerConnected main.playlistLoaded {
         grid-column: 1 / 2;
     }
 
-    body:not(.playerConnected) main {
+    body:not(.playerConnected) main,
+    main:not(.playlistLoaded) {
         grid-column: 1 / 3;
     }
 
@@ -179,10 +180,24 @@
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
+            let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading track data...');
+            this.$store.dispatch('loading/initializeProgress', {id: 'tracks', weight: 70, ms: 300});
             await initialize(this.$store.state.user.user.country);
+            this.$store.commit('loading/completeProgress', {id: 'tracks'});
+            this.$store.commit('loading/clearMessage', messageId);
             if (!this.$store.getters['tracks/playlistLoaded']) {
+                let loadingMessage = 'Generating playlist';
+                if (this.$store.state.preferences.seedStyle) {
+                    loadingMessage += ` (${this.$store.state.preferences.seedStyle})`;
+                } else {
+                    loadingMessage += ' (random)';
+                }
+                let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
+                this.$store.dispatch('loading/initializeProgress', {id: 'generate', weight: 25, ms: 200, amount: 3});
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                this.$store.commit('loading/completeProgress', {id: 'generate'});
+                this.$store.commit('loading/clearMessage', messageId);
             }
             this.$store.dispatch('loading/endLoadAfterDelay');
         },
