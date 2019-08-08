@@ -2,16 +2,18 @@ package session
 
 import (
 	"fmt"
-	"github.com/gomodule/redigo/redis"
-	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"log"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
+	"github.com/samuelhorwitz/phosphorescence/api/common"
 )
 
 func initializeReaper() {
 	go func() {
 		iter := 0
 		for {
+			// sleep 'n' reap
 			time.Sleep(3 * time.Second)
 			iter = reap(iter)
 		}

@@ -2,6 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/joho/godotenv"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/phosphor"
@@ -11,12 +18,6 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
-	"log"
-	"math/rand"
-	"net/http"
-	"os"
-	"strconv"
-	"time"
 )
 
 func main() {

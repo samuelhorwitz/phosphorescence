@@ -1,9 +1,10 @@
 package common
 
 import (
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"os"
 )
 
 const S3NotFoundCode = "NotFound"

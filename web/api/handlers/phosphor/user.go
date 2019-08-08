@@ -3,12 +3,13 @@ package phosphor
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
-	"net/http"
-	"time"
 )
 
 type User struct {
