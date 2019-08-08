@@ -553,6 +553,8 @@
         },
         async created() {
             this.$store.commit('loading/startLoad');
+            let messageId = await this.$store.dispatch('loading/pushMessage', 'Initializing Spotify web player');
+            this.$store.dispatch('loading/initializeProgress', {id: 'player', weight: 5, ms: 10});
             try {
                 let playerWrapper = await initializePlayer(this.$store, 'tracks');
                 this.destroyer = playerWrapper.destroyer;
@@ -569,6 +571,8 @@
                 this.webPlayerReady = false;
             }
             this.checkShouldScroll();
+            this.$store.commit('loading/completeProgress', {id: 'player'});
+            this.$store.commit('loading/clearMessage', messageId);
             this.$store.dispatch('loading/endLoadAfterDelay');
         },
         beforeDestroy() {
