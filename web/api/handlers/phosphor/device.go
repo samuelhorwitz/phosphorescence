@@ -6,15 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"golang.org/x/oauth2"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
 )
 
 func TransferPlayback(w http.ResponseWriter, r *http.Request) {

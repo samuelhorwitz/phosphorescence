@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
 const maxScriptVersionPageSize float64 = 10

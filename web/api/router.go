@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi"
 	chimiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/phosphor"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
-	"net/http"
 )
 
 func initializeRoutes(cfg *config) http.Handler {
@@ -40,6 +41,7 @@ func initializeRoutes(cfg *config) http.Handler {
 			r.Use(middleware.Session)
 			r.Post("/", phosphor.Authenticate)
 			r.Get("/logout", phosphor.Logout)
+			r.Post("/logoutall", phosphor.LogoutEverywhere)
 		})
 		r.Get("/{magicLink}", phosphor.AuthenticateRedirect)
 	})

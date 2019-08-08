@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
-	"io/ioutil"
-	"net/http"
 )
 
 func GetTrackData(w http.ResponseWriter, r *http.Request) {
