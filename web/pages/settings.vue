@@ -5,8 +5,9 @@
             <p>You are logged in as the Spotify user <a target="_blank" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
             <p>Currently, all settings are stored locally on the device and automatically updated as they are changed.</p>
             <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
+            <p>You may destroy every active session and log out of every device including this one: <button :disabled="logOutEverywhereClicked" @click="logoutEverywhere">Destroy All Sessions</button></p>
             <p>In order to use certain advanced features of Phosphorescence, you must authenticate your session. To do this, we will send an email to the address listed on your Spotify account. By clicking the button below, you agree to allow us to send you that single email. We will not save your email or use it for anything else. Once you receive the email, follow the enclosed directions.</p>
-            <button :disabled="authenticateClicked || alreadyAuthenticated" @click="sendAuthEmail">{{buttonText}}</button>
+            <button class="large" :disabled="authenticateClicked || alreadyAuthenticated" @click="sendAuthEmail">{{authButtonText}}</button>
         </article>
     </div>
 </template>
@@ -26,16 +27,21 @@
     }
 
     button {
-        border: 7px outset darkgray;
+        border: 2px outset darkgray;
         background-color: gray;
         -webkit-appearance: none;
-        width: 100%;
-        font-size: 2em;
         color: black;
-        padding: 0.5em 0;
         cursor: pointer;
+        padding: 0.3em;
+    }
+
+    button.large {
+        border-width: 7px;
+        width: 100%;
         margin-top: 1em;
         margin-bottom: 1em;
+        font-size: 2em;
+        padding: 0.5em 0;
     }
 
     button:hover, button:disabled {
@@ -62,11 +68,13 @@
             return {
                 alreadyAuthenticated: this.$store.state.user.user.authenticated,
                 authenticateClicked: false,
+                logOutEverywhereClicked: false,
+                logOutEverywhereFailed: false,
                 emailSentAddress: ""
             };
         },
         computed: {
-            buttonText() {
+            authButtonText() {
                 if (this.alreadyAuthenticated) {
                     return 'Already authenticated';
                 }
@@ -77,6 +85,15 @@
                     return 'Sending email...';
                 }
                 return 'Authenticate Session';
+            },
+            logoutButtonText() {
+                if (this.logOutEverywhereClicked) {
+                    if (this.logOutEverywhereFailed) {
+                        return 'Failed to destroy all sessions';
+                    }
+                    return 'Destroying sessions...';
+                }
+                return 'Destroy All Sessions';
             }
         },
         methods: {
@@ -88,6 +105,18 @@
                 });
                 let {email} = await emailResponse.json();
                 this.emailSentAddress = email;
+            },
+            async logoutEverywhere() {
+                this.logOutEverywhereClicked = true;
+                let {status} = await fetch(`${process.env.API_ORIGIN}/authenticate/logoutall`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (status === 200) {
+                    window.location.href = '/';
+                } else {
+                    this.logOutEverywhereFailed = true;
+                }
             }
         }
     };

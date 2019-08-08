@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gomodule/redigo/redis"
-	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
-	"github.com/satori/go.uuid"
 	"log"
 	"math"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
+	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
+	"github.com/satori/go.uuid"
 )
 
 var PhosphorUUIDV5Namespace = uuid.NewV5(uuid.NamespaceDNS, "phosphor.me")

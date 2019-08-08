@@ -3,8 +3,6 @@ package spotifyclient_test
 import (
 	"context"
 	"fmt"
-	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
-	"golang.org/x/time/rate"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,6 +11,9 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
+	"golang.org/x/time/rate"
 )
 
 type response struct {

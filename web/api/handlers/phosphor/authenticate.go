@@ -3,16 +3,17 @@ package phosphor
 import (
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/samuelhorwitz/phosphorescence/api/common"
-	"github.com/samuelhorwitz/phosphorescence/api/middleware"
-	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-chi/chi"
+	"github.com/samuelhorwitz/phosphorescence/api/common"
+	"github.com/samuelhorwitz/phosphorescence/api/middleware"
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 )
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +64,20 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 	session.Destroy(w, sessionID, refreshID)
 	http.Redirect(w, r, phosphorOrigin, http.StatusFound)
+}
+
+func LogoutEverywhere(w http.ResponseWriter, r *http.Request) {
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
+	if !ok {
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
+		return
+	}
+	err := session.DestroyAllByUser(w, sess)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Could not destroy all user sessions: %s", err), http.StatusUnauthorized)
+		return
+	}
+	common.JSON(w, map[string]interface{}{"signedout": true})
 }
 
 func sendMail(name string, email string, magicLink string, utcOffsetMinutes int64) error {

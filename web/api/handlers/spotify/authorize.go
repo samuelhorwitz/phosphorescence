@@ -3,13 +3,14 @@ package spotify
 import (
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 func Authorize(w http.ResponseWriter, r *http.Request) {
