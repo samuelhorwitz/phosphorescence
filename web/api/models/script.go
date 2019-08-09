@@ -432,6 +432,7 @@ func pushScriptToObjectStorage(script string) (scriptID uuid.UUID, err error) {
 		ACL:             aws.String("public-read"),
 		ContentType:     aws.String("application/javascript"),
 		ContentEncoding: aws.String("gzip"),
+		CacheControl:    aws.String("public, max-age=31536000"),
 		Key:             aws.String(scriptID.String()),
 		Body:            reader,
 	})
