@@ -11,7 +11,8 @@
     "build": "webpack --config webpack.config.js --mode=production"
   },
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "pako": "^1.0.10"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.0.3",

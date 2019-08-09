@@ -1,5 +1,6 @@
 import RunnerWorker from 'worker-loader!./runner.worker.js';
 import {encoder, decoder} from '../common/textencoding';
+import pako from 'pako';
 
 let additionalTracks = {};
 let tracksReadyResolver;
@@ -56,7 +57,8 @@ addEventListener('message', async ({origin, data}) => {
         });
     }
     else if (data.type === 'loadTracks') {
-        tracksReadyResolver(URL.createObjectURL(new Blob([data.tracks], {type: 'application/json'})));
+        let trackData = pako.ungzip(data.tracks);
+        tracksReadyResolver(URL.createObjectURL(new Blob([trackData], {type: 'application/json'})));
         responsePort.postMessage({type: 'acknowledge'});
     }
     else if (data.type === 'loadAdditionalTrack') {
