@@ -3,13 +3,14 @@ package push
 import (
 	"compress/gzip"
 	"fmt"
+	"io"
+	"os"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"io"
-	"os"
-	"time"
 )
 
 var s3Session *session.Session
@@ -77,6 +78,8 @@ func uploadTrackList(key string, trackJSON []byte) (err error) {
 		ACL:             aws.String("private"),
 		ContentType:     aws.String("application/json"),
 		ContentEncoding: aws.String("gzip"),
+		CacheControl:    aws.String("private"),
+		Expires:         aws.Time(time.Now().AddDate(0, 0, 1).Add(10 * time.Minute)),
 		Key:             aws.String(key),
 		Body:            reader,
 	})

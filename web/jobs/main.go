@@ -4,20 +4,23 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/samuelhorwitz/phosphorescence/jobs/push"
-	"github.com/samuelhorwitz/phosphorescence/jobs/spider"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/joho/godotenv"
+	"github.com/samuelhorwitz/phosphorescence/jobs/push"
+	"github.com/samuelhorwitz/phosphorescence/jobs/spider"
 )
 
 func main() {
 	var outFile string
 	var testPush bool
+	var fakeData bool
 	flag.StringVar(&outFile, "out", "", "output file (opt)")
 	flag.BoolVar(&testPush, "test", false, "test push (opt)")
+	flag.BoolVar(&fakeData, "fake", false, "fake data (opt)")
 	flag.Parse()
 	isProduction := os.Getenv("ENV") == "production"
 	if !isProduction {
@@ -34,22 +37,29 @@ func main() {
 		spacesEndpoint:  os.Getenv("SPACES_TRACKS_ENDPOINT"),
 		spacesRegion:    os.Getenv("SPACES_TRACKS_REGION"),
 		outFile:         outFile,
-		testPush:        testPush,
+		testPush:        testPush || fakeData,
+		fakeData:        fakeData,
 	}
 	run(cfg)
 }
 
 func run(cfg *config) {
-	tracks, err := spider.GetTracks(&spider.Config{
-		SpotifyClientID: cfg.spotifyClientID,
-		SpotifySecret:   cfg.spotifySecret,
-	})
-	if err != nil {
-		log.Fatalf("Could not get tracks: %s", err)
-	}
-	trackJSON, err := json.Marshal(tracks)
-	if err != nil {
-		log.Fatalf("Could not marshal tracks JSON: %s", err)
+	var trackJSON []byte
+	var err error
+	if cfg.fakeData {
+		trackJSON = []byte(`{"foo":"bar"}`)
+	} else {
+		tracks, err := spider.GetTracks(&spider.Config{
+			SpotifyClientID: cfg.spotifyClientID,
+			SpotifySecret:   cfg.spotifySecret,
+		})
+		if err != nil {
+			log.Fatalf("Could not get tracks: %s", err)
+		}
+		trackJSON, err = json.Marshal(tracks)
+		if err != nil {
+			log.Fatalf("Could not marshal tracks JSON: %s", err)
+		}
 	}
 	if cfg.outFile != "" {
 		err = dumpTracksJSON(trackJSON, cfg.outFile)

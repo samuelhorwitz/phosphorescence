@@ -9,4 +9,5 @@ type config struct {
 	spacesRegion    string
 	outFile         string
 	testPush        bool
+	fakeData        bool
 }
