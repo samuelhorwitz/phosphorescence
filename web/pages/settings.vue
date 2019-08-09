@@ -20,9 +20,15 @@
     .pageWrapper {
         margin-left: 2em;
         margin-right: 2em;
+        margin-top: 0px;
+        display: flex;
+        align-items: flex-start;
+        height: 100%;
     }
 
     .authPage {
+        overflow-y: auto;
+        height: 88%;
         margin: 0px;
     }
 

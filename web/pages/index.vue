@@ -57,14 +57,24 @@
         box-sizing: border-box;
         background-color: magenta;
         padding: 1em;
-        width: 50%;
+        flex: 1;
+        height: 10em;
         font-size: 16px;
+        z-index: 10000000;
+        display: flex;
+        flex-direction: column;
     }
 
     aside.loading h2 {
         text-align: center;
         padding: 0px;
         margin: 0px;
+    }
+
+    aside.loading ul {
+        margin: 0px;
+        padding: 0px;
+        flex: 1;
     }
 
     li.loadingMessage {
@@ -199,6 +209,10 @@
     @media only screen and (max-height: 999px) {
         .tracks {
             align-items: center;
+        }
+
+        aside.loading {
+            flex: 1;
         }
     }
 

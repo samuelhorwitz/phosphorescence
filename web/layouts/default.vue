@@ -117,7 +117,7 @@
     }
 
     @media only screen and (max-width: 949px) and (min-height: 275px) and (max-height: 449px) {
-        body.playerConnected main {
+        body.playerConnected main.playlistLoaded {
             display: none;
         }
 
@@ -127,7 +127,7 @@
     }
 
     @media only screen and (max-height: 274px) {
-        body.playerConnected main {
+        body.playerConnected main.playlistLoaded {
             display: none;
         }
 
@@ -179,7 +179,7 @@
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading and processing track data');
-            this.$store.dispatch('loading/initializeProgress', {id: 'tracks', weight: 70, ms: 300});
+            this.$store.dispatch('loading/initializeProgress', {id: 'tracks', weight: 60, ms: 300});
             await initialize(this.$store.state.user.user.country);
             this.$store.commit('loading/completeProgress', {id: 'tracks'});
             this.$store.commit('loading/clearMessage', messageId);
@@ -191,7 +191,7 @@
                     loadingMessage += ' (random)';
                 }
                 let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
-                this.$store.dispatch('loading/initializeProgress', {id: 'generate', weight: 25, ms: 200, amount: 3});
+                this.$store.dispatch('loading/initializeProgress', {id: 'generate', weight: 35, ms: 200, amount: 2});
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
