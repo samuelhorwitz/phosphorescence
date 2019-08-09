@@ -99,10 +99,10 @@ async function getProcessedTracks(countryCode) {
     let expires = tracksResponse.headers.get('expires');
     let tracks = await tracksResponse.arrayBuffer();
     let recordCrateWorker = new RecordCrateWorker();
-    let data = await new Promise((resolve, reject) => {
+    let gzipData = await new Promise((resolve, reject) => {
         recordCrateWorker.addEventListener('message', async ({data}) => {
             if (data.type === 'sendProcessedTracks') {
-                resolve(data.data);
+                resolve(data.gzipData);
             }
             else {
                 reject();
@@ -114,22 +114,23 @@ async function getProcessedTracks(countryCode) {
     if (cache && expires) {
         console.log('Caching good processed tracks JSON for next time');
         try {
-            await cache.put(req, new Response(data, {
+            await cache.put(req, new Response(gzipData, {
                 status: 200,
                 statusText: 'OK',
                 headers: {
-                    'Vary': 'X-Phosphor-Accept-Region',
+                    'Vary': 'X-Phosphor-Accept-Region, Accept-Encoding',
                     'X-Phosphor-Content-Region': countryCode,
                     'Expires': expires,
                     'Content-Type': 'application/json',
-                    'Content-Length': data.length
+                    'Content-Encoding': 'gzip',
+                    'Content-Length': gzipData.byteLength
                 }
             }));
         } catch (e) {
             console.warn('Could not cache processed tracks JSON', e);
         }
     }
-    return data;
+    return gzipData;
 }
 
 async function getFromCache(cache, request) {
@@ -159,6 +160,7 @@ async function getFromCache(cache, request) {
 function getProcessedTracksRequest(countryCode) {
     return new Request(processedTracksUrl, {
         headers: new Headers({
+            'Accept-Encoding': 'gzip',
             'X-Phosphor-Accept-Region': countryCode
         })
     });

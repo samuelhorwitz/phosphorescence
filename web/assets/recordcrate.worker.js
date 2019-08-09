@@ -1,6 +1,7 @@
 import {loadModel, tensor2d, tidy} from '@tensorflow/tfjs';
 import {getTrackTag} from '~/common/normalize';
 import {encoder, decoder} from '~/common/textencoding';
+import pako from 'pako';
 
 const modelsReady = new Promise(async resolve => {
     let aModel = await loadModel('/models/aetherealness/model.json');
@@ -19,7 +20,9 @@ addEventListener('message', async ({data}) => {
         tracks = await getEvocativeness(tracks);
         console.log('Tracks processed');
         let {tags, idsToTags} = buildTags(tracks);
-        postMessage({type: 'sendProcessedTracks', data: encoder.encode(JSON.stringify({tracks, tags, idsToTags}))});
+        let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
+        let gzipResponseData = pako.gzip(responseData, {level: 9});
+        postMessage({type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer});
     } else if (data.type == 'sendTrack') {
         let track = data.track;
         let countryCode = data.countryCode;
