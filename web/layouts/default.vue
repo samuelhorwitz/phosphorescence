@@ -180,7 +180,7 @@
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
-            let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading track data...');
+            let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading and processing track data');
             this.$store.dispatch('loading/initializeProgress', {id: 'tracks', weight: 70, ms: 300});
             await initialize(this.$store.state.user.user.country);
             this.$store.commit('loading/completeProgress', {id: 'tracks'});
