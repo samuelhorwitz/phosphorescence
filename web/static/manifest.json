@@ -1,5 +1,14 @@
 {
  "name": "Phosphorescence",
+ "short_name": "Phosphor.me",
+ "start_url": "https://phospor.me",
+ "display": "fullscreen",
+ "background_color": "rgb(40, 27, 61)",
+ "description": "Intelligent trance music playlists for Spotify.",
+ "categories": ["music"],
+ "lang": "en-US",
+ "orientation": "portrait-primary",
+ "theme_color": "magenta",
  "icons": [
   {
    "src": "\/android-icon-36x36.png",
