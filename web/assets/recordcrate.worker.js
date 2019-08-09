@@ -92,12 +92,12 @@ function predict(a, aModel, pModel, meanstd) {
 }
 
 function filterTracks(tracks, countryCode) {
-    console.log('Tracks before:', Object.keys(tracks).length);
+    console.log('Tracks before region pruning:', Object.keys(tracks).length);
     for (let [id, track] of Object.entries(tracks)) {
         if (track.track.available_markets.indexOf(countryCode) == -1) {
             delete tracks[id];
         }
     }
-    console.log('Tracks after:', Object.keys(tracks).length);
+    console.log('Tracks after region pruning:', Object.keys(tracks).length);
     return tracks;
 }

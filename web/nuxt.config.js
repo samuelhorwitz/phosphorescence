@@ -48,6 +48,13 @@ module.exports = {
       shouldPreload: (file, type) => {
         return ['script', 'style', 'font'].includes(type)
       }
+    },
+    static: {
+      setHeaders: function(res) {
+        if (process.env.NODE_ENV !== 'production') {
+          res.setHeader('Expires', 'Tue, 21 Oct 2025 07:28:00 GMT');
+        }
+      }
     }
   },
   env: {

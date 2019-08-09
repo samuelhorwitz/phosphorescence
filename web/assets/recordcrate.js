@@ -5,7 +5,8 @@ import _builders from '~/builders/index';
 export const builders = Object.freeze(_builders);
 
 const cacheVersion = 'v1';
-const baseTracksUrl = 'https://phosphorescence.sfo2.digitaloceanspaces.com/tracks.json';
+const baseTracksUrl = '/tracks.json';
+const processedTracksUrl = '/processed-tracks.json';
 let initializeCalled = false;
 
 export async function initialize(countryCode) {
@@ -13,21 +14,8 @@ export async function initialize(countryCode) {
         return;
     }
     initializeCalled = true;
-    let encodedTracks = await getTracks();
-    let recordCrateWorker = new RecordCrateWorker();
-    await new Promise((resolve, reject) => {
-        recordCrateWorker.addEventListener('message', async ({data}) => {
-            if (data.type === 'sendProcessedTracks') {
-                await sendTrackBlobToEos(data.data);
-                resolve();
-            }
-            else {
-                reject();
-            }
-        });
-        recordCrateWorker.postMessage({type: 'sendTracks', tracks: encodedTracks, countryCode});
-    });
-    recordCrateWorker.terminate();
+    let data = await getProcessedTracks(countryCode);
+    await sendTrackBlobToEos(data);
 }
 
 export async function processTrack(countryCode, track) {
@@ -72,27 +60,10 @@ export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTr
 async function getTracks() {
     let cache;
     if ('caches' in window) {
-        console.log('Browser supports cache');
         cache = await caches.open(cacheVersion);
-        let response = await cache.match(baseTracksUrl);
+        let response = await getFromCache(cache, baseTracksUrl);
         if (response) {
-            console.log('Tracks JSON found in cache');
-            let expiresHeader = response.headers.get('expires');
-            if (expiresHeader) {
-                console.log('Cached tracks JSON has expiration header:', expiresHeader);
-                let expires = new Date(expiresHeader);
-                let now = new Date();
-                if (expires > now) {
-                    console.log('Cached tracks JSON expiration header is in the future, using cache:', expires);
-                    return response.arrayBuffer();
-                } else {
-                    console.log('Cached tracks JSON has expired, ignoring');
-                }
-            } else {
-                console.log('Tracks JSON has no expiration header, ignoring')
-            }
-        } else {
-            console.log('Tracks JSON not found in cache');
+            return response;
         }
     } else {
         console.log('Browser does not support cache');
@@ -104,5 +75,83 @@ async function getTracks() {
         console.log('Caching good tracks JSON for next time');
         await cache.put(baseTracksUrl, response.clone());
     }
-    return response.arrayBuffer();
+    return response;
+}
+
+async function getProcessedTracks(countryCode) {
+    let req = getProcessedTracksRequest(countryCode);
+    let cache;
+    if ('caches' in window) {
+        cache = await caches.open(cacheVersion);
+        let response = await getFromCache(cache, req);
+        if (response) {
+            let data = await response.arrayBuffer();
+            return data;
+        }
+    } else {
+        console.log('Browser does not support cache');
+    }
+    let tracksResponse = await getTracks();
+    let expires = tracksResponse.headers.get('expires');
+    let tracks = await tracksResponse.arrayBuffer();
+    let recordCrateWorker = new RecordCrateWorker();
+    let data = await new Promise((resolve, reject) => {
+        recordCrateWorker.addEventListener('message', async ({data}) => {
+            if (data.type === 'sendProcessedTracks') {
+                resolve(data.data);
+            }
+            else {
+                reject();
+            }
+        });
+        recordCrateWorker.postMessage({type: 'sendTracks', tracks, countryCode});
+    });
+    recordCrateWorker.terminate();
+    if (cache && expires) {
+        console.log('Caching good processed tracks JSON for next time');
+        await cache.put(req, new Response(data, {
+            status: 200,
+            statusText: 'OK',
+            headers: {
+                'Vary': 'X-Phosphor-Accept-Region',
+                'X-Phosphor-Content-Region': countryCode,
+                'Expires': expires,
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        }));
+    }
+    return data;
+}
+
+async function getFromCache(cache, request) {
+    let url = request.url || request;
+    let response = await cache.match(request);
+    if (!response) {
+        console.log(`${url} not found in cache`);
+        return;
+    }
+    console.log(`${url} found in cache`);
+    let expiresHeader = response.headers.get('expires');
+    if (!expiresHeader) {
+        console.log(`${url} has no expiration header, ignoring`)
+        return
+    }
+    console.log(`Cached ${url} has expiration header:`, expiresHeader);
+    let expires = new Date(expiresHeader);
+    let now = new Date();
+    if (expires > now) {
+        console.log(`Cached ${url} expiration header is in the future, using cache:`, expires);
+        return response;
+    } else {
+        console.log(`Cached ${url} has expired, ignoring`);
+    }
+}
+
+function getProcessedTracksRequest(countryCode) {
+    return new Request(processedTracksUrl, {
+        headers: new Headers({
+            'X-Phosphor-Accept-Region': countryCode
+        })
+    });
 }
