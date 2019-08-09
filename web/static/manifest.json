@@ -1,7 +1,7 @@
 {
  "name": "Phosphorescence",
  "short_name": "Phosphor.me",
- "start_url": "https://phospor.me",
+ "start_url": "https://phosphor.me",
  "display": "fullscreen",
  "background_color": "rgb(40, 27, 61)",
  "description": "Intelligent trance music playlists for Spotify.",
