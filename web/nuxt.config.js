@@ -10,7 +10,9 @@ module.exports = {
       { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
       { name: 'msapplication-TileColor', content: '#281b3d' },
       { name: 'msapplication-TileImage', content: '/ms-icon-144x144.png' },
-      { name: 'theme-color', content: '#281b3d' }
+      { name: 'theme-color', content: '#281b3d' },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
     ],
     link: [
       {rel: 'apple-touch-icon', sizes: '57x57', href: '/apple-icon-57x57.png' },
