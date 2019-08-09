@@ -103,10 +103,8 @@
             margin: 1em 0;
         }
 
-        body.playerConnected main {
-            grid-column: 1 / 3;
-        }
-
+        body.playerConnected main,
+        body.playerConnected main.playlistLoaded,
         body:not(.playerConnected) main {
             grid-column: 1 / 3;
         }
