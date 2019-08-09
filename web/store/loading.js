@@ -35,6 +35,10 @@ export const mutations = {
         if (state.progressIntervals[id]) {
             clearInterval(state.progressIntervals[id]);
         }
+        if (!weight) {
+            weight = 100;
+        }
+        weight = Math.min(weight, 100);
         state.progresses[id] = 0;
         state.progressWeights[id] = weight;
         state.progressIntervals[id] = intervalId;

@@ -363,7 +363,7 @@
                 }
                 let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
                 this.$store.commit('loading/resetProgress');
-                this.$store.dispatch('loading/initializeProgress', {id: 'generate', weight: 100, amount: 3, ms: 200});
+                this.$store.dispatch('loading/initializeProgress', {id: 'generate', amount: 2, ms: 200});
                 this.$store.dispatch('tracks/clearPlaylist');
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
