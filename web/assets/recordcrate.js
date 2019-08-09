@@ -73,7 +73,11 @@ async function getTracks() {
     let response = await fetch(tracksUrl);
     if (cache && response.ok && response.headers.get('expires')) {
         console.log('Caching good tracks JSON for next time');
-        await cache.put(baseTracksUrl, response.clone());
+        try {
+            await cache.put(baseTracksUrl, response.clone());
+        } catch (e) {
+            console.warn('Could not cache tracks JSON', e);
+        }
     }
     return response;
 }
@@ -109,17 +113,21 @@ async function getProcessedTracks(countryCode) {
     recordCrateWorker.terminate();
     if (cache && expires) {
         console.log('Caching good processed tracks JSON for next time');
-        await cache.put(req, new Response(data, {
-            status: 200,
-            statusText: 'OK',
-            headers: {
-                'Vary': 'X-Phosphor-Accept-Region',
-                'X-Phosphor-Content-Region': countryCode,
-                'Expires': expires,
-                'Content-Type': 'application/json',
-                'Content-Length': data.length
-            }
-        }));
+        try {
+            await cache.put(req, new Response(data, {
+                status: 200,
+                statusText: 'OK',
+                headers: {
+                    'Vary': 'X-Phosphor-Accept-Region',
+                    'X-Phosphor-Content-Region': countryCode,
+                    'Expires': expires,
+                    'Content-Type': 'application/json',
+                    'Content-Length': data.length
+                }
+            }));
+        } catch (e) {
+            console.warn('Could not cache processed tracks JSON', e);
+        }
     }
     return data;
 }
