@@ -19,6 +19,17 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+#__nuxt {
+    overflow: hidden;
+}
+
+.bgIosCanvas {
+    position: fixed;
+    top: 0px;
+    z-index: -1;
+    pointer-events: none;
+}
+
 @media only screen and (max-width: 329px) {
     body {
         font-size: 5px;
