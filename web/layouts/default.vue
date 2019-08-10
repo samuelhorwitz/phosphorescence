@@ -219,7 +219,7 @@
         },
         methods: {
             handleResize(e) {
-                this.$refs.mainContainer.style.height = `${window.innerHeight}px`;
+                this.$refs.mainContainer.style.height = `${document.documentElement.clientHeight}px`;
             },
             handleWindowDragenter(e) {
                 if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {

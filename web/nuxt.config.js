@@ -33,7 +33,8 @@ module.exports = {
   },
   plugins: [
     {ssr: false, src: '~plugins/eos.js'},
-    {ssr: false, src: '~plugins/monaco.js'}
+    {ssr: false, src: '~plugins/monaco.js'},
+    {ssr: false, src: '~plugins/ios-rubberband-bg.js'}
   ],
   css: ['~/css/main.css'],
   mode: 'spa',
