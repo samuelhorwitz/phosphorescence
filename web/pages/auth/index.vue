@@ -21,9 +21,20 @@
 </template>
 
 <style scoped>
+    .pageWrapper {
+        margin-left: 2em;
+        margin-right: 2em;
+        display: flex;
+        align-items: flex-start;
+        height: 88%;
+    }
+
+    .authPage {
+        margin: 0px;
+    }
+
     p {
         font-family: 'Montserrat';
-        font-size: 1.3em;
     }
 
     a {

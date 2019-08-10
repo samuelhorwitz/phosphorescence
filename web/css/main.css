@@ -96,3 +96,7 @@ body.scrollablePage {
 body.scrollablePage img.spotifyLogoImg {
     display: none;
 }
+
+body.scrollablePage .bgIosCanvas {
+    display: none;
+}
