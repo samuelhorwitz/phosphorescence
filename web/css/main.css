@@ -19,8 +19,19 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+@media only screen and (display-mode: fullscreen) {
+    body {
+        height: 100vh;
+    }
+}
+
 #__nuxt {
     overflow: hidden;
+    padding:
+        env(safe-area-inset-top, 0px)
+        env(safe-area-inset-right, 0px)
+        env(safe-area-inset-bottom, 0px)
+        env(safe-area-inset-left, 0px);
 }
 
 .bgIosCanvas {
