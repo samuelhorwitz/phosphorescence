@@ -15,17 +15,37 @@
         debugEl.style.fontSize = '16px';
         debugEl.style.position = 'fixed';
         debugEl.style.bottom = '0px';
+        debugEl.style.left = '40px';
         document.body.appendChild(debugEl);
     }
     let bgCanvas = document.createElement('canvas');
     bgCanvas.classList.add('bgIosCanvas');
-    bgCanvas.width = innerWidth * devicePixelRatio;
-    bgCanvas.height = innerHeight * devicePixelRatio;
-    bgCanvas.style.width = `${innerWidth}px`;
-    bgCanvas.style.height = `${innerHeight}px`;
     let ctx = bgCanvas.getContext('2d');
-    ctx.scale(devicePixelRatio, devicePixelRatio);
+    function resetCanvasSize() {
+        let width = innerWidth;
+        let height = innerHeight;
+        if (matchMedia('(display-mode: fullscreen)').matches) {
+            width = outerWidth;
+            height = outerHeight;
+        }
+        bgCanvas.width = width * devicePixelRatio;
+        bgCanvas.height = height * devicePixelRatio;
+        bgCanvas.style.width = `${width}px`;
+        bgCanvas.style.height = `${height}px`;
+        ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resetCanvasSize();
     document.body.appendChild(bgCanvas);
+
+    document.body.addEventListener('resize', function() {
+        resetCanvasSize();
+        requestAnimationFrame(repaint);
+    });
+
+    window.addEventListener('orientationchange', function() {
+        resetCanvasSize();
+        requestAnimationFrame(repaint);
+    })
 
     let bgImg = new Image();
     await new Promise(res => {
@@ -40,8 +60,14 @@
     }, {passive: true});
 
     function repaint() {
+        let width = innerWidth;
+        let height = innerHeight;
+        if (matchMedia('(display-mode: fullscreen)').matches) {
+            width = outerWidth;
+            height = outerHeight;
+        }
         if (debug) {
-            debugEl.innerText = scrollY;
+            debugEl.innerText = `${width}, ${height}, ${scrollY}`;
         }
         ctx.save();
         if (debug) {
@@ -50,9 +76,30 @@
         else {
             ctx.fillStyle = 'rgb(40, 27, 61)';
         }
-        ctx.fillRect(0, 0, innerWidth, offset);
-        ctx.drawImage(bgImg, (bgImg.naturalWidth - innerWidth) / 2, scrollY * parallaxMultiplier, innerWidth, innerHeight - offset, 0, offset, innerWidth, innerHeight - offset);
+        if (offset > 0) {
+            ctx.fillRect(0, 0, width, offset);
+        }
+        let neededPixels = height - offset;
+        let yOffset = scrollY * parallaxMultiplier;
+        let pixelsLeft = bgImg.naturalHeight - yOffset;
+        if (yOffset + neededPixels > bgImg.naturalHeight) {
+            yOffset = bgImg.naturalHeight - neededPixels;
+        }
+        ctx.drawImage(bgImg,
+            // source
+            (bgImg.naturalWidth - width) / 2,
+            yOffset,
+            width,
+            neededPixels,
+
+            // dest
+            0,
+            offset,
+            width,
+            neededPixels
+        );
         ctx.restore();
     }
     requestAnimationFrame(repaint);
+    document.body.style.backgroundImage = 'none';
 })();
