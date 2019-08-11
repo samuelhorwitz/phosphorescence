@@ -51,7 +51,13 @@ const getMutations = storagePrefix => Object.assign({
         state.currentTrackCursor = cursor;
     },
     loadPlaylist(state, playlist) {
-        sessionStorage.setItem(`${storagePrefix}/currentPlaylist`, JSON.stringify(playlist));
+        if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
+            let id = new Date().getTime();
+            localStorage.setItem(`${storagePrefix}/currentPlaylist-${id}`, JSON.stringify(playlist));
+            location.hash = `#${id}`;
+        } else {
+            sessionStorage.setItem(`${storagePrefix}/currentPlaylist`, JSON.stringify(playlist));
+        }
         state.playlist = playlist;
         state.currentTrackCursor = 0;
         state.playback = STOPPED;
@@ -62,7 +68,18 @@ const getMutations = storagePrefix => Object.assign({
         state.playback = STOPPED;
     },
     restore(state) {
-        let playlist = sessionStorage.getItem(`${storagePrefix}/currentPlaylist`);
+        let playlist;
+        if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
+            let id = location.hash.slice(1);
+            if (id) {
+                playlist = localStorage.getItem(`${storagePrefix}/currentPlaylist-${id}`);
+                if (!playlist) {
+                    location.hash = '';
+                }
+            }
+        } else {
+            playlist = sessionStorage.getItem(`${storagePrefix}/currentPlaylist`);
+        }
         if (playlist) {
             state.playlist = JSON.parse(playlist);
             state.currentTrackCursor = 0;
