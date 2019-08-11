@@ -1,0 +1,200 @@
+<template>
+    <aside ref="elastic" :class="{real: useRealHeader}">
+        <div class="container">
+            <p v-show="playlistGenerating">playlist already generating...</p>
+            <p v-show="noTrackCurrentlyPlaying">no track currently playing</p>
+            <p v-show="isPulling">create playlist from current track</p>
+            <p v-show="isReadyToRelease">release to create playlist</p>
+            <p v-show="isReleased">creating playlist...</p>
+            <p v-if="track && showTrackData" class="track">{{track.name}} - {{trackArtists}}</p>
+        </div>
+    </aside>
+</template>
+
+<style scoped>
+    aside {
+        position: fixed;
+        height: 0px;
+        width: 100%;
+        z-index: -1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        color: transparent;
+    }
+
+    aside.real {
+        color: white !important;
+    }
+
+    .container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: 1em;
+        flex-direction: column;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    p {
+        font-size: 16px;
+        margin: 0px;
+        padding: 0px;
+        font-style: italic;
+        flex: 1;
+        text-align: center;
+    }
+
+    p.track {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-style: normal;
+        font-size: 14px;
+        max-width: 100vw;
+        color: cyan;
+    }
+</style>
+
+<script>
+    import {builders, loadNewPlaylist, processTrack} from '~/assets/recordcrate';
+
+    const playlistGenerating = -2;
+    const noTrack = -1;
+    const notTouched = 0;
+    const pulling = 1;
+    const readyToRelease = 2;
+    const released = 3;
+    const complete = 4;
+    const barHeight = 60;
+
+    export default {
+        data() {
+            return {
+                state: notTouched,
+                recheckCurrentlyPlaying: true,
+                track: null
+            }
+        },
+        computed: {
+            trackArtists() {
+                if (!this.track || !this.track.artists) {
+                    return '';
+                }
+                return this.track.artists.map(artist => artist.name).join(', ');
+            },
+            useRealHeader() {
+                return this.isReleased;
+            },
+            noTrackCurrentlyPlaying() {
+                return this.state === noTrack;
+            },
+            isPulling() {
+                return this.state === pulling;
+            },
+            isReadyToRelease() {
+                return this.state === readyToRelease;
+            },
+            isReleased() {
+                return this.state === released;
+            },
+            showTrackData() {
+                return this.isReadyToRelease || this.isReleased;
+            },
+            playlistGenerating() {
+                return this.state === playlistGenerating;
+            }
+        },
+        mounted() {
+            addEventListener('scroll', this.handleScroll, {passive: true});
+            addEventListener('touchend', this.handleTouchEnd, {passive: true});
+        },
+        beforeDestroy() {
+            removeEventListener('scroll', this.handleScroll, {passive: true});
+            removeEventListener('touchend', this.handleTouchEnd, {passive: true});
+        },
+        methods: {
+            handleScroll() {
+                if (scrollY <= 0) {
+                    requestAnimationFrame(this.repaint);
+                    if (scrollY <= -10 && this.recheckCurrentlyPlaying) {
+                        this.recheckCurrentlyPlaying = false;
+                        this.loadCurrentlyPlaying();
+                    }
+                    if (scrollY === 0) {
+                        this.recheckCurrentlyPlaying = true;
+                    }
+                }
+            },
+            repaint() {
+                let absScrollY = Math.abs(scrollY);
+                this.$refs.elastic.style.height = `${absScrollY}px`;
+                this.$refs.elastic.style.color = `rgba(255, 255, 255, ${Math.min(absScrollY / barHeight, 1)})`;
+                if (this.$store.state.loading.playlistGenerating && this.state !== released) {
+                    this.state = playlistGenerating;
+                } else if (absScrollY > barHeight && (this.state === pulling || this.state === readyToRelease)) {
+                    this.state = readyToRelease;
+                } else if (scrollY < 0 && this.state === readyToRelease) {
+                    this.state = pulling;
+                } else if (scrollY === 0 && this.state <= pulling) {
+                    this.state = notTouched;
+                } else if (this.state === notTouched) {
+                    this.state = pulling;
+                } else if (this.state === playlistGenerating && !this.$store.state.loading.playlistGenerating) {
+                    this.state = pulling;
+                }
+            },
+            handleTouchEnd() {
+                if (this.state === readyToRelease) {
+                    let absScrollY = Math.abs(scrollY);
+                    this.state = released;
+                    this.$refs.elastic.style.transform = `translateY(-${absScrollY}px)`;
+                    this.$refs.elastic.parentNode.style.transform = `translateY(${absScrollY}px)`;
+                    scrollTo(0, absScrollY);
+                    this.$refs.elastic.parentNode.addEventListener('webkitTransitionEnd', () => {
+                        this.$refs.elastic.parentNode.style.transition = '';
+                    }, {once: true});
+                    this.$refs.elastic.addEventListener('webkitTransitionEnd', () => {
+                        this.$refs.elastic.style.transition = '';
+                    }, {once: true});
+                    this.$refs.elastic.parentNode.style.transition = 'transform 0.2s ease-out 0s';
+                    this.$refs.elastic.parentNode.style.transform = `translateY(${barHeight}px)`;
+                    this.$refs.elastic.style.transition = 'transform 0.2s ease-out 0s';
+                    this.$refs.elastic.style.transform = `translateY(-${barHeight}px)`;
+                    this.generateFromTrack();
+                }
+            },
+            async loadCurrentlyPlaying() {
+                let currentlyPlayingResponse = await fetch(`${process.env.API_ORIGIN}/user/me/currently-playing`, {credentials: 'include'});
+                if (currentlyPlayingResponse.ok) {
+                    let {track} = await currentlyPlayingResponse.json();
+                    this.track = track;
+                } else {
+                    this.state = noTrack;
+                }
+            },
+            async generateFromTrack() {
+                this.$store.commit('loading/startLoad');
+                this.$store.commit('loading/playlistGenerating');
+                let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
+                let {track} = await trackResponse.json();
+                let processedTrack = await processTrack(this.$store.state.user.user.country, track);
+                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
+                this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                this.$store.commit('loading/playlistGenerationComplete');
+                this.$store.dispatch('loading/endLoadAfterDelay');
+                this.state = complete;
+                this.$refs.elastic.parentNode.addEventListener('webkitTransitionEnd', () => {
+                    this.$refs.elastic.parentNode.style.transition = '';
+                    this.$refs.elastic.parentNode.style.transform = '';
+                    this.state = notTouched;
+                }, {once: true});
+                this.$refs.elastic.parentNode.style.transition = 'transform 0.5s ease 0s';
+                this.$refs.elastic.parentNode.style.transform = 'translateY(0)';
+                this.$refs.elastic.style.transform = '';
+            }
+        }
+    };
+</script>
