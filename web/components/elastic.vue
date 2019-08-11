@@ -1,7 +1,7 @@
 <template>
     <aside ref="elastic" :class="{real: useRealHeader}">
         <div class="container">
-            <p v-show="playlistGenerating">playlist already generating...</p>
+            <p v-show="failed">somethin went wrong :'(</p>
             <p v-show="noTrackCurrentlyPlaying">no track currently playing</p>
             <p v-show="isPulling">create playlist from current track</p>
             <p v-show="isReadyToRelease">release to create playlist</p>
@@ -61,6 +61,7 @@
 <script>
     import {builders, loadNewPlaylist, processTrack} from '~/assets/recordcrate';
 
+    const failed = -3;
     const playlistGenerating = -2;
     const noTrack = -1;
     const notTouched = 0;
@@ -86,7 +87,7 @@
                 return this.track.artists.map(artist => artist.name).join(', ');
             },
             useRealHeader() {
-                return this.isReleased;
+                return this.isReleased || this.failed;
             },
             noTrackCurrentlyPlaying() {
                 return this.state === noTrack;
@@ -105,6 +106,12 @@
             },
             playlistGenerating() {
                 return this.state === playlistGenerating;
+            },
+            failed() {
+                return this.state === failed;
+            },
+            disabled() {
+                return this.playlistGenerating;
             }
         },
         mounted() {
@@ -117,9 +124,12 @@
         },
         methods: {
             handleScroll() {
+                if (matchMedia('(orientation: landscape)').matches) {
+                    return;
+                }
                 if (scrollY <= 0) {
                     requestAnimationFrame(this.repaint);
-                    if (scrollY <= -10 && this.recheckCurrentlyPlaying) {
+                    if (scrollY <= -10 && this.recheckCurrentlyPlaying && this.isPulling && !this.$store.state.loading.playlistGenerating) {
                         this.recheckCurrentlyPlaying = false;
                         this.loadCurrentlyPlaying();
                     }
@@ -132,13 +142,13 @@
                 let absScrollY = Math.abs(scrollY);
                 this.$refs.elastic.style.height = `${absScrollY}px`;
                 this.$refs.elastic.style.color = `rgba(255, 255, 255, ${Math.min(absScrollY / barHeight, 1)})`;
-                if (this.$store.state.loading.playlistGenerating && this.state !== released) {
+                if (this.$store.state.loading.playlistGenerating && this.state !== released && this.state !== failed) {
                     this.state = playlistGenerating;
                 } else if (absScrollY > barHeight && (this.state === pulling || this.state === readyToRelease)) {
                     this.state = readyToRelease;
                 } else if (scrollY < 0 && this.state === readyToRelease) {
                     this.state = pulling;
-                } else if (scrollY === 0 && this.state <= pulling) {
+                } else if (scrollY === 0 && this.state <= pulling && this.state !== failed) {
                     this.state = notTouched;
                 } else if (this.state === notTouched) {
                     this.state = pulling;
@@ -178,14 +188,21 @@
             async generateFromTrack() {
                 this.$store.commit('loading/startLoad');
                 this.$store.commit('loading/playlistGenerating');
-                let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
-                let {track} = await trackResponse.json();
-                let processedTrack = await processTrack(this.$store.state.user.user.country, track);
-                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
-                this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                try {
+                    let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
+                    let {track} = await trackResponse.json();
+                    let processedTrack = await processTrack(this.$store.state.user.user.country, track);
+                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
+                    this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                    this.state = complete;
+                } catch (e) {
+                    this.state = failed;
+                    await new Promise(res => setTimeout(res, 1000));
+                }
+                this.state = complete;
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
-                this.state = complete;
+                this.track = null;
                 this.$refs.elastic.parentNode.addEventListener('webkitTransitionEnd', () => {
                     this.$refs.elastic.parentNode.style.transition = '';
                     this.$refs.elastic.parentNode.style.transform = '';
