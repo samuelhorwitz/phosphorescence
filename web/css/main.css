@@ -37,7 +37,7 @@ body {
 .bgIosCanvas {
     position: fixed;
     top: 0px;
-    z-index: -1;
+    z-index: -100;
     pointer-events: none;
 }
 

@@ -364,11 +364,13 @@
                 let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
                 this.$store.commit('loading/resetProgress');
                 this.$store.dispatch('loading/initializeProgress', {id: 'generate', amount: 2, ms: 200});
+                this.$store.commit('loading/playlistGenerating');
                 this.$store.dispatch('tracks/clearPlaylist');
                 let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
                 this.$store.commit('loading/clearMessage', messageId);
+                this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
             },
             logout() {

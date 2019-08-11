@@ -4,7 +4,8 @@ export const state = () => ({
     descriptions: [],
     progresses: {},
     progressWeights: {},
-    progressIntervals: {}
+    progressIntervals: {},
+    playlistGenerating: false
 });
 
 export const mutations = {
@@ -61,6 +62,12 @@ export const mutations = {
         state.progresses = {};
         state.progressWeights = {};
         state.progressIntervals = {};
+    },
+    playlistGenerating(state) {
+        state.playlistGenerating = true;
+    },
+    playlistGenerationComplete(state) {
+        state.playlistGenerating = false;
     }
 };
 
