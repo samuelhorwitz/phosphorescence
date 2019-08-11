@@ -21,6 +21,18 @@
         height: 100vh;
     }
 
+    @media only screen and (display-mode: fullscreen) and (orientation: portrait) {
+        .mainContainer {
+            height: calc(100vh - 70px);
+        }
+    }
+
+    @media only screen and (display-mode: fullscreen) and (orientation: landscape) {
+        .mainContainer {
+            height: calc(100vh - 20px);
+        }
+    }
+
     body.playerConnected .mainContainer {
         grid-template-rows: min-content min-content minmax(100px, 1fr) min-content min-content;
     }
@@ -205,6 +217,7 @@
             document.body.addEventListener('drop', this.handleWindowDrop);
             if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
                 document.body.addEventListener('resize', this.handleResize);
+                window.addEventListener('orientationchange', this.handleResize);
                 this.handleResize();
                 this.destroyResizeListener = true;
             }
@@ -215,11 +228,15 @@
             document.body.removeEventListener('drop', this.handleWindowDrop);
             if (this.destroyResizeListener) {
                 document.body.removeEventListener('resize', this.handleResize);
+                window.removeEventListener('orientationchange', this.handleResize);
             }
         },
         methods: {
             handleResize(e) {
-                this.$refs.mainContainer.style.height = `${document.documentElement.clientHeight}px`;
+                if (matchMedia('(display-mode: fullscreen)').matches) {
+                    return;
+                }
+                this.$refs.mainContainer.style.height = `${innerHeight}px`;
             },
             handleWindowDragenter(e) {
                 if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {

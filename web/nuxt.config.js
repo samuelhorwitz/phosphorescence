@@ -7,7 +7,7 @@ module.exports = {
     meta: [
       { charset: 'utf-8' },
       { name: 'description', content: 'Intelligent trance music playlists for Spotify.' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
+      { name: 'viewport', content: 'width=device-width, height=device-height, initial-scale=1, maximum-scale=1, viewport-fit=cover' },
       { name: 'msapplication-TileColor', content: '#281b3d' },
       { name: 'msapplication-TileImage', content: '/ms-icon-144x144.png' },
       { name: 'theme-color', content: '#281b3d' },
@@ -28,6 +28,16 @@ module.exports = {
       {rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
       {rel: 'icon', type: 'image/png', sizes: '96x96', href: '/favicon-96x96.png' },
       {rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
+      {href: "/iphone5_splash.png", media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
+      {href: "/iphone6_splash.png", media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
+      {href: "/iphoneplus_splash.png", media: "(device-width: 621px) and (device-height: 1104px) and (-webkit-device-pixel-ratio: 3)",  rel: "apple-touch-startup-image"},
+      {href: "/iphonex_splash.png", media: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)",  rel: "apple-touch-startup-image"},
+      {href: "/iphonexr_splash.png", media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
+      {href: "/iphonexsmax_splash.png", media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)",  rel: "apple-touch-startup-image"},
+      {href: "/ipad_splash.png", media: "(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
+      {href: "/ipadpro1_splash.png", media: "(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
+      {href: "/ipadpro3_splash.png", media: "(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
+      {href: "/ipadpro2_splash.png", media: "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
       {rel: 'manifest', href: '/manifest.json'}
     ]
   },

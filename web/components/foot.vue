@@ -155,6 +155,12 @@
             right: 5px;
         }
     }
+
+    @media only screen and (display-mode: fullscreen) and (orientation: portrait) {
+        .spotifyLogo {
+            bottom: 0px;
+        }
+    }
 </style>
 
 <script>
