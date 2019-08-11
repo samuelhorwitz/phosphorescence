@@ -94,7 +94,10 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Route("/scripts", scriptRouter)
 	userRouter := func(r chi.Router) {
 		r.Use(middleware.Session)
-		r.Get("/me", phosphor.GetCurrentUser)
+		r.Route("/me", func(r chi.Router) {
+			r.Get("/", phosphor.GetCurrentUser)
+			r.Get("/currently-playing", phosphor.GetCurrentlyPlaying)
+		})
 	}
 	r.Route("/user", userRouter)
 	r.Route("/users", userRouter)

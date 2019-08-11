@@ -53,13 +53,26 @@
         bgImg.src = '/images/bg_small.jpg';
     });
 
+    let repaintLocked = false;
+
     addEventListener('scroll', function() {
         if (scrollY >= 0) {
             requestAnimationFrame(repaint);
         }
     }, {passive: true});
 
+    addEventListener('touchend', function() {
+        if (scrollY >= 0) {
+            return;
+        }
+        repaintLocked = true;
+        setTimeout(() => repaintLocked = false, 100);
+    }, {passive: true});
+
     function repaint() {
+        if (repaintLocked) {
+            return;
+        }
         let width = innerWidth;
         let height = innerHeight;
         if (matchMedia('(display-mode: fullscreen)').matches) {

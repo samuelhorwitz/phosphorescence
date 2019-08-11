@@ -42,7 +42,7 @@ func setCookies(w http.ResponseWriter, sessionID string, refreshID string, perma
 }
 
 func clearCookies(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
+	sessionCookie := &http.Cookie{
 		Name:     SessionCookieName,
 		Value:    "",
 		Expires:  time.Unix(0, 0),
@@ -51,9 +51,12 @@ func clearCookies(w http.ResponseWriter) {
 		Path:     "/",
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
-	http.SetCookie(w, &http.Cookie{
+	}
+	if isProduction {
+		sessionCookie.SameSite = http.SameSiteLaxMode
+	}
+	http.SetCookie(w, sessionCookie)
+	refreshCookie := &http.Cookie{
 		Name:     RefreshCookieName,
 		Value:    "",
 		Expires:  time.Unix(0, 0),
@@ -62,6 +65,9 @@ func clearCookies(w http.ResponseWriter) {
 		Path:     "/",
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
+	}
+	if isProduction {
+		refreshCookie.SameSite = http.SameSiteLaxMode
+	}
+	http.SetCookie(w, refreshCookie)
 }
