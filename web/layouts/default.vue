@@ -1,6 +1,6 @@
 <template>
     <div class="mainContainer" ref="mainContainer">
-        <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
+        <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
             {{dropText}}
         </div>
         <elastic v-if="isIOS"></elastic>
@@ -53,6 +53,7 @@
         text-shadow: -1px -1px 0 midnightblue, 1px -1px 0 midnightblue, -1px 1px 0 midnightblue, 1px 1px 0 midnightblue;
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
     }
 
     .dropzone * {
@@ -64,17 +65,23 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        box-sizing: border-box;
     }
 
     .dropzone.dropHoverActive {
         background-color: rgba(255, 0, 255, 0.75);
         border: 20px dashed aqua;
+        cursor: grabbing;
     }
 
     .dropzone.dropHoverBlockActive {
         background-color: rgba(255, 0, 0, 0.75);
         border: 20px dashed red;
+        cursor: no-drop;
+    }
+
+    .dropzone.invalidDragObject {
+        cursor: no-drop;
+        color: transparent;
     }
 
     body.playerConnected main.playlistLoaded {
@@ -192,7 +199,8 @@
                 destroyResizeListener: false,
                 dragStarted: false,
                 isDropHovering: false,
-                isAlreadyGeneratingHover: false
+                isAlreadyGeneratingHover: false,
+                isBadDropHovering: false
             };
         },
         computed: {
@@ -202,6 +210,8 @@
             dropText() {
                 if (this.isAlreadyGeneratingHover) {
                     return 'Please wait';
+                } else if (this.isBadDropHovering) {
+                    return '';
                 }
                 return 'Drop your track!';
             },
@@ -272,9 +282,7 @@
                 this.$refs.mainContainer.style.height = `${innerHeight}px`;
             },
             handleWindowDragenter(e) {
-                if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {
-                    this.dragStarted = true;
-                }
+                this.dragStarted = true;
             },
             handleWindowDragover(e) {
                 e.preventDefault();
@@ -289,16 +297,20 @@
                     } else {
                         this.isDropHovering = true;
                     }
+                } else {
+                    this.isBadDropHovering = true;
                 }
             },
             handleDragleave() {
                 this.isDropHovering = false;
                 this.isAlreadyGeneratingHover = false;
+                this.isBadDropHovering = false;
                 this.dragStarted = false;
             },
             async handleDrop(e) {
                 this.isDropHovering = false;
                 this.isAlreadyGeneratingHover = false;
+                this.isBadDropHovering = false;
                 this.dragStarted = false;
                 this.$store.commit('loading/startLoad');
                 this.$store.commit('loading/playlistGenerating');
