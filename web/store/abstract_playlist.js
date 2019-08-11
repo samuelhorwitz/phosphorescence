@@ -55,6 +55,7 @@ const getMutations = storagePrefix => Object.assign({
             let id = new Date().getTime();
             localStorage.setItem(`${storagePrefix}/currentPlaylist-${id}`, JSON.stringify(playlist));
             location.hash = `#${id}`;
+            sessionStorage.setItem(`${storagePrefix}/currentPlaylistId`, id);
         } else {
             sessionStorage.setItem(`${storagePrefix}/currentPlaylist`, JSON.stringify(playlist));
         }
@@ -71,10 +72,14 @@ const getMutations = storagePrefix => Object.assign({
         let playlist;
         if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
             let id = location.hash.slice(1);
+            if (!id) {
+                id = sessionStorage.getItem(`${storagePrefix}/currentPlaylistId`);
+            }
             if (id) {
                 playlist = localStorage.getItem(`${storagePrefix}/currentPlaylist-${id}`);
                 if (!playlist) {
                     location.hash = '';
+                    sessionStorage.removeItem(`${storagePrefix}/currentPlaylistId`);
                 }
             }
         } else {
