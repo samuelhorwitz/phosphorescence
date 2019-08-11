@@ -240,8 +240,8 @@
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
                 this.$store.commit('loading/clearMessage', messageId);
-                this.$store.commit('loading/playlistGenerationComplete');
             }
+            this.$store.commit('loading/playlistGenerationComplete');
             this.$store.dispatch('loading/endLoadAfterDelay');
         },
         mounted() {
