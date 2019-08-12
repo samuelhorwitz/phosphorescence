@@ -52,6 +52,8 @@ const getMutations = storagePrefix => Object.assign({
     },
     loadPlaylist(state, playlist) {
         if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
+            let oldId = getCurrentPlaylistIdIos(storagePrefix);
+            localStorage.removeItem(`${storagePrefix}/currentPlaylist-${oldId}`);
             let id = new Date().getTime();
             localStorage.setItem(`${storagePrefix}/currentPlaylist-${id}`, JSON.stringify(playlist));
             location.hash = `#${id}`;
@@ -71,10 +73,7 @@ const getMutations = storagePrefix => Object.assign({
     restore(state) {
         let playlist;
         if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
-            let id = location.hash.slice(1);
-            if (!id) {
-                id = sessionStorage.getItem(`${storagePrefix}/currentPlaylistId`);
-            }
+            let id = getCurrentPlaylistIdIos(storagePrefix);
             if (id) {
                 playlist = localStorage.getItem(`${storagePrefix}/currentPlaylist-${id}`);
                 if (!playlist) {
@@ -309,4 +308,12 @@ async function seekToCurrentTrack(state, commit) {
     // is one more request to Spotify so let's keep it simple.
     await new Promise(resolve => setTimeout(resolve, 500));
     commit('unlockNeighborSeeking');
+}
+
+function getCurrentPlaylistIdIos(storagePrefix) {
+    let id = location.hash.slice(1);
+    if (!id) {
+        id = sessionStorage.getItem(`${storagePrefix}/currentPlaylistId`);
+    }
+    return id;
 }
