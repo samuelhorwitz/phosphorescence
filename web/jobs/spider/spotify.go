@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -75,6 +76,16 @@ func getTracksFromPlaylist(playlistID string) (map[string]*TrackEnvelope, error)
 			return tracks, fmt.Errorf("Could not make Spotify playlist request: %s", err)
 		}
 		defer res.Body.Close()
+		if res.StatusCode == http.StatusTooManyRequests {
+			log.Println("Spotify asked us too back off")
+			retryAfterSeconds, err := strconv.Atoi(res.Header.Get("Retry-After"))
+			if err != nil {
+				return nil, fmt.Errorf("Could not parse retry after header: %s", err)
+			}
+			log.Printf("Waiting for %d seconds...", retryAfterSeconds)
+			time.Sleep(time.Duration(retryAfterSeconds) * time.Second)
+			return getTrackFeatures(tracks)
+		}
 		if res.StatusCode != http.StatusOK {
 			return tracks, fmt.Errorf("Spotify playlist request responded with %d", res.StatusCode)
 		}
@@ -152,6 +163,16 @@ func getTrackFeatures(tracks map[string]*TrackEnvelope) (map[string]*TrackEnvelo
 		return nil, fmt.Errorf("Could not make Spotify track features request: %s", err)
 	}
 	defer res.Body.Close()
+	if res.StatusCode == http.StatusTooManyRequests {
+		log.Println("Spotify asked us too back off")
+		retryAfterSeconds, err := strconv.Atoi(res.Header.Get("Retry-After"))
+		if err != nil {
+			return nil, fmt.Errorf("Could not parse retry after header: %s", err)
+		}
+		log.Printf("Waiting for %d seconds...", retryAfterSeconds)
+		time.Sleep(time.Duration(retryAfterSeconds) * time.Second)
+		return getTrackFeatures(tracks)
+	}
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Spotify track features request responded with %d", res.StatusCode)
 	}
