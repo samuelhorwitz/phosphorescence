@@ -51,13 +51,14 @@ const getMutations = storagePrefix => Object.assign({
         state.currentTrackCursor = cursor;
     },
     loadPlaylist(state, playlist) {
-        if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
+        if (navigator.standalone) {
+            localStorage.setItem(`${storagePrefix}/currentPlaylist`, JSON.stringify(playlist));
+        } else if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
             let oldId = getCurrentPlaylistIdIos(storagePrefix);
             localStorage.removeItem(`${storagePrefix}/currentPlaylist-${oldId}`);
             let id = new Date().getTime();
             localStorage.setItem(`${storagePrefix}/currentPlaylist-${id}`, JSON.stringify(playlist));
-            location.hash = `#${id}`;
-            sessionStorage.setItem(`${storagePrefix}/currentPlaylistId`, id);
+            setCurrentPlaylistIdIos(storagePrefix, id);
         } else {
             sessionStorage.setItem(`${storagePrefix}/currentPlaylist`, JSON.stringify(playlist));
         }
@@ -72,13 +73,14 @@ const getMutations = storagePrefix => Object.assign({
     },
     restore(state) {
         let playlist;
-        if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
+        if (navigator.standalone) {
+            playlist = localStorage.getItem(`${storagePrefix}/currentPlaylist`);
+        } else if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
             let id = getCurrentPlaylistIdIos(storagePrefix);
             if (id) {
                 playlist = localStorage.getItem(`${storagePrefix}/currentPlaylist-${id}`);
                 if (!playlist) {
-                    location.hash = '';
-                    sessionStorage.removeItem(`${storagePrefix}/currentPlaylistId`);
+                    clearCurrentPlaylistIdIos(storagePrefix);
                 }
             }
         } else {
@@ -315,5 +317,18 @@ function getCurrentPlaylistIdIos(storagePrefix) {
     if (!id) {
         id = sessionStorage.getItem(`${storagePrefix}/currentPlaylistId`);
     }
+    if (id) {
+        setCurrentPlaylistIdIos(storagePrefix, id);
+    }
     return id;
+}
+
+function setCurrentPlaylistIdIos(storagePrefix, id) {
+    location.hash = `#${id}`;
+    sessionStorage.setItem(`${storagePrefix}/currentPlaylistId`, id);
+}
+
+function clearCurrentPlaylistIdIos(storagePrefix) {
+    location.hash = '';
+    sessionStorage.removeItem(`${storagePrefix}/currentPlaylistId`);
 }
