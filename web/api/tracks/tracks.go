@@ -32,7 +32,7 @@ func Initialize(cfg *Config) {
 	}
 	s3Service := s3.New(s3Session)
 	res, err := s3Service.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String("phosphorescence"),
+		Bucket: aws.String("phosphorescence-tracks"),
 		Key:    aws.String("tracks.json"),
 	})
 	if err != nil {

@@ -13,7 +13,7 @@ func Tracks(w http.ResponseWriter, r *http.Request) {
 	var tracksURL string
 	if isProduction {
 		s3Req, _ := s3Service.GetObjectRequest(&s3.GetObjectInput{
-			Bucket: aws.String("phosphorescence"),
+			Bucket: aws.String("phosphorescence-tracks"),
 			Key:    aws.String("tracks.json"),
 		})
 		var err error

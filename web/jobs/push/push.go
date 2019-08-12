@@ -42,8 +42,8 @@ func PushTracks(cfg *Config, trackJSON []byte) (err error) {
 
 func backupOldTrackList() error {
 	_, err := s3Service.CopyObject(&s3.CopyObjectInput{
-		Bucket:     aws.String("phosphorescence"),
-		CopySource: aws.String("/phosphorescence/tracks.json"),
+		Bucket:     aws.String("phosphorescence-tracks"),
+		CopySource: aws.String("/phosphorescence-tracks/tracks.json"),
 		Key:        aws.String(fmt.Sprintf("old/tracks-%d.json", time.Now().UnixNano()/(int64(time.Millisecond)/int64(time.Nanosecond)))),
 	})
 	if err != nil {
@@ -74,7 +74,7 @@ func uploadTrackList(key string, trackJSON []byte) (err error) {
 		return fmt.Errorf("Could not zip tracks JSON: %s", err)
 	}
 	_, err = s3Uploader.Upload(&s3manager.UploadInput{
-		Bucket:          aws.String("phosphorescence"),
+		Bucket:          aws.String("phosphorescence-tracks"),
 		ACL:             aws.String("private"),
 		ContentType:     aws.String("application/json"),
 		ContentEncoding: aws.String("gzip"),
