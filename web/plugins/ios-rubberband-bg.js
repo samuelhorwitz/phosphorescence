@@ -24,7 +24,7 @@
     function resetCanvasSize() {
         let width = innerWidth;
         let height = innerHeight;
-        if (matchMedia('(display-mode: fullscreen)').matches) {
+        if (navigator.standalone) {
             width = outerWidth;
             height = outerHeight;
         }
@@ -75,7 +75,7 @@
         }
         let width = innerWidth;
         let height = innerHeight;
-        if (matchMedia('(display-mode: fullscreen)').matches) {
+        if (navigator.standalone) {
             width = outerWidth;
             height = outerHeight;
         }
