@@ -62,7 +62,7 @@ func getSpotifyTokenRequestBody(spotifyClientID, spotifySecret string) string {
 }
 
 func getTracksFromPlaylist(playlistID string) (map[string]*TrackEnvelope, error) {
-	nextURL := fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks?limit=100", playlistID)
+	nextURL := fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks?limit=100&fields=next,items(track(available_markets,duration_ms,external_urls,id,name,popularity,album(external_urls,id,images,name,artists),artists))", playlistID)
 	tracks := make(map[string]*TrackEnvelope)
 	for nextURL != "" {
 		log.Printf("Handling %s...", nextURL)
