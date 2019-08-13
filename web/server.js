@@ -11,6 +11,7 @@ app.use(function (req, res, next) {
 if (process.env.NODE_ENV === 'production') {
     const http = require('http');
     app.use(express.static('./public'));
+    app.use('/editor/:id?', express.static('./public'));
     const server = http.createServer(app).listen('80', '0.0.0.0', () => {
         console.log('Server listening on `' + server.address().address + ':' + server.address().port + '`.');
     });
