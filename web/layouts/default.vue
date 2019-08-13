@@ -308,10 +308,17 @@
                 this.dragStarted = false;
             },
             async handleDrop(e) {
+                let shouldHandleDrop = false;
+                if (this.isDropHovering) {
+                    shouldHandleDrop = true;
+                }
                 this.isDropHovering = false;
                 this.isAlreadyGeneratingHover = false;
                 this.isBadDropHovering = false;
                 this.dragStarted = false;
+                if (!shouldHandleDrop) {
+                    return;
+                }
                 this.$store.commit('loading/startLoad');
                 this.$store.commit('loading/playlistGenerating');
                 e.preventDefault();
