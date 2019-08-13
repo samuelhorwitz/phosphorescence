@@ -1,7 +1,7 @@
 {
 	"whitelists": [
 		"0nBZNL98G6zFt76htSPTmk", // Phosphorescence Seeder
-		"1knjXQhIb46e09GbnTi2w0" // Phosphorescence York Seeder (York chillout compilations and originals)
+		"1knjXQhIb46e09GbnTi2w0"  // Phosphorescence York Seeder (York chillout compilations and originals)
 	],
 	"seeders": [
 		"5lSgExb6yTKfLusGag7bm7", // Armada Trance Top 1000
@@ -12,7 +12,41 @@
 		"5QafFMGgQKGwqgV7k3qHy6", // Armada ASOT Classics
 		"6YfKSAJbqPABnn6tnda1V1", // Armada A State of Sundays
 		"122lYUX1edW7OGRElFB17k", // Armada Chicane Sun:Sets
-		"5WdZ7SDAgBE8kK0EYkn3xj", // Trance Classics Official
+		"78OCCNfXrsTQwbEANRmXT8", // Armada Planet Love
+		"6hmVOoZlfhIEi2o0kGXPif", // Armada Gabriel & Dresden
+		"74M99JYCke9OrhwELydMt9", // Armada Vandit
+		"7fNe00ee3Z1VoeiSlkdj1q", // Armada Subculture
+		"5a4xpPH9SrQRyB0ZAYT8H4", // Armada S107
+		"2FdXvK4KRjhfMgAevzFXSG", // Armada Club Elite
+		"2EXxdhxKwuRj5fdf34oXLu", // Armada Perfecto
+		"2kfuxKRMIUElCjV2APAnP0", // Armada Captivating
+		"0m5YUdPTQ2Kv8NlkOCMIw4", // Armada Susana
+		"2RqBNPNAjV81rWtW5m9tgv", // Armada Aropa
+		"0W8lpEbHyJReUMg4518qff", // Armada AVA
+		"6xjDy6fq4f5nivbLyeYxcY", // Alex M.O.R.P.H.
+		"0oMexzEZus9I57WvJ5p3to", // Armada FSOE
+		"3d5QfTlrrRfWh2YPjyGXnR", // Armada Magic Island
+		"7MDfRaaO0aKTzAdD8Oxtz1", // Armada Perfecto Fluoro
+		"6yYS66EEthJ3IumzWck2RR", // BHR Vocal Trance
+		"2BfXSgtwWVSoHwVhaiv8B1", // BHR #trancefamily
+		"3KbMl9OnWlatRacjUIggMb", // BHR In Trance We Trust
+		"6nypwwASuMcehflKFWg1ak", // BHR Beyond
+		"2tR4ZJDVn0yfzKfMASxNKf", // BHR Trance Classics
+		"3jGlUfHVREAnejiwcGFpdP", // BHR ISOS
+		"49Lnw1ECPaG50tlOdXxVQh", // BHR Magik: The Collection
+		"0Y7EUWeyD7XyzCzCM3J835", // BHR Magik Muzik
+		"5zH4xCy1FIMT6qJHb30AKE", // BHR AVA
+		"5uxBAEP4UJYCkVrlVdJkcJ", // BHR GO
+		"4zYrEUz6iXL2HfZEmCwsMk", // BHR Damaged
+		"3sUqXHaAiOnRHQjuhGV0Pz", // BHR Create Music
+		"7KpH2J1h9XBnxmQufTUJaN", // BHR Magic Island
+		"1e4uXoD44ZsGuY8294Ue0z", // BHR Outburst
+		"2FM8SDrT0SiCnxgSHOmNSI", // BHR Pure Trance
+		"6Tbc3nulovy3JgdNs6HQDA", // BHR RIDE
+		"1oLqtz5JNlP14Marsgw7kF", // BHR Touchstone
+		"5tKZEIOyPwv31RHezjONmC", // BHR Subculture
+		"1NHD0e01T6rpNR9XfREFBK", // BHR Grotesque
+		"6uSUUGBBJcLU8wQKwUNHXg", // BHR Universal Nation
 		"37i9dQZF1DX91oIci4su1D", // Spotify Trance Mission
 		"37i9dQZF1DWXWbLEOaHnU3", // Spotify Psytrance Supernova
 		"397Gfd9mvy0jB7uHTKJ4TR", // Solarstone Pure Trance
@@ -31,11 +65,9 @@
 		"5A4dvp15zTXXNKNfcRfE3f", // ASOT Top 50 2018
 		"54KSGqVphnrK8ntRc4NL1G", // Planet Perfecto
 		"7f8Nq71ChVGywKVcgEUa35", // Planet Perfecto Radio
-		"6ZNqBjtmRBjXBG2BW0QYCA", // Psytrance Full On Progressive & Goa Trance
-		"5NHLM1DytStTaxfGJigoC0", // Psytrance Classics
-		"4p6NpPAfQBPdhVfeHZzRmM", // Ibiza Classics
-		"0npkErs6y3GCymDR868GdD", // 90's Ibiza Trance
-		"3MKHH3b7ExUNwm228Za7wM", // Uplifting Trance, Euphoric Trance, Vocal Trance & Melodic
+		"3MKHH3b7ExUNwm228Za7wM"  // Raz Nitzan Music Uplifting Trance, Euphoric Trance, Vocal Trance & Melodic
+	],
+	"unofficialSeeders": [
 		"5aJnwzy9n2WRM2Ore7ceEY", // Tunnel Trance Force
 		"6ovOorzVT1JFLkKJCUEh2k", // Late 90s Early 2000s Trance / Dance
 		"260cw4PvjDjcWuCi5duiEf", // Trance Classics (90s/2000)
@@ -43,23 +75,30 @@
 		"78AFAJFvRzboZfEDnAkkFn", // Trance Anthems 90s-00s
 		"72DnoMQTeGRgLbLk7WlKol", // Trance/90s
 		"6kaLL9VKSZK37QtuCqdqZX", // Euphoric Chillout Trance
-		"708Lw1vngitikCt5JxqDsD" // Aly & Fila Chillout
+		"4p6NpPAfQBPdhVfeHZzRmM", // Ibiza Classics
+		"5WdZ7SDAgBE8kK0EYkn3xj", // Trance Classics Official
+		"0npkErs6y3GCymDR868GdD"  // 90's Ibiza Trance
 	],
 	"blacklists": [
-		"4NTy5kvMHlsVUyXiCRbzfW" // Phosphorescence Blacklist
+		"4NTy5kvMHlsVUyXiCRbzfW"  // Phosphorescence Blacklist
 	],
 	"artistBlacklists": [
-		"1yXD9tSi0HJKK9B4j8s0Hz" // Phosphorescence Artist Blacklist
+		"1yXD9tSi0HJKK9B4j8s0Hz"  // Phosphorescence Artist Blacklist
 	],
 	"subgenres": {
 		"chill": [
 			"0IJUUs6IqIPk9tS5nau0Rj", // Armada Chill
-			"68BiK8KG3otORDaYB3ZaO9" // Armada Chillout Top 1000
+			"68BiK8KG3otORDaYB3ZaO9", // Armada Chillout Top 1000
+			"74qhFAWiX6m6mVESyfPFTv", // Armada Coldharbour Chill
+			"0H06AQrAegyWpBCPMNeEEK", // BHR Chill Zone
+			"708Lw1vngitikCt5JxqDsD"  // Aly & Fila Chillout
 		],
 		"psy": [
 			"06IaXoRhHIvrCi8g4fmjel", // Psy/Goa/Prog/Dark-trance
 			"4Xq4VM7PpM63Rl1LYNWBIO", // Psytrance (Goa, Minimal, Progressive, Dark, Chill...)
-			"3T1e2xXlbVJ6AXbqALUSfr" // Psytrance, progresive, goa, psybient, fullon, forest, dark and rest
+			"3T1e2xXlbVJ6AXbqALUSfr", // Psytrance, progresive, goa, psybient, fullon, forest, dark and rest
+			"6ZNqBjtmRBjXBG2BW0QYCA", // Psytrance Full On Progressive & Goa Trance
+			"5NHLM1DytStTaxfGJigoC0" // Psytrance Classics
 		]
 	}
 }
