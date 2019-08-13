@@ -138,18 +138,22 @@ const getActions = () => Object.assign({
         player = pl;
         commit('connected');
     },
-    async play({commit, dispatch, getters, state}) {
+    async play({commit, dispatch, getters, state}, msOffset) {
         commit('loading/startLoad', null, {root: true});
         commit('play');
+        let body = {
+            uris: state.playlist.map(track => track.track.uri),
+            offset: {position: state.currentTrackCursor}
+        };
+        if (msOffset) {
+            body.position_ms = msOffset;
+        }
         let response = await fetch('https://api.spotify.com/v1/me/player/play', {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${await getAccessToken()}`
             },
-            body: JSON.stringify({
-                uris: state.playlist.map(track => track.track.uri),
-                offset: {position: state.currentTrackCursor}
-            })
+            body: JSON.stringify(body)
         });
         if (response && response.status >= 500) {
             commit('stopBecauseBroken');

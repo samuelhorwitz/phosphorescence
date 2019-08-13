@@ -54,6 +54,7 @@ func GetCurrentlyPlaying(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not make Spotify currently playing request: %s", err), http.StatusInternalServerError)
 		return
 	}
+	fetchedAt := time.Now()
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		common.Fail(w, fmt.Errorf("Spotify currently playing request responded with %d", res.StatusCode), http.StatusInternalServerError)
@@ -68,6 +69,8 @@ func GetCurrentlyPlaying(w http.ResponseWriter, r *http.Request) {
 		IsPlaying            bool            `json:"is_playing"`
 		Track                json.RawMessage `json:"item"`
 		CurrentlyPlayingType string          `json:"currently_playing_type"`
+		Timestamp            int             `json:"timestamp"`
+		ProgressMilliseconds int             `json:"progress_ms"`
 	}
 	err = json.Unmarshal(body, &parsedBody)
 	if err != nil {
@@ -78,7 +81,13 @@ func GetCurrentlyPlaying(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Spotify currently playing is not a track: %s", err), http.StatusNotFound)
 		return
 	}
-	common.JSON(w, map[string]interface{}{"isPlaying": parsedBody.IsPlaying, "track": parsedBody.Track})
+	common.JSON(w, map[string]interface{}{
+		"isPlaying":        parsedBody.IsPlaying,
+		"progress":         parsedBody.ProgressMilliseconds,
+		"fetchedAtSpotify": parsedBody.Timestamp,
+		"fetchedAt":        fetchedAt.UnixNano() / int64(time.Millisecond),
+		"track":            parsedBody.Track,
+	})
 }
 
 func ListCurrentUserScripts(w http.ResponseWriter, r *http.Request) {
