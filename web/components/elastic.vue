@@ -76,7 +76,8 @@
             return {
                 state: notTouched,
                 recheckCurrentlyPlaying: true,
-                track: null
+                track: null,
+                trackState: null
             }
         },
         computed: {
@@ -144,7 +145,7 @@
                 this.$refs.elastic.style.color = `rgba(255, 255, 255, ${Math.min(absScrollY / barHeight, 1)})`;
                 if (this.$store.state.loading.playlistGenerating && this.state !== released && this.state !== failed) {
                     this.state = playlistGenerating;
-                } else if (absScrollY > barHeight && (this.state === pulling || this.state === readyToRelease)) {
+                } else if (absScrollY > barHeight && ((this.state === pulling && this.track) || this.state === readyToRelease)) {
                     this.state = readyToRelease;
                 } else if (scrollY < 0 && this.state === readyToRelease) {
                     this.state = pulling;
@@ -179,8 +180,9 @@
             async loadCurrentlyPlaying() {
                 let currentlyPlayingResponse = await fetch(`${process.env.API_ORIGIN}/user/me/currently-playing`, {credentials: 'include'});
                 if (currentlyPlayingResponse.ok) {
-                    let {track} = await currentlyPlayingResponse.json();
+                    let {track, isPlaying, progress, fetchedAt} = await currentlyPlayingResponse.json();
                     this.track = track;
+                    this.trackState = {isPlaying, progress, fetchedAt};
                 } else {
                     this.state = noTrack;
                 }
@@ -194,6 +196,16 @@
                     let processedTrack = await processTrack(this.$store.state.user.user.country, track);
                     let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                    if (this.trackState.isPlaying) {
+                        let now = new Date().getTime();
+                        console.log(now, this.trackState.fetchedAt, (now - this.trackState.fetchedAt) / 1000, this.trackState.progress, this.trackState.progress / 1000);
+                        let offset = Math.max(0, (now - this.trackState.fetchedAt) + this.trackState.progress);
+                        if (offset > track.duration_ms) {
+                            this.$store.dispatch('tracks/next');
+                            offset = 0;
+                        }
+                        this.$store.dispatch('tracks/play', offset);
+                    }
                     this.state = complete;
                 } catch (e) {
                     this.state = failed;
@@ -203,6 +215,7 @@
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
                 this.track = null;
+                this.trackState = null;
                 this.$refs.elastic.parentNode.addEventListener('webkitTransitionEnd', () => {
                     this.$refs.elastic.parentNode.style.transition = '';
                     this.$refs.elastic.parentNode.style.transform = '';
