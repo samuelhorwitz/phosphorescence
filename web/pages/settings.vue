@@ -6,6 +6,7 @@
             <p>Currently, all settings are stored locally on the device and automatically updated as they are changed.</p>
             <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
             <p>You may destroy every active session and log out of every device including this one: <button :disabled="logOutEverywhereClicked" @click="logoutEverywhere">Destroy All Sessions</button></p>
+            <p>You may empty your cache on this device: <button :disabled="cacheClearState" @click="destroyCaches">{{clearCacheButtonText}}</button></p>
             <p>In order to use certain advanced features of Phosphorescence, you must authenticate your session. To do this, we will send an email to the address listed on your Spotify account. By clicking the button below, you agree to allow us to send you that single email. We will not save your email or use it for anything else. Once you receive the email, follow the enclosed directions.
             <button class="large" :disabled="authenticateClicked || alreadyAuthenticated" @click="sendAuthEmail">{{authButtonText}}</button>
             </p>
@@ -77,7 +78,8 @@
                 authenticateClicked: false,
                 logOutEverywhereClicked: false,
                 logOutEverywhereFailed: false,
-                emailSentAddress: ""
+                emailSentAddress: "",
+                cacheClearState: null
             };
         },
         computed: {
@@ -101,6 +103,14 @@
                     return 'Destroying sessions...';
                 }
                 return 'Destroy All Sessions';
+            },
+            clearCacheButtonText() {
+                if (this.cacheClearState === 'clearing') {
+                    return 'Clearing Cache...'
+                } else if (this.cacheClearState === 'cleared') {
+                    return 'Cache cleared'
+                }
+                return 'Clear Caches';
             }
         },
         methods: {
@@ -124,6 +134,13 @@
                 } else {
                     this.logOutEverywhereFailed = true;
                 }
+            },
+            async destroyCaches() {
+                this.cacheClearState = 'clearing';
+                for (let cacheKey of await caches.keys()) {
+                    await caches.delete(cacheKey);
+                }
+                this.cacheClearState = 'cleared';
             }
         }
     };
