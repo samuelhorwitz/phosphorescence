@@ -550,10 +550,39 @@
                         this.isTrackDataScrolling = false;
                     }
                 });
+            },
+            handleKeyPress(e) {
+                if (!this.webPlayerReady) {
+                    return;
+                }
+                if (e.code === 'Space') {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (this.$store.getters['tracks/stopped']) {
+                        this.play();
+                    } else if (this.$store.getters['tracks/paused']) {
+                        this.resume();
+                    } else if (this.$store.getters['tracks/playing']) {
+                        this.pause();
+                    }
+                }
+                // left arrow
+                else if (e.keyCode === 37 && (e.metaKey || e.ctrlKey)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.previous();
+                }
+                // right arrow
+                else if (e.keyCode == 39 && (e.metaKey || e.ctrlKey)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    this.next();
+                }
             }
         },
         mounted() {
             addEventListener('resize', this.checkShouldScroll);
+            document.addEventListener('keydown', this.handleKeyPress);
         },
         async created() {
             this.$store.commit('loading/startLoad');
@@ -584,6 +613,7 @@
                 this.destroyer();
             }
             removeEventListener('resize', this.checkShouldScroll);
+            document.removeEventListener('keydown', this.handleKeyPress);
         }
     };
 </script>
