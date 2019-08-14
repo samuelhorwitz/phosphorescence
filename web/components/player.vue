@@ -60,6 +60,12 @@
                         <div class="deviceName">{{device.name}} <span v-if="device.type == 'Phosphorescence' && device.isPrimary">(This Window)</span></div>
                     </button>
                 </li>
+                <li @click="createPlaylist">
+                    <button :disabled="savePlaylistSuccessful" class="deviceButton" :class="{success: savePlaylistSuccessful, failure: savePlaylistFailed}">
+                        <div class="deviceIcon phosphorLogo">+</div>
+                        <div class="deviceName">{{savePlaylistButtonText}}</div>
+                    </button>
+                </li>
                 <li @click="refreshDevices">
                     <button class="deviceButton">
                         <div class="deviceIcon"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 100" xml:space="preserve" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Refresh Devices</title><g><path d="M29.455,58.993c-3.851-8.647-2.062-18.514,4.554-25.136c6.619-6.616,16.492-8.405,25.146-4.556   c0.082,0.036,0.166,0.051,0.248,0.082l-4.238,3.327c-1.77,1.388-2.08,3.944-0.691,5.715c0.803,1.022,1.998,1.559,3.205,1.559   c0.883,0,1.766-0.284,2.512-0.868l10.744-8.428c1.219-0.955,1.789-2.518,1.473-4.033l-2.797-13.415   c-0.457-2.199-2.609-3.612-4.814-3.154c-2.201,0.458-3.615,2.614-3.156,4.816l1.291,6.197c-0.035-0.018-0.064-0.042-0.102-0.058   c-12.1-5.383-25.92-2.864-35.217,6.423c-9.285,9.292-11.805,23.112-6.42,35.209c0.749,1.683,2.401,2.683,4.134,2.683   c0.614,0,1.239-0.127,1.837-0.392C29.446,63.947,30.469,61.274,29.455,58.993z"></path><path d="M78.814,37.026c-1.012-2.283-3.686-3.31-5.969-2.296c-2.283,1.012-3.311,3.685-2.295,5.967   c3.844,8.656,2.057,18.523-4.561,25.138c-6.482,6.482-16.081,8.321-24.601,4.774l4.231-3.317c1.767-1.388,2.079-3.947,0.688-5.718   c-1.387-1.767-3.946-2.079-5.714-0.688l-10.746,8.428c-1.218,0.955-1.79,2.518-1.473,4.031l2.796,13.413   C31.57,88.68,33.262,90,35.15,90c0.274,0,0.555-0.028,0.833-0.084c2.2-0.461,3.615-2.615,3.157-4.817l-1.285-6.167   c4.023,1.685,8.218,2.517,12.367,2.517c8.159,0,16.122-3.178,22.167-9.226C81.67,62.948,84.193,49.128,78.814,37.026z"></path></g></svg></div>
@@ -238,6 +244,34 @@
         justify-content: center;
     }
 
+    .deviceButton.success {
+        color: limegreen;
+    }
+
+    .deviceButton.success .deviceIcon svg {
+        fill: limegreen;
+        stroke: limegreen;
+    }
+
+    .deviceButton.success .deviceIcon.phosphorLogo {
+        color: limegreen;
+        border: 1px solid limegreen;
+    }
+
+    .deviceButton.failure {
+        color: indianred;
+    }
+
+    .deviceButton.failure .deviceIcon svg {
+        fill: indianred;
+        stroke: indianred;
+    }
+
+    .deviceButton.failure .deviceIcon.phosphorLogo {
+        color: indianred;
+        border: 1px solid indianred;
+    }
+
     @keyframes marquee {
         0%   { transform: translate(0, 0); }
         100% { transform: translate(-100%, 0); }
@@ -379,7 +413,8 @@
                 devicesLoaded: false,
                 hideActiveDevice: false,
                 isTrackDataScrolling: false,
-                devices: []
+                devices: [],
+                savePlaylistState: null
             };
         },
         computed: {
@@ -443,6 +478,20 @@
                     }
                 }
                 return null;
+            },
+            savePlaylistSuccessful() {
+                return this.savePlaylistState === 'SUCCESS';
+            },
+            savePlaylistFailed() {
+                return this.savePlaylistState === 'FAILED';
+            },
+            savePlaylistButtonText() {
+                if (this.savePlaylistSuccessful) {
+                    return 'Playlist Saved';
+                } else if (this.savePlaylistFailed) {
+                    return 'Failed To Save';
+                }
+                return 'Save Playlist';
             }
         },
         watch: {
@@ -471,6 +520,7 @@
                 this.$store.dispatch('tracks/previous');
             },
             async toggleDevicePicker() {
+                this.savePlaylistState = null;
                 this.devicesMenu = !this.devicesMenu;
                 if (this.devicesLoaded) {
                     return;
@@ -550,6 +600,27 @@
                         this.isTrackDataScrolling = false;
                     }
                 });
+            },
+            async createPlaylist() {
+                let tracks = this.tracks.map(track => {
+                    return {
+                        name: track.track.name,
+                        uri: track.track.uri
+                    };
+                });
+                let savePlaylistResponse = await fetch(`${process.env.API_ORIGIN}/users/me/playlist`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        tracks,
+                        utcOffsetMinutes: -(new Date().getTimezoneOffset())
+                    })
+                });
+                if (savePlaylistResponse.ok) {
+                    this.savePlaylistState = 'SUCCESS';
+                } else {
+                    this.savePlaylistState = 'FAILED';
+                }
             },
             handleKeyPress(e) {
                 if (!this.webPlayerReady) {

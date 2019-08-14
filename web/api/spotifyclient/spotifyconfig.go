@@ -33,6 +33,8 @@ func Initialize(cfg *Config) {
 			"user-read-private",
 			"user-read-playback-state",
 			"user-read-recently-played",
+			"playlist-modify-public",
+			"ugc-image-upload",
 		},
 		Endpoint:    spotify.Endpoint,
 		RedirectURL: fmt.Sprintf("%s/spotify/authorize/redirect", cfg.APIOrigin),
