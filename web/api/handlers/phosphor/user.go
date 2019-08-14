@@ -1,6 +1,7 @@
 package phosphor
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -126,4 +127,126 @@ func ListSpotifyDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.JSONRaw(w, body)
+}
+
+func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
+	if !ok {
+		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Could not read request body: %s", err), http.StatusInternalServerError)
+		return
+	}
+	var requestBody struct {
+		UTCOffsetMinutes int `json:"utcOffsetMinutes"`
+		Tracks           []struct {
+			Name string `json:"name"`
+			URI  string `json:"uri"`
+		} `json:"tracks"`
+	}
+	err = json.Unmarshal(body, &requestBody)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Could not parse request body: %s", err), http.StatusInternalServerError)
+		return
+	}
+	if len(requestBody.Tracks) < 1 {
+		common.Fail(w, errors.New("Must include at least one track"), http.StatusBadRequest)
+		return
+	}
+	var createdPlaylist struct {
+		ID string `json:"id"`
+	}
+	{
+		var createPlaylistBody struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		}
+		now := time.Now().UTC().Add(time.Duration(requestBody.UTCOffsetMinutes) * time.Minute)
+		createPlaylistBody.Name = requestBody.Tracks[0].Name
+		createPlaylistBody.Description = fmt.Sprintf("Created by Phosphorescence on %s at %s. Visit https://phosphor.me to create more trance playlists!", now.Format("Monday, January _2"), now.Format("3:04 PM"))
+		createPlaylistBodyJSON, err := json.Marshal(createPlaylistBody)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not marshal create playlist request body: %s", err), http.StatusInternalServerError)
+			return
+		}
+		req, err := http.NewRequestWithContext(r.Context(), "POST", fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists", sess.SpotifyID), bytes.NewBuffer(createPlaylistBodyJSON))
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not build Spotify create playlist request: %s", err), http.StatusInternalServerError)
+			return
+		}
+		sess.SpotifyToken.SetAuthHeader(req)
+		req.Header.Set("Content-Type", "application/json")
+		res, err := common.SpotifyClient.Do(req)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not make Spotify create playlist request: %s", err), http.StatusInternalServerError)
+			return
+		}
+		defer res.Body.Close()
+		if !(res.StatusCode == http.StatusOK || res.StatusCode == http.StatusCreated) {
+			common.Fail(w, fmt.Errorf("Spotify create playlist request responded with %d", res.StatusCode), http.StatusInternalServerError)
+			return
+		}
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not read Spotify create playlist response: %s", err), http.StatusInternalServerError)
+			return
+		}
+		err = json.Unmarshal(body, &createdPlaylist)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not parse Spotify create playlist response: %s", err), http.StatusInternalServerError)
+			return
+		}
+	}
+	{
+		var addTracksBody struct {
+			URIs []string `json:"uris"`
+		}
+		for _, track := range requestBody.Tracks {
+			addTracksBody.URIs = append(addTracksBody.URIs, track.URI)
+		}
+		addTracksBodyJSON, err := json.Marshal(addTracksBody)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not marshal add tracks request body: %s", err), http.StatusInternalServerError)
+			return
+		}
+		req, err := http.NewRequestWithContext(r.Context(), "POST", fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", createdPlaylist.ID), bytes.NewBuffer(addTracksBodyJSON))
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not build Spotify add tracks request: %s", err), http.StatusInternalServerError)
+			return
+		}
+		sess.SpotifyToken.SetAuthHeader(req)
+		req.Header.Set("Content-Type", "application/json")
+		res, err := common.SpotifyClient.Do(req)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not make Spotify add tracks request: %s", err), http.StatusInternalServerError)
+			return
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusCreated {
+			common.Fail(w, fmt.Errorf("Spotify add tracks request responded with %d", res.StatusCode), http.StatusInternalServerError)
+			return
+		}
+	}
+	{
+		req, err := http.NewRequestWithContext(r.Context(), "PUT", fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/images", createdPlaylist.ID), bytes.NewBuffer([]byte(playlistImageBase64)))
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not build Spotify change image request: %s", err), http.StatusInternalServerError)
+			return
+		}
+		sess.SpotifyToken.SetAuthHeader(req)
+		res, err := common.SpotifyClient.Do(req)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not make Spotify change image request: %s", err), http.StatusInternalServerError)
+			return
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusAccepted {
+			common.Fail(w, fmt.Errorf("Spotify change image request responded with %d", res.StatusCode), http.StatusInternalServerError)
+			return
+		}
+	}
+	common.JSON(w, map[string]interface{}{"playlist": createdPlaylist.ID})
 }

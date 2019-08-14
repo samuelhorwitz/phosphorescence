@@ -97,6 +97,7 @@ func initializeRoutes(cfg *config) http.Handler {
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", phosphor.GetCurrentUser)
 			r.Get("/currently-playing", phosphor.GetCurrentlyPlaying)
+			r.Post("/playlist", phosphor.CreatePlaylist)
 		})
 	}
 	r.Route("/user", userRouter)
