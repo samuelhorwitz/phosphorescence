@@ -23,6 +23,7 @@ FROM alpine:3.10 AS release
 WORKDIR /app
 COPY --from=dependencies /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /app/api/migrations ./migrations
+COPY --from=build /app/api/assets ./assets
 COPY --from=build /app/api/apiapp ./
 RUN chmod +x /app/apiapp
 EXPOSE 80

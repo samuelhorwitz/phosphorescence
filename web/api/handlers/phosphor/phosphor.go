@@ -1,15 +1,21 @@
 package phosphor
 
 import (
+	"encoding/base64"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
 var (
-	phosphorOrigin string
-	isProduction   bool
-	mailgunAPIKey  string
-	mailgunClient  *http.Client
+	phosphorOrigin      string
+	isProduction        bool
+	mailgunAPIKey       string
+	mailgunClient       *http.Client
+	playlistImageBase64 string
 )
 
 type Config struct {
@@ -25,4 +31,16 @@ func Initialize(cfg *Config) {
 	mailgunClient = &http.Client{
 		Timeout: 10 * time.Second,
 	}
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Could not get executable path: %s", err)
+		return
+	}
+	exPath := filepath.Dir(ex)
+	playlistImage, err := ioutil.ReadFile(filepath.Join(exPath, "assets", "playlist_small.jpg"))
+	if err != nil {
+		log.Fatalf("Could not open playlist image: %s", err)
+		return
+	}
+	playlistImageBase64 = base64.StdEncoding.EncodeToString(playlistImage)
 }
