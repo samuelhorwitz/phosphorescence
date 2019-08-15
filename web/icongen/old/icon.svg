@@ -1,0 +1,15 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" width="2634" height="2634">
+    <defs>
+		<style type="text/css">
+			@font-face {
+			    font-family: "Varela";
+			    src: url("./varela.ttf");
+			}
+		</style>
+    </defs>
+    <image width="2634" height="2634" xlink:href="./bg.jpg" />
+    <text x="125" y="2350" fill="magenta" font-size="2800px" font-family="Varela">P</text>
+    <text x="374" y="2350" fill="cyan" font-size="2800px" font-family="Varela">P</text>
+    <text x="623" y="2350" fill="white" font-size="2800px" font-family="Varela">P</text>
+</svg>

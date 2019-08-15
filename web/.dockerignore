@@ -29,3 +29,4 @@ jobs/.gitignore
 jobs/vendor/*
 jobs/Dockerfile
 jobs/jobs
+icongen/*
