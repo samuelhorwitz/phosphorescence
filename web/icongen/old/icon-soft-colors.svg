@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   xml:space="preserve"
+   width="2634"
+   height="2634"
+   id="svg114"
+   sodipodi:docname="icon-soft-colors.svg"
+   inkscape:export-filename="/Users/samuel/src/phosphorescence/web/static/images/icon/renders/310.png"
+   inkscape:export-xdpi="11.298406"
+   inkscape:export-ydpi="11.298406"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"><metadata
+     id="metadata118"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1680"
+     inkscape:window-height="1005"
+     id="namedview116"
+     showgrid="false"
+     inkscape:zoom="0.30068337"
+     inkscape:cx="718.36364"
+     inkscape:cy="1317"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg114" /><defs
+     id="defs104"><style
+       type="text/css"
+       id="style102">
+			@font-face {
+			    font-family: &quot;Varela&quot;;
+			    src: url(&quot;./varela.ttf&quot;);
+			}
+		</style></defs><image
+     sodipodi:absref="/Users/samuel/src/phosphorescence/web/static/images/icon/./bg.jpg"
+     xlink:href="./bg.jpg"
+     id="image106"
+     height="2634"
+     width="2634" /><text
+     x="125"
+     y="2350"
+     fill="magenta"
+     font-size="2100pt"
+     font-family="Varela"
+     id="text108"
+     style="fill:#ff40ff;fill-opacity:1;">P</text>
+<text
+     x="374"
+     y="2350"
+     fill="cyan"
+     font-size="2100pt"
+     font-family="Varela"
+     id="text110"
+     style="fill:#0dfcff;fill-opacity:1;">P</text>
+<text
+     x="623"
+     y="2350"
+     fill="white"
+     font-size="2100pt"
+     font-family="Varela"
+     id="text112">P</text>
+</svg>

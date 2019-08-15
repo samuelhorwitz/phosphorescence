@@ -1,0 +1,1 @@
+Icons are hard so I wrote this to generate icons that rasterize as I would expect which for some reason is more complicated than it seems like it should be. Thanks to Jordan Checkman for advice/help with the alternative favicon styling (`icon-small-special.svg`). Inkscape must be installed.
