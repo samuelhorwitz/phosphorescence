@@ -30,3 +30,6 @@ jobs/vendor/*
 jobs/Dockerfile
 jobs/jobs
 icongen/*
+ml-data/.git
+ml-data/LICENSE
+ml-data/README.md
