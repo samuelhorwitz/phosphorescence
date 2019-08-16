@@ -28,10 +28,14 @@ WORKDIR /app
 COPY --from=dependencies /app/package*.json ./
 RUN npm ci --only=production
 RUN mkdir public
+RUN mkdir public/models
 COPY api api
 COPY --from=build /app/dist ./public
 COPY --from=build /app/static/monaco ./public/monaco
 COPY --from=build /app/static/docs ./public/docs
+COPY --from=build /app/ml-data/aetherealness/ ./public/models/aetherealness/
+COPY --from=build /app/ml-data/primordialness/ ./public/models/primordialness/
+COPY --from=build /app/ml-data/meanstd.json ./public/models/
 COPY --from=build /app/server.js ./
 EXPOSE 80
 CMD ["npm", "start"]
