@@ -38,9 +38,13 @@
                         <option :value="'trippy'">Trippy</option>
                     </select>
                 </li>
-                <li class="advancedMenuItem">
-                    <label for="onlyTheHits">Only Hits</label>
+                <li class="advancedMenuItem checkbox">
+                    <label for="onlyTheHits">Hits</label>
                     <input name="onlyTheHits" type="checkbox" v-model="onlyTheHits">
+                </li>
+                <li class="advancedMenuItem checkbox">
+                    <label for="lowEnergy">Sleep</label>
+                    <input name="lowEnergy" type="checkbox" v-model="lowEnergy">
                 </li>
                 <li class="advancedMenuItem">
                     <button @click="regenerate()" :disabled="$store.state.loading.loading || $nuxt.$route.path !== '/'">Generate!</button>
@@ -84,6 +88,10 @@
         font-weight: bold;
         color: white;
         margin-right: 2em;
+    }
+
+    .advancedMenuItem.checkbox {
+        flex-direction: column;
     }
 
     menu {
@@ -355,7 +363,15 @@
                 set(newValue) {
                     this.$store.commit('preferences/updateOnlyTheHits', newValue);
                 }
-             }
+            },
+            lowEnergy: {
+                get() {
+                    return this.$store.state.preferences.lowEnergy;
+                },
+                set(newValue) {
+                    this.$store.commit('preferences/updateLowEnergy', newValue);
+                }
+            }
         },
         methods: {
             async regenerate() {
@@ -374,11 +390,7 @@
                 this.$store.dispatch('loading/initializeProgress', {id: 'generate', amount: 2, ms: 200});
                 this.$store.commit('loading/playlistGenerating');
                 this.$store.dispatch('tracks/clearPlaylist');
-                let pruners;
-                if (this.$store.state.preferences.onlyTheHits) {
-                    pruners = [builders.hits];
-                }
-                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle], null, pruners);
+                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle], null, this.$store.getters['preferences/pruners']);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
                 this.$store.commit('loading/clearMessage', messageId);

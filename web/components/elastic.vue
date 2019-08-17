@@ -194,11 +194,7 @@
                     let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
                     let {track} = await trackResponse.json();
                     let processedTrack = await processTrack(this.$store.state.user.user.country, track);
-                    let pruners;
-                    if (this.$store.state.preferences.onlyTheHits) {
-                        pruners = [builders.hits];
-                    }
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners);
+                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, this.$store.getters['preferences/pruners']);
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                     if (this.trackState.isPlaying) {
                         let now = new Date().getTime();
