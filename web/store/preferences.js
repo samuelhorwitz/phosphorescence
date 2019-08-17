@@ -24,7 +24,7 @@ export const mutations = {
         if (tracksPerPlaylist) {
             state.tracksPerPlaylist = parseInt(tracksPerPlaylist, 10);
         }
-        if (seedStyle) {
+        if (seedStyle && seedStyle !== 'null') {
             state.seedStyle = seedStyle;
         }
         if (onlyTheHits) {

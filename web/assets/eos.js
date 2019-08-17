@@ -53,30 +53,66 @@ export function sendTrackToEos(track) {
     });
 }
 
-export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firstTrack) {
+export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firstTrack, pruners) {
+    let allDimensions = [];
+    let prunedTrackIds;
+    function appendDimensions(newDims) {
+        if (!newDims) {
+            return;
+        }
+        allDimensions = [...allDimensions, ...newDims].filter((val, index, arr) => arr.indexOf(val) === index);
+    }
+    if (pruners) {
+        for (let pruner of pruners) {
+            let script = encoder.encode(pruner);
+            try {
+                let response = await callBuilder({prunedTrackIds, script}, 'pruneTracks');
+                if (!prunedTrackIds) {
+                    prunedTrackIds = [];
+                }
+                prunedTrackIds = [...prunedTrackIds, ...response.prunedTrackIds];
+                appendDimensions(response.dimensions);
+            }
+            catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+    }
     let script = encoder.encode(builder);
     if (firstTrackBuilder) {
-        let firstTrack, firstTrackDimensions;
+        let firstTrack;
         try {
-            let response = await callBuilder({firstTrackOnly: true, script: encoder.encode(firstTrackBuilder)});
+            let response = await callBuilder({firstTrackOnly: true, prunedTrackIds, script: encoder.encode(firstTrackBuilder)}, 'buildPlaylist');
             firstTrack = response.playlist[0];
-            firstTrackDimensions = response.dimensions;
+            appendDimensions(response.dimensions);
         }
         catch (e) {
             console.error(e);
             return null;
         }
-        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, script});
+        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist');
+        appendDimensions(dimensions);
         return {
             playlist,
-            dimensions: [...firstTrackDimensions, ...dimensions].filter((val, index, arr) => arr.indexOf(val) === index)
+            dimensions: allDimensions
         };
     }
     else if (firstTrack) {
-        return callBuilder({firstTrack, trackCount, script});
+        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist');
+        appendDimensions(dimensions);
+        return {
+            playlist,
+            dimensions: allDimensions
+        };
     }
     else {
-        return callBuilder({trackCount, script});
+        let {playlist, dimensions} = await callBuilder({trackCount, prunedTrackIds, script}, 'buildPlaylist');
+        appendDimensions(dimensions);
+        return {
+            playlist,
+            dimensions: allDimensions
+        };
     }
 }
 
@@ -84,12 +120,15 @@ export function terminatePlaylistBuilding() {
     iframe.contentWindow.postMessage({type: 'terminateAll'}, process.env.EOS_ORIGIN);
 }
 
-function callBuilder(body) {
+function callBuilder(body, type) {
     return new Promise((resolve, reject) => {
         let channel = new MessageChannel();
         channel.port1.onmessage = ({origin, data}) => {
             if (data.type === 'playlist') {
                 resolve({playlist: data.playlist, dimensions: data.dimensions});
+            }
+            else if (data.type === 'prunedTracks') {
+                resolve({prunedTrackIds: data.prunedTrackIds, dimensions: data.dimensions});
             }
             else if (data.type === 'playlistError') {
                 reject(data.error);
@@ -99,6 +138,6 @@ function callBuilder(body) {
             }
             channel.port1.close();
         };
-        iframe.contentWindow.postMessage(Object.assign({type: 'buildPlaylist', responsePort: channel.port2}, body), process.env.EOS_ORIGIN, [channel.port2]);
+        iframe.contentWindow.postMessage(Object.assign({type, responsePort: channel.port2}, body), process.env.EOS_ORIGIN, [channel.port2]);
     });
 }
