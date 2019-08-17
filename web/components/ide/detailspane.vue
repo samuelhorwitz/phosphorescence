@@ -391,8 +391,17 @@
                     else if (dim === 'primordialness' || dim === 'aetherealness') {
                         dimMap[dim.charAt(0).toUpperCase() + dim.slice(1)] = this.inspectedTrack.evocativeness[dim];
                     }
+                    else if (dim === 'popularity') {
+                        dimMap.Popularity = this.inspectedTrack.track.popularity;
+                    }
                     else {
-                        dimMap[dim.charAt(0).toUpperCase() + dim.slice(1)] = this.inspectedTrack.features[dim];
+                        let key = dim.charAt(0).toUpperCase() + dim.slice(1);
+                        let val = this.inspectedTrack.features[dim];
+                        if (!val) {
+                            dimMap[key] = 'Unrecognized dimension';
+                        } else {
+                            dimMap[key] = val;
+                        }
                     }
                 }
                 return dimMap;

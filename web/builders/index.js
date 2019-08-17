@@ -8,6 +8,7 @@ import progressive from '!raw-loader!~/builders/progressive.js';
 import trippy from '!raw-loader!~/builders/trippy.js';
 import phosphorescence from '!raw-loader!~/builders/phosphorescence.js';
 import randomwalk from '!raw-loader!~/builders/randomwalk.js';
+import hits from '!raw-loader!~/builders/hits.js';
 
 export default {
     chillout,
@@ -19,5 +20,6 @@ export default {
     progressive,
     trippy,
     phosphorescence,
-    randomwalk
+    randomwalk,
+    hits
 };

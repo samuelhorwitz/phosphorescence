@@ -45,6 +45,12 @@ export default function wrappedKdTree(points, dimensions, distanceFn) {
         }
         return matches;
     };
+    this.forEach = function forEach(fn) {
+        let points = Object.values(pointsIndex);
+        for (let point of points) {
+            fn(point);
+        }
+    };
     this.length = function length() {
         return Object.keys(pointsIndex).length;
     };

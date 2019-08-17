@@ -36,6 +36,7 @@
                         <option :value="'hard'">Hard</option>
                         <option :value="'dark'">Dark</option>
                         <option :value="'trippy'">Trippy</option>
+                        <option :value="'hits'">Just the hits</option>
                     </select>
                 </li>
                 <li class="advancedMenuItem">

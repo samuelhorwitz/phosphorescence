@@ -149,6 +149,11 @@ Object.defineProperties(self, {
         value: 'duration',
         writable: false,
         configurable: false
+    },
+    POPULARITY: {
+        value: 'popularity',
+        writable: false,
+        configurable: false
     }
 });
 
@@ -169,7 +174,7 @@ const defineAPIFunction = (key, fn) => Object.defineProperty(self, key, {
 // except what is explicitly desired. This way, the user script is sandboxed
 // from the main origin, the UI thread, and bootstrapping code of the sandbox
 // itself.
-export function injector({getTree, getIdToTagMap}) {
+export function injector({getTree, getIdToTagMap, registerDimension}) {
     // ### The _k_-d tree
     // [_k_-d trees](https://en.wikipedia.org/wiki/K-d_tree) are trees that are
     // partitioned across _k_ dimensions. The use of these trees is for finding
@@ -225,9 +230,19 @@ export function injector({getTree, getIdToTagMap}) {
         return getTree().getNodesWhere(fn);
     });
 
+    // This traverse every node in the tree for analysis purposes.
+    defineAPIFunction('forEachNode', function(fn) {
+        return getTree().forEach(fn);
+    });
+
     // This returns how many nodes are left in the tree.
     defineAPIFunction('treeSize', function(fn) {
         return getTree().length();
+    });
+
+    // Allows a non-tree dimension to be registered for logging.
+    defineAPIFunction('addLoggingDimension', function(dim) {
+        registerDimension(dim);
     });
 
     // When searching for nearest neighbors,
@@ -390,7 +405,7 @@ export function injector({getTree, getIdToTagMap}) {
     defineAPIFunction('getPointFromTrack', function(trackWrapper) {
         let idsToTags = getIdToTagMap();
         let {track, features, evocativeness} = trackWrapper;
-        let {id} = track;
+        let {id, popularity} = track;
         let {
             key,
             mode,
@@ -418,14 +433,15 @@ export function injector({getTree, getIdToTagMap}) {
             valence,
             liveness,
             loudness,
+            duration,
+            popularity,
             speechiness,
             acousticness,
             danceability,
+            timeSignature,
             aetherealness,
             primordialness,
-            instrumentalness,
-            duration,
-            timeSignature
+            instrumentalness
         };
     });
 };
