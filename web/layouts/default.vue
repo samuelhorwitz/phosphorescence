@@ -246,7 +246,11 @@
                 }
                 let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
                 this.$store.dispatch('loading/initializeProgress', {id: 'generate', weight: 35, ms: 200, amount: 2});
-                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle]);
+                let builder = builders.randomwalk;
+                if (this.$store.state.preferences.onlyTheHits) {
+                    builder = builders.hits;
+                }
+                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builder, builders[this.$store.state.preferences.seedStyle]);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
                 this.$store.commit('loading/clearMessage', messageId);
@@ -331,7 +335,11 @@
                 let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${trackId}`, {credentials: 'include'});
                 let {track} = await trackResponse.json();
                 let processedTrack = await processTrack(this.$store.state.user.user.country, track);
-                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack);
+                let builder = builders.randomwalk;
+                if (this.$store.state.preferences.onlyTheHits) {
+                    builder = builders.hits;
+                }
+                let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builder, null, processedTrack);
                 this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');

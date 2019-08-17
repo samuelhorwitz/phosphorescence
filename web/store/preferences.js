@@ -1,6 +1,7 @@
 export const state = () => ({
     tracksPerPlaylist: 10,
-    seedStyle: null
+    seedStyle: null,
+    onlyTheHits: false
 });
 
 export const mutations = {
@@ -12,14 +13,22 @@ export const mutations = {
         localStorage.setItem('seedStyle', seedStyle);
         state.seedStyle = seedStyle;
     },
+    updateOnlyTheHits(state, onlyTheHits) {
+        localStorage.setItem('onlyTheHits', onlyTheHits);
+        state.onlyTheHits = onlyTheHits;
+    },
     restore(state) {
         let tracksPerPlaylist = localStorage.getItem('tracksPerPlaylist');
         let seedStyle = localStorage.getItem('seedStyle');
+        let onlyTheHits = localStorage.getItem('onlyTheHits');
         if (tracksPerPlaylist) {
             state.tracksPerPlaylist = parseInt(tracksPerPlaylist, 10);
         }
         if (seedStyle) {
             state.seedStyle = seedStyle;
+        }
+        if (onlyTheHits) {
+            state.onlyTheHits = onlyTheHits === 'true';
         }
     }
 };
