@@ -26,19 +26,19 @@
 // as use the supplied harmonic and tempo functions to ensure we lean towards
 // non-jarring harmonic shifts and BPM changes.
 self.hooks.buildTree = function (kdTree, {points}) {
-    return new kdTree(points, [AETHEREALNESS, PRIMORDIALNESS, KEY, MODE, TEMPO], (a, b) => {
+    return buildResponse(new kdTree(points, [AETHEREALNESS, PRIMORDIALNESS, KEY, MODE, TEMPO], (a, b) => {
         return calculateEuclidianDistance(
             b.aetherealness - a.aetherealness,
             b.primordialness - a.primordialness,
             nonJarringHarmonicDifference(a, b),
             nonJarringTempoDifference(a, b)
         );
-    });
+    }));
 }
 
 // Choose a completely random first track.
 self.hooks.getFirstTrack = function() {
-    return getRandomTrack();
+    return buildResponse(getRandomTrack());
 };
 
 // All subsequent tracks are picked by feeding the last chosen track into the
@@ -47,7 +47,7 @@ self.hooks.getFirstTrack = function() {
 // changes. Prior to picking a random track, we also make sure to clear out all
 // tracks that may not be exact duplicates but are likely remixes or different
 // releases of an already chosen track.
-self.hooks.getNextTrack = function({tags}, previousTrack) {
+self.hooks.getNextTrack = function({tags, previousTrack}) {
     let neighbors = getNearestNeighborsByTrack(treeSize() * 0.005, previousTrack);
-    return pickRandom(cullTracksWithAlreadySeenTags(neighbors, tags));
+    return buildResponse(pickRandom(cullTracksWithAlreadySeenTags(neighbors, tags)));
 };

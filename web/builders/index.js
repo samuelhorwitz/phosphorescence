@@ -6,9 +6,9 @@ import melancholy from '!raw-loader!~/builders/melancholy.js';
 import primal from '!raw-loader!~/builders/primal.js';
 import progressive from '!raw-loader!~/builders/progressive.js';
 import trippy from '!raw-loader!~/builders/trippy.js';
-import phosphorescence from '!raw-loader!~/builders/phosphorescence.js';
 import randomwalk from '!raw-loader!~/builders/randomwalk.js';
 import hits from '!raw-loader!~/builders/hits.js';
+import lowEnergy from '!raw-loader!~/builders/sleep.js';
 
 export default {
     chillout,
@@ -19,7 +19,7 @@ export default {
     primal,
     progressive,
     trippy,
-    phosphorescence,
     randomwalk,
-    hits
+    hits,
+    lowEnergy
 };

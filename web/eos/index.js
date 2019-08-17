@@ -11,7 +11,7 @@ addEventListener('message', async ({origin, data}) => {
         return;
     }
     let {responsePort} = data;
-    if (data.type === 'buildPlaylist') {
+    if (data.type === 'buildPlaylist' || data.type === 'pruneTracks') {
         let finished = false;
         let runner = new RunnerWorker();
         async function killRunnerAndCleanup() {
@@ -27,6 +27,9 @@ addEventListener('message', async ({origin, data}) => {
             if (e.data.secret === secret) {
                 if (e.data.type === 'playlist') {
                     responsePort.postMessage({type: 'playlist', playlist: e.data.playlist, dimensions: e.data.dimensions});
+                }
+                else if (e.data.type === 'prunedTracks') {
+                    responsePort.postMessage({type: 'prunedTracks', prunedTrackIds: e.data.prunedTrackIds, dimensions: e.data.dimensions});
                 }
                 else {
                     responsePort.postMessage({type: 'playlistError', error: e.data.error});
@@ -45,16 +48,29 @@ addEventListener('message', async ({origin, data}) => {
                 responsePort.postMessage({type: 'playlistError', error: 'User killed builder'});
             }
         }, {once: true});
-        runner.postMessage({
-            type: 'buildPlaylist',
-            tracksUrl: await tracksReady,
-            additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
-            trackCount: data.trackCount,
-            firstTrackOnly: data.firstTrackOnly,
-            firstTrack: data.firstTrack,
-            script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`),
-            secret
-        });
+        if (data.type === 'buildPlaylist') {
+            runner.postMessage({
+                type: 'buildPlaylist',
+                tracksUrl: await tracksReady,
+                additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
+                prunedTrackIds: data.prunedTrackIds,
+                trackCount: data.trackCount,
+                firstTrackOnly: data.firstTrackOnly,
+                firstTrack: data.firstTrack,
+                script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`),
+                secret
+            });
+        }
+        else if (data.type === 'pruneTracks') {
+            runner.postMessage({
+                type: 'pruneTracks',
+                tracksUrl: await tracksReady,
+                additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
+                prunedTrackIds: data.prunedTrackIds,
+                script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`),
+                secret
+            });
+        }
     }
     else if (data.type === 'loadTracks') {
         let trackData = pako.ungzip(data.tracks);

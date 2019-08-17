@@ -16,18 +16,15 @@
  * licensed under the repository's MIT license.
  */
 
-self.hooks.prune = function ({tracks, unprunedTracks}) {
-    addLoggingDimension(POPULARITY);
-    let totalPopularity = 0;
-    let unprunedTracksArr = Object.values(unprunedTracks);
-    unprunedTracksArr.forEach(({track}) => totalPopularity += track.popularity);
-    let avgPopularity = totalPopularity / unprunedTracksArr.length;
-    let popularTracks = {};
+self.hooks.prune = function ({tracks}) {
+    addLoggingDimension(ENERGY, LOUDNESS, TEMPO);
+    let sleepTracks = {};
     Object.values(tracks).forEach(trackWrapper => {
-        let {track} = trackWrapper;
-        if (track.popularity > avgPopularity) {
-            popularTracks[track.id] = trackWrapper;
+        let {track, features} = trackWrapper;
+        let {energy, loudness, tempo} = features;
+        if (tempo <= 130 && energy <= 0.7 && loudness <= -10) {
+            sleepTracks[track.id] = trackWrapper;
         }
     });
-    return buildResponse(popularTracks);
+    return buildResponse(sleepTracks);
 }

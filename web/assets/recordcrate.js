@@ -36,7 +36,7 @@ export async function processTrack(countryCode, track) {
     return processedTrack;
 }
 
-export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack) {
+export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners) {
     if (!builder) {
         builder = builders.randomwalk;
     }
@@ -46,7 +46,7 @@ export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTr
     let playlist;
     let dimensions;
     try {
-        let response = await buildPlaylist(count, builder, firstTrackBuilder, firstTrack);
+        let response = await buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners);
         playlist = response.playlist;
         dimensions = response.dimensions;
     }
