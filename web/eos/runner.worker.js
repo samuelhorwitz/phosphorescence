@@ -6,11 +6,13 @@
     let idToTagMap;
     let tracks;
     let additionalTracks = {};
+    let extraDimensions = [];
     let tree;
     let getTree = () => tree;
     let getIdToTagMap = () => idToTagMap;
+    let registerDimension = dim => extraDimensions.push(dim);
 
-    require('./api.js').injector({getTree, getIdToTagMap});
+    require('./api.js').injector({getTree, getIdToTagMap, registerDimension});
 
     addEventListener('message', async ({data}) => {
         // The secret is used so that the worker code cannot try and falsify a postMessage to `self`
@@ -64,7 +66,7 @@
             self.postMessage({type: 'playlistError', error: e.message, secret});
             return;
         }
-        self.postMessage({type: 'playlist', playlist, dimensions: tree.getDimensions(), secret});
+        self.postMessage({type: 'playlist', playlist, dimensions: [...tree.getDimensions(), ...extraDimensions], secret});
     });
 
     async function buildPlaylist(script, goalTracks, firstTrack) {
