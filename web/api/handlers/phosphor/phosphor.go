@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/microcosm-cc/bluemonday"
 )
 
 var (
@@ -16,6 +18,7 @@ var (
 	mailgunAPIKey       string
 	mailgunClient       *http.Client
 	playlistImageBase64 string
+	noHTML              *bluemonday.Policy
 )
 
 type Config struct {
@@ -43,4 +46,5 @@ func Initialize(cfg *Config) {
 		return
 	}
 	playlistImageBase64 = base64.StdEncoding.EncodeToString(playlistImage)
+	noHTML = bluemonday.StrictPolicy()
 }

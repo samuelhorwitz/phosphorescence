@@ -22,6 +22,7 @@ var (
 )
 
 type Config struct {
+	IsProduction             bool
 	SpacesID                 string
 	SpacesSecret             string
 	SpacesScriptsEndpoint    string
@@ -55,4 +56,38 @@ func Initialize(cfg *Config) {
 	postgresDB.SetMaxOpenConns(cfg.PostgresMaxOpen)
 	postgresDB.SetMaxIdleConns(cfg.PostgresMaxIdle)
 	postgresDB.SetConnMaxLifetime(time.Duration(cfg.PostgreMaxLifetime) * time.Minute)
+	initializeRefreshers(cfg.IsProduction)
+}
+
+func initializeRefreshers(isProduction bool) {
+	go func() {
+		logInDev := func(l string) {
+			if !isProduction {
+				log.Println(l)
+			}
+		}
+		for {
+			time.Sleep(5 * time.Minute)
+			logInDev("Refreshing materialized views...")
+			var err error
+			_, err = postgresDB.Exec("refresh materialized view searchables")
+			if err != nil {
+				log.Printf("Could not refresh searchables: %s", err)
+				continue
+			}
+			logInDev("Searchables refreshed")
+			_, err = postgresDB.Exec("refresh materialized view searchable_lexemes")
+			if err != nil {
+				log.Printf("Could not refresh searchable_lexemes: %s", err)
+				continue
+			}
+			logInDev("Searchable lexemes refreshed")
+			_, err = postgresDB.Exec("refresh materialized view searchable_tag_lexemes")
+			if err != nil {
+				log.Printf("Could not refresh searchable_tag_lexemes: %s", err)
+				continue
+			}
+			logInDev("Searchable tag lexemes refreshed")
+		}
+	}()
 }

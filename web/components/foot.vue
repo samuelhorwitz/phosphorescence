@@ -3,10 +3,10 @@
         <ol>
             <li><span @click="flash" @mouseover="tosHover = true" @mouseout="tosHover = false" class="wrapper"><nuxt-link to="/legal/tos" target="_blank"><glitch :text="'[Terms of Service]'" :enable="tosHover"/></nuxt-link></span></li>
             <li ><span @click="flash" @mouseover="privacyHover = true" @mouseout="privacyHover = false" class="wrapper"><nuxt-link to="/legal/privacy" target="_blank"><glitch :text="'[Privacy]'" :enable="privacyHover"/></nuxt-link></span></li>
-            <li><span @mouseover="githubHover = true" @mouseout="githubHover = false" class="wrapper"><a target="_blank" href="https://github.com/samuelhorwitz/phosphorescence"><glitch :text="'[GitHub]'" :enable="githubHover"/></a></span></li>
+            <li><span @mouseover="githubHover = true" @mouseout="githubHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence"><glitch :text="'[GitHub]'" :enable="githubHover"/></a></span></li>
             <li class="spotify">
                 <div class="spotifyLogo">
-                    <a target="_blank" href="https://spotify.com"><span class="spotifyPreCopy">Content made available by</span><img alt="Spotify" class="spotifyLogoImg" src="/images/spotify_small.png"></a>
+                    <a target="_blank" rel="external noopener" href="https://spotify.com"><span class="spotifyPreCopy">Content made available by</span><img alt="Spotify" class="spotifyLogoImg" src="/images/spotify_small.png"></a>
                 </div>
             </li>
         </ol>
