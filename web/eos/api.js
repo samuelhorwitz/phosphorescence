@@ -192,19 +192,32 @@ export function injector({getTree, getIdToTagMap, registerDimension}) {
     // You may return promises and use `async` functions if desired, for all
     // hooks. It will be properly handled by the runner.
     self.hooks = {
+        // This hook is called prior to tree-building and allows you to prune
+        // the list of tracks. It is not required.
+        prune({tracks, idToTagMap, unprunedTracks}) {return buildResponse(tracks)},
         // This hook allows you to define your tree building function. The tree
         // is the main datastructure used in the playlist building search. All
         // available tracks are already transformed into `points`, however if
         // you want to define you own points we provide `tracks` as well as a
         // map of IDs to tags as the raw starting point.
-        buildTree(kdTreeCtor, {points, tracks, idToTagMap}) {throw new Error('You must define a buildTree hook!')},
+        buildTree(kdTreeCtor, {points, tracks, idToTagMap}) {return buildResponse(null)},
         // This hook lets you specify logic for getting the first track of the
         // playlist.
-        getFirstTrack({playlist, tags, goalTracks}, tree) {throw new Error('You must define a getFirstTrack hook!')},
+        getFirstTrack({playlist, tags, goalTracks, points, tracks}, tree) {throw new Error('You must define a getFirstTrack hook!')},
         // And this one let's you specify logic for getting all subsequent
         // tracks, one at a time.
-        getNextTrack({playlist, tags, goalTracks}, previousTrack, tree) {throw new Error('You must define a getNextTrack hook!')}
+        getNextTrack({playlist, tags, goalTracks, points, previousTrack, tracks}, tree) {throw new Error('You must define a getNextTrack hook!')}
     };
+
+    // Build response envelope for hook.
+    defineAPIFunction('buildResponse', function(data) {
+        return {data};
+    });
+
+    // Wrap point data correctly.
+    defineAPIFunction('buildPoint', function(point) {
+        return {point};
+    });
 
     // Get _k_ nearest neighbors relative to a track. The track will be turned
     // into a standard point for you. If you are using your own custom point
