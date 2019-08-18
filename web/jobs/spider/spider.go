@@ -3,6 +3,7 @@ package spider
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 func GetTracks(cfg *Config) (map[string]*TrackEnvelope, error) {
@@ -102,18 +103,20 @@ func buildTracks(playlists playlists, blacklist map[string]bool, artistBlacklist
 			if blacklist[id] {
 				continue
 			}
-			isArtistBlacklisted, err := checkIfBlacklistedArtist(seedTrack.Track, artistBlacklist)
+			isArtistBlacklisted, artistName, err := checkIfBlacklistedArtist(seedTrack.Track, artistBlacklist)
 			if err != nil {
 				return nil, fmt.Errorf("Could not check if artist is blacklisted: %s", err)
 			}
 			if isArtistBlacklisted {
+				log.Printf(`Skipping blacklisted artist "%s"`, artistName)
 				continue
 			}
-			isMixCut, err := checkIfMixCut(seedTrack.Track)
+			isMixCut, trackName, err := checkIfMixCut(seedTrack.Track)
 			if err != nil {
 				return nil, fmt.Errorf("Could not check if mix cut: %s", err)
 			}
 			if isMixCut {
+				log.Printf(`Skipping mixed track "%s"`, trackName)
 				continue
 			}
 			allTracks[id] = seedTrack
