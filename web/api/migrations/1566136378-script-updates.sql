@@ -119,3 +119,14 @@ join (
 	group by script_chain_id
 ) script_chain_versions on script_chains.id = script_chain_versions.script_chain_id
 where script_chains.deleted_at is null;
+
+create table script_chain_likes (
+    script_chain_id uuid not null references script_chains(id) on update restrict on delete restrict,
+    liker_id uuid not null references users(id) on update restrict on delete restrict,
+    primary key (script_chain_id, liker_id)
+);
+
+create index on script_chain_likes (liker_id);
+
+grant insert on script_chain_likes to phosphor_api;
+grant delete on script_chain_likes to phosphor_api;
