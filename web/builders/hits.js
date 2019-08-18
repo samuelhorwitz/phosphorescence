@@ -16,6 +16,13 @@
  * licensed under the repository's MIT license.
  */
 
+// Prune functions are called before tree building and track generation. They
+// may also be called alone for builders that only act as pruners, in a chain of
+// builder calls. They are responsible for reducing the tracks available. They
+// are only allowed to return a subset of the passed in `tracks`; attempting to
+// add tracks will result in an error. The `unprunedTracks` value is passed in
+// solely for analysis, such as here, where we want the average popularity of
+// all tracks in order to filter.
 self.hooks.prune = function ({tracks, unprunedTracks}) {
     addLoggingDimension(POPULARITY);
     let totalPopularity = 0;
