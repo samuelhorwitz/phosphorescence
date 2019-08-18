@@ -65,32 +65,19 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
     if (pruners) {
         for (let pruner of pruners) {
             let script = encoder.encode(pruner);
-            try {
-                let response = await callBuilder({prunedTrackIds, script}, 'pruneTracks');
-                if (!prunedTrackIds) {
-                    prunedTrackIds = [];
-                }
-                prunedTrackIds = [...prunedTrackIds, ...response.prunedTrackIds];
-                appendDimensions(response.dimensions);
+            let response = await callBuilder({prunedTrackIds, script}, 'pruneTracks');
+            if (!prunedTrackIds) {
+                prunedTrackIds = [];
             }
-            catch (e) {
-                console.error(e);
-                return null;
-            }
+            prunedTrackIds = [...prunedTrackIds, ...response.prunedTrackIds];
+            appendDimensions(response.dimensions);
         }
     }
     let script = encoder.encode(builder);
     if (firstTrackBuilder) {
-        let firstTrack;
-        try {
-            let response = await callBuilder({firstTrackOnly: true, prunedTrackIds, script: encoder.encode(firstTrackBuilder)}, 'buildPlaylist');
-            firstTrack = response.playlist[0];
-            appendDimensions(response.dimensions);
-        }
-        catch (e) {
-            console.error(e);
-            return null;
-        }
+        let response = await callBuilder({firstTrackOnly: true, prunedTrackIds, script: encoder.encode(firstTrackBuilder)}, 'buildPlaylist');
+        let firstTrack = response.playlist[0];
+        appendDimensions(response.dimensions);
         let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist');
         appendDimensions(dimensions);
         return {

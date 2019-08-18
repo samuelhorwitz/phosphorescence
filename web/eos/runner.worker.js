@@ -1,3 +1,72 @@
+let safePostMessage = self.postMessage;
+let checksFailed = true;
+
+// First lets lockdown and run sanity checks
+(async () => {
+    ['indexedDB', 'caches', 'CacheStorage', 'Caches', 'postMessage', 'close'].forEach(o => {
+        let t = self;
+        while (!!Object.getOwnPropertyDescriptor(t, o) || !!t.__lookupGetter__(o)) {
+            Object.defineProperty(t, o, {
+                get() {
+                    throw new Error(`Disallowed Exception: You cannot use global property ${o} in a track builder script`);
+                },
+                configurable: false
+            });
+            t = Object.getPrototypeOf(t);
+        }
+    });
+
+    // Test data offloading CSP
+    let failedChecks = {
+        remoteConnectionCheck: true,
+        idbCheck: true,
+        caches: true,
+        close: true,
+        postMessage: true
+    }
+
+    try {
+        let response = await fetch('http://example.com/this-fetch-should-fail');
+    } catch (e) {
+        failedChecks.remoteConnectionCheck = false;
+    }
+
+    try {
+        indexedDB;
+    } catch (e) {
+        failedChecks.idbCheck = false;
+    }
+
+    try {
+        caches;
+    } catch (e) {
+        failedChecks.caches = false;
+    }
+
+    try {
+        close();
+    } catch (e) {
+        failedChecks.close = false;
+    }
+
+    try {
+        postMessage('foo');
+    } catch (e) {
+        failedChecks.postMessage = false;
+    }
+
+    for (let key in failedChecks) {
+        let failedCheck = failedChecks[key];
+        if (failedCheck) {
+            return;
+        }
+    }
+
+    // Everything is okay
+    checksFailed = false;
+})();
+
+// Now lets run code
 (() => {
     const kdTree = require('./kdtree').default;
     const {getTrackTag} = require('../common/normalize');
@@ -20,9 +89,14 @@
         // The message handlers set up to listen to this worker pass in a secret they expect back
         // on response which lives inside this closure and cannot be accessed by user code.
         let secret = data.secret;
+        if (checksFailed) {
+            console.error('Checks failed');
+            safePostMessage({type: 'playlistError', error: 'checks failed', secret});
+            return;
+        }
         if (data.type !== 'buildPlaylist' && data.type !== 'pruneTracks') {
             console.error('Unexpected request', data.type);
-            self.postMessage({type: 'playlistError', error: 'unexpected request type', secret});
+            safePostMessage({type: 'playlistError', error: 'unexpected request type', secret});
             return;
         }
         let trackData = await new Promise(async resolve => {
@@ -67,11 +141,11 @@
             }
             catch (e) {
                 console.error('Could not prune tracks:', e);
-                self.postMessage({type: 'playlistError', error: e.message, secret});
+                safePostMessage({type: 'playlistError', error: e.message, secret});
                 return;
             }
             console.log(`Tracks pruned down to ${prunedTrackIds.length}`);
-            self.postMessage({type: 'prunedTracks', prunedTrackIds, dimensions: extraDimensions, secret});
+            safePostMessage({type: 'prunedTracks', prunedTrackIds, dimensions: extraDimensions, secret});
         } else {
             let trackCount = data.trackCount;
             let firstTrack;
@@ -91,14 +165,14 @@
             }
             catch (e) {
                 console.error('Could not build playlist:', e);
-                self.postMessage({type: 'playlistError', error: e.message, secret});
+                safePostMessage({type: 'playlistError', error: e.message, secret});
                 return;
             }
             let dimensions = [...extraDimensions];
             if (tree) {
                 dimensions = [...dimensions, ...tree.getDimensions()];
             }
-            self.postMessage({type: 'playlist', playlist, dimensions, secret});
+            safePostMessage({type: 'playlist', playlist, dimensions, secret});
         }
     });
 
