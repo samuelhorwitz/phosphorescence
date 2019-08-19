@@ -31,8 +31,16 @@ create function remove_hashtags(text) returns text as $$
 	select regexp_replace($1, '#[^\s]+', '', 'g')
 $$ language sql;
 
+create function clean_hashtag(text) returns text as $$
+	select regexp_replace(unaccent($1), '[^A-Za-z0-9]+', '', 'g')
+$$ language sql;
+
+create function clean_text(text) returns text as $$
+	select regexp_replace(unaccent($1), '[^A-Za-z0-9\s]+', '', 'g')
+$$ language sql;
+
 create function get_hashtags(text) returns text[] as $$
-	select array(select unaccent(array_to_string(regexp_matches($1, '#([^#\s]+)', 'g'), ',')))
+	select array(select clean_hashtag(array_to_string(regexp_matches($1, '#([^#\s]+)', 'g'), ',')))
 $$ language sql;
 
 create materialized view searchables as
@@ -109,7 +117,7 @@ $$ language sql;
 
 create type search_result as (rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint);
 
-create or replace function search(text) returns setof search_result as $$
+create function search(text) returns setof search_result as $$
 	with phrase as (select array_to_string(array_remove(array[
 		phraseto_tsquery('english', unaccent($1))::text,
 		phraseto_tsquery('english', get_close_phrase($1))::text,
@@ -137,12 +145,16 @@ create or replace function search(text) returns setof search_result as $$
 				searchables.author_name,
 				searchables.likes
 				from searchables, phrase
-				where searchables.name ilike ('%' || unaccent($1) || '%')
-				or searchables.description ilike ('%' || unaccent($1) || '%')
+				where clean_text(searchables.name) ilike ('%' || clean_text($1) || '%')
+				or clean_text(searchables.description) ilike ('%' || clean_text($1) || '%')
 				order by rank desc, likes desc
 			) results
 		) searchables
 		where rank > 0
 	) searchables_uq
 	order by rank desc, likes desc
+$$ language sql;
+
+create function search_hashtag(text) returns setof searchables as $$
+	select * from searchables where tags @> array[clean_hashtag($1)]
 $$ language sql;
