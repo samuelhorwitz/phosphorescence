@@ -1,6 +1,8 @@
 -- IMPORTANT! These must be run as super user!
 -- create extension pg_trgm;
 -- create extension unaccent;
+-- create extension plperl;
+-- `plperl.on_init = 'use utf8; use re; package utf8; require "utf8_heavy.pl";'` needed in the config (this is already on DO managed instance)
 
 alter table users add column name text not null;
 
@@ -27,28 +29,42 @@ create function build_document(text, text, text, text[], bool) returns tsvector 
 	setweight(to_tsvector('simple', unaccent(array_to_string($4, ' '))), 'A')
 $$ language sql;
 
--- Hashtag parsing high level:
--- We are searching for anything that starts with "#" (whether or not it's
--- preceeded by whitespace) and consuming everything until we hit whitespace or
--- punctuation. The exception is the ASCII punctuation for underscore ("_") and
--- simple dash/hyphen/minus ("-"). These are consumed as well but treated as
--- empty string (so "foo-bar", "foo_bar" and "foobar" are all the same). We also
--- normalize the tag by stripping accents and converting to lowercase. If the
--- end result leaves us with nothing, then we have a null value hashtag and it's
--- tossed out (eg "#_"). We filter the set of tags by uniqueness and end up with
--- a bunch of unique normalized tags. Also, tags must be at least 3 characters.
+-- A hashtag begins the second a hashmark is seen regardless of what preceeds it
+-- and must be followed by a letter or number from across the entire Unicode
+-- spectrum. Then, optionally, more letters and numbers, potentially with single
+-- dashes or connectors interspersed throughout, but no trailing dashes or
+-- connectors.
 
 create function remove_hashtags(text) returns text as $$
-	select regexp_replace($1, '#(?:[^[:punct:][:space:]]|[\-_])+', '', 'g')
-$$ language sql;
+	$_[0] =~ s/#((?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*))//g;
+	return $_[0];
+$$ language plperl;
+
+create function match_hashtags(text) returns text[][] as $$
+	@matches = ($_[0] =~ /#((?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*))/gi);
+	return [@matches];
+$$ language plperl;
+
+create function validate_hashtag(text) returns boolean as $$
+	return true if $_[0] =~ /^(?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*)$/i;
+	return false;
+$$ language plperl;
+
+create function remove_allowed_connectors_from_hashtag(text) returns text as $$
+	$_[0] =~ s/[\p{Pc}\p{Pd}]//g;
+	return $_[0];
+$$ language plperl;
 
 create function clean_hashtag(text) returns text as $$
-	with cleaned as (select regexp_replace(lower(unaccent($1)), '[\-_]', '', 'g') as cleaned)
-	select case when char_length(cleaned) < 3 then null else cleaned end from cleaned
+	select remove_allowed_connectors_from_hashtag(lower(unaccent($1)))
+$$ language sql;
+
+create function validate_and_clean_hashtag(text) returns text as $$
+	select case when validate_hashtag($1) then clean_hashtag($1) else null end
 $$ language sql;
 
 create function get_hashtags(text) returns text[] as $$
-	select array(select distinct unnest(array_remove(array(select clean_hashtag(array_to_string(regexp_matches($1, '#((?:[^#[:punct:][:space:]]|[\-_])+)', 'gi'), ','))), null)))
+	select array(select distinct unnest(array_remove(array(select clean_hashtag(array_to_string(match_hashtags($1), ','))), null)))
 $$ language sql;
 
 create materialized view searchables as
@@ -169,5 +185,5 @@ create function search(text) returns setof search_result as $$
 $$ language sql;
 
 create function search_hashtag(text) returns setof searchables as $$
-	select * from searchables where tags @> array[clean_hashtag($1)]
+	select * from searchables where tags @> array[validate_and_clean_hashtag($1)]
 $$ language sql;

@@ -52,3 +52,5 @@ cross join lateral (
     order by word <-> original_words asc
 ) lex;
 ```
+
+`#((?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*))`
