@@ -27,16 +27,28 @@ create function build_document(text, text, text, text[], bool) returns tsvector 
 	setweight(to_tsvector('simple', unaccent(array_to_string($4, ' '))), 'A')
 $$ language sql;
 
+-- Hashtag parsing high level:
+-- We are searching for anything that starts with "#" (whether or not it's
+-- preceeded by whitespace) and consuming everything until we hit whitespace or
+-- punctuation. The exception is the ASCII punctuation for underscore ("_") and
+-- simple dash/hyphen/minus ("-"). These are consumed as well but treated as
+-- empty string (so "foo-bar", "foo_bar" and "foobar" are all the same). We also
+-- normalize the tag by stripping accents and converting to lowercase. If the
+-- end result leaves us with nothing, then we have a null value hashtag and it's
+-- tossed out (eg "#_"). We filter the set of tags by uniqueness and end up with
+-- a bunch of unique normalized tags. Also, tags must be at least 3 characters.
+
 create function remove_hashtags(text) returns text as $$
-	select regexp_replace($1, '#[^\s]+', '', 'g')
+	select regexp_replace($1, '#(?:[^[:punct:][:space:]]|[\-_])+', '', 'g')
 $$ language sql;
 
 create function clean_hashtag(text) returns text as $$
-	select lower(regexp_replace(unaccent($1), '[^A-Za-z0-9]+', '', 'g'))
+	with cleaned as (select regexp_replace(lower(unaccent($1)), '[\-_]', '', 'g') as cleaned)
+	select case when char_length(cleaned) < 3 then null else cleaned end from cleaned
 $$ language sql;
 
 create function get_hashtags(text) returns text[] as $$
-	select array(select clean_hashtag(array_to_string(regexp_matches($1, '#([^#\s]+)', 'g'), ',')))
+	select array(select distinct unnest(array_remove(array(select clean_hashtag(array_to_string(regexp_matches($1, '#((?:[^#[:punct:][:space:]]|[\-_])+)', 'gi'), ','))), null)))
 $$ language sql;
 
 create materialized view searchables as
