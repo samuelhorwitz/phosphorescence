@@ -32,7 +32,7 @@ create function remove_hashtags(text) returns text as $$
 $$ language sql;
 
 create function clean_hashtag(text) returns text as $$
-	select regexp_replace(unaccent($1), '[^A-Za-z0-9]+', '', 'g')
+	select lower(regexp_replace(unaccent($1), '[^A-Za-z0-9]+', '', 'g'))
 $$ language sql;
 
 create function get_hashtags(text) returns text[] as $$
@@ -146,12 +146,12 @@ create function search(text) returns setof search_result as $$
 				searchables.author_name,
 				searchables.likes
 				from searchables, phrase
-				where unaccent(searchables.name) ilike (unaccent($1) || '%')
-				or unaccent(searchables.description) ilike (unaccent($1) || '%')
+				where unaccent(searchables.name) ilike ('%' || unaccent($1) || '%')
+				or unaccent(searchables.description) ilike ('%' || unaccent($1) || '%')
 				order by rank desc, likes desc
 			) results
 		) searchables
-		where rank > 0.01
+		where rank > 5.96e-08 -- epsilon
 	) searchables_uq
 	order by rank desc, likes desc
 $$ language sql;
