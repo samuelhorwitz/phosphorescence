@@ -15,8 +15,8 @@ from script_chains_view
 where is_private = false;
 
 create type searchable_type as enum (
-    'script',
-    'script_chain'
+	'script',
+	'script_chain'
 );
 
 create function build_document(text, text, text, text[], bool) returns tsvector as $$
@@ -109,24 +109,40 @@ $$ language sql;
 
 create type search_result as (rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint);
 
-create function search(text) returns setof search_result as $$
+create or replace function search(text) returns setof search_result as $$
 	with phrase as (select array_to_string(array_remove(array[
-		phraseto_tsquery('english', $1)::text,
+		phraseto_tsquery('english', unaccent($1))::text,
 		phraseto_tsquery('english', get_close_phrase($1))::text,
-		phraseto_tsquery('simple', $1)::text,
+		phraseto_tsquery('simple', unaccent($1))::text,
 		phraseto_tsquery('simple', get_close_phrase($1))::text
 	], ''),'|')::tsquery as phrase)
-	select rank, id, type, name, description, author_name, likes
-	from (
-	    select ts_rank(document, phrase) as rank,
-	    searchables.id,
-	    searchables.type,
-	    ts_headline('english'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
-	    ts_headline('english'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
-	    ts_headline('english'::regconfig, author_name, phrase, 'StartSel = <mark>, StopSel = </mark>') as author_name,
-	    searchables.likes
-	    from searchables, phrase
-	) searchables
-	where rank > 0
-	order by rank desc, likes desc;
+	select rank, id, type, name, description, author_name, likes from (
+		select rank, id, type, name, description, author_name, likes
+		from (
+			select distinct on (id) * from (
+				select ts_rank(document, phrase) as rank,
+				searchables.id,
+				searchables.type,
+				ts_headline('english'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
+				ts_headline('english'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
+				ts_headline('simple'::regconfig, author_name, phrase, 'StartSel = <mark>, StopSel = </mark>') as author_name,
+				searchables.likes
+				from searchables, phrase
+				union
+				select greatest(similarity(unaccent($1), searchables.name), similarity(unaccent($1), searchables.description)) as rank,
+				searchables.id,
+				searchables.type,
+				ts_headline('simple'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
+				ts_headline('simple'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
+				searchables.author_name,
+				searchables.likes
+				from searchables, phrase
+				where searchables.name ilike ('%' || unaccent($1) || '%')
+				or searchables.description ilike ('%' || unaccent($1) || '%')
+				order by rank desc, likes desc
+			) results
+		) searchables
+		where rank > 0
+	) searchables_uq
+	order by rank desc, likes desc
 $$ language sql;
