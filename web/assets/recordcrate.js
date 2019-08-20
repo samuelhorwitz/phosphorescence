@@ -27,7 +27,7 @@ export async function processTrack(countryCode, track) {
                 resolve(data.data);
             }
             else {
-                reject();
+                reject(`Could not get processed track (type: ${data.type})`);
             }
         });
         recordCrateWorker.postMessage({type: 'sendTrack', track, countryCode});

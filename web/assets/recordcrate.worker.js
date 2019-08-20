@@ -12,25 +12,30 @@ const modelsReady = new Promise(async resolve => {
 });
 
 addEventListener('message', async ({data}) => {
-    if (data.type == 'sendTracks') {
-        let tracks = JSON.parse(decoder.decode(data.tracks));
-        let countryCode = data.countryCode;
-        tracks = filterTracks(tracks, countryCode);
-        console.log('Processing tracks...');
-        tracks = await getEvocativeness(tracks);
-        console.log('Tracks processed');
-        let {tags, idsToTags} = buildTags(tracks);
-        let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
-        let gzipResponseData = pako.gzip(responseData, {level: 9});
-        postMessage({type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer});
-    } else if (data.type == 'sendTrack') {
-        let track = data.track;
-        let countryCode = data.countryCode;
-        console.log('Processing track...');
-        track = await getEvocativenessOfSingleTrack(track);
-        console.log('Track processed');
-        let tag = getTrackTag(track.track);
-        postMessage({type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}});
+    try {
+        if (data.type == 'sendTracks') {
+            let tracks = JSON.parse(decoder.decode(data.tracks));
+            let countryCode = data.countryCode;
+            tracks = filterTracks(tracks, countryCode);
+            console.log('Processing tracks...');
+            tracks = await getEvocativeness(tracks);
+            console.log('Tracks processed');
+            let {tags, idsToTags} = buildTags(tracks);
+            let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
+            let gzipResponseData = pako.gzip(responseData, {level: 9});
+            postMessage({type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer});
+        } else if (data.type == 'sendTrack') {
+            let track = data.track;
+            let countryCode = data.countryCode;
+            console.log('Processing track...');
+            track = await getEvocativenessOfSingleTrack(track);
+            console.log('Track processed');
+            let tag = getTrackTag(track.track);
+            postMessage({type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}});
+        }
+    } catch (e) {
+        console.error('Could not process track', e);
+        postMessage({type: 'processError'});
     }
 });
 
