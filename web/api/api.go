@@ -122,6 +122,7 @@ func initialize(cfg *config) {
 		SpacesScriptsRegion:      cfg.spacesScriptsRegion,
 	})
 	tracks.Initialize(&tracks.Config{
+		IsProduction:   cfg.isProduction,
 		SpacesID:       cfg.spacesID,
 		SpacesSecret:   cfg.spacesSecret,
 		SpacesEndpoint: cfg.spacesTracksEndpoint,

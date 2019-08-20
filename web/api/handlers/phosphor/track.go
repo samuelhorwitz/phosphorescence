@@ -14,6 +14,29 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 )
 
+// This struct is used instead json.RawMessage directly because we
+// want to filter out keys that we don't have on tracks when they
+// are pulled by the job. The job uses playlist track getting filters
+// built into Spotify's endpoint and this struct mimics the result
+// and implicitly discards the extra track data when remarshaled.
+type spotifyTrack struct {
+	AvailableMarkets []string        `json:"available_markets"`
+	DurationMS       json.RawMessage `json:"duration_ms"`
+	ExternalURLs     json.RawMessage `json:"external_urls"`
+	ID               json.RawMessage `json:"id"`
+	Name             json.RawMessage `json:"name"`
+	Popularity       json.RawMessage `json:"popularity"`
+	URI              json.RawMessage `json:"uri"`
+	Album            struct {
+		ExternalURLs json.RawMessage `json:"external_urls"`
+		ID           json.RawMessage `json:"id"`
+		Images       json.RawMessage `json:"images"`
+		Name         json.RawMessage `json:"name"`
+		Artists      json.RawMessage `json:"artists"`
+	} `json:"album"`
+	Artists json.RawMessage `json:"artists"`
+}
+
 func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
 	if !ok {
@@ -24,12 +47,14 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	// First let's check if the track is in our huge cache of tracks
 	// and return it if it is, no Spotify request needed.
 	track, ok := tracks.GetTrack(trackID)
+	var trackData spotifyTrack
 	if ok {
-		canPlay, err := checkIfTrackPlayableInRegion(sess.SpotifyCountry, track.Track)
+		err := json.Unmarshal(track.Track, &trackData)
 		if err != nil {
-			common.Fail(w, fmt.Errorf("Could not check if track playable in region: %s", err), http.StatusInternalServerError)
+			common.Fail(w, fmt.Errorf("Could not parse Spotify track: %s", err), http.StatusInternalServerError)
 			return
 		}
+		canPlay := checkIfTrackPlayableInRegion(sess.SpotifyCountry, trackData)
 		if !canPlay {
 			common.Fail(w, fmt.Errorf("Track not playable in region %s", sess.SpotifyCountry), http.StatusNotFound)
 			return
@@ -38,7 +63,6 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// We don't have that track cached, so let's reach out to Spotify
-	var rawTrackData json.RawMessage
 	var featuresData json.RawMessage
 	{
 		req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID), nil)
@@ -62,13 +86,13 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 			common.Fail(w, fmt.Errorf("Could not read Spotify track response: %s", err), http.StatusInternalServerError)
 			return
 		}
-		rawTrackData = json.RawMessage(body)
+		err = json.Unmarshal(body, &trackData)
+		if err != nil {
+			common.Fail(w, fmt.Errorf("Could not parse Spotify track response: %s", err), http.StatusInternalServerError)
+			return
+		}
 	}
-	canPlay, err := checkIfTrackPlayableInRegion(sess.SpotifyCountry, rawTrackData)
-	if err != nil {
-		common.Fail(w, fmt.Errorf("Could not check if track playable in region: %s", err), http.StatusInternalServerError)
-		return
-	}
+	canPlay := checkIfTrackPlayableInRegion(sess.SpotifyCountry, trackData)
 	if !canPlay {
 		common.Fail(w, fmt.Errorf("Track not playable in region %s", sess.SpotifyCountry), http.StatusNotFound)
 		return
@@ -114,26 +138,19 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	common.JSON(w, map[string]interface{}{"track": struct {
-		Track    json.RawMessage `json:"track"`
+		Track    spotifyTrack    `json:"track"`
 		Features json.RawMessage `json:"features"`
 	}{
-		Track:    rawTrackData,
+		Track:    trackData,
 		Features: featuresData,
 	}})
 }
 
-func checkIfTrackPlayableInRegion(country string, track json.RawMessage) (bool, error) {
-	var parsedBody struct {
-		AvailableMarkets []string `json:"available_markets"`
-	}
-	err := json.Unmarshal(track, &parsedBody)
-	if err != nil {
-		return false, fmt.Errorf("Could not parse Spotify track response: %s", err)
-	}
-	for _, market := range parsedBody.AvailableMarkets {
+func checkIfTrackPlayableInRegion(country string, track spotifyTrack) bool {
+	for _, market := range track.AvailableMarkets {
 		if market == country {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
