@@ -26,7 +26,6 @@ addEventListener('message', async ({data}) => {
             postMessage({type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer});
         } else if (data.type == 'sendTrack') {
             let track = data.track;
-            let countryCode = data.countryCode;
             console.log('Processing track...');
             track = await getEvocativenessOfSingleTrack(track);
             console.log('Track processed');

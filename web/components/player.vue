@@ -603,9 +603,13 @@
             },
             async createPlaylist() {
                 let tracks = this.tracks.map(track => {
+                    let uri = track.track.uri;
+                    if (track.track.linked_from) {
+                        uri = track.track.linked_from.uri;
+                    }
                     return {
                         name: track.track.name,
-                        uri: track.track.uri
+                        uri
                     };
                 });
                 let savePlaylistResponse = await fetch(`${process.env.API_ORIGIN}/users/me/playlist`, {
