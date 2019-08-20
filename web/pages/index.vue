@@ -19,7 +19,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.track.id)}" @click="seekTrack(index)">
-                        <td class="number">{{index + 1}}</td>
+                        <td :title="humanReadableEvocativeness[index]" class="number">{{index + 1}}</td>
                         <td :title="track.track.name"><a target="_blank" :href="track.track.external_urls.spotify">{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
                             <ol>
@@ -261,6 +261,22 @@
                     return null;
                 }
                 return `${track.track.album.name} - ${track.track.album.artists.map(artist => artist.name).join(', ')}`;
+            },
+            humanReadableEvocativeness() {
+                return this.$store.state.tracks.playlist.map(({evocativeness}) => {
+                    let str = '';
+                    if (evocativeness.aetherealness >= 0.5) {
+                        str += `${Math.floor((evocativeness.aetherealness - 0.5) * 200)}% aethereal and `
+                    } else {
+                        str += `${Math.floor((0.5 - evocativeness.aetherealness) * 200)}% chthonic and `
+                    }
+                    if (evocativeness.primordialness >= 0.5) {
+                        str += `${Math.floor((evocativeness.primordialness - 0.5) * 200)}% primordial`
+                    } else {
+                        str += `${Math.floor((0.5 - evocativeness.primordialness) * 200)}% transcendental`
+                    }
+                    return str;
+                });
             }
         },
         methods: {
