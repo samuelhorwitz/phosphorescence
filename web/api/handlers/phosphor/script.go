@@ -309,6 +309,11 @@ func DuplicateScript(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not parse request body: %s", err), http.StatusInternalServerError)
 		return
 	}
+	err = validateScriptName(requestBody.Name)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Bad request: %s", err), http.StatusBadRequest)
+		return
+	}
 	var name string
 	if requestBody.Name != "" {
 		name = requestBody.Name
@@ -353,6 +358,11 @@ func DuplicateScriptVersion(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not parse request body: %s", err), http.StatusInternalServerError)
 		return
 	}
+	err = validateScriptName(requestBody.Name)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Bad request: %s", err), http.StatusBadRequest)
+		return
+	}
 	var name string
 	if requestBody.Name != "" {
 		name = requestBody.Name
@@ -374,11 +384,18 @@ func validateScript(name, description, script string) error {
 	if description != noHTML.Sanitize(description) {
 		return errors.New("Description contained HTML")
 	}
-	if uniseg.GraphemeClusterCount(name) > 60 {
-		return errors.New("Name is too long")
+	if err := validateScriptName(name); err != nil {
+		return err
 	}
 	if len([]byte(description)) > 1024 {
 		return errors.New("Description is too long")
+	}
+	return nil
+}
+
+func validateScriptName(name string) error {
+	if uniseg.GraphemeClusterCount(name) > 60 {
+		return errors.New("Name is too long")
 	}
 	return nil
 }
