@@ -12,6 +12,8 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
+
+	"github.com/rivo/uniseg"
 )
 
 const maxScriptVersionPageSize float64 = 10
@@ -105,19 +107,20 @@ func CreateScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var requestBody struct {
-		Script string `json:"script"`
-		Name   string `json:"name"`
+		Script      string `json:"script"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
 	}
 	err = json.Unmarshal(body, &requestBody)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not parse request body: %s", err), http.StatusInternalServerError)
 		return
 	}
-	if requestBody.Script == "" {
-		common.Fail(w, errors.New("Script cannot be empty"), http.StatusBadRequest)
+	if err := validateScript(requestBody.Name, requestBody.Description, requestBody.Script); err != nil {
+		common.Fail(w, fmt.Errorf("Bad request: %s", err), http.StatusBadRequest)
 		return
 	}
-	createDetails, err := models.CreateScript(sess.SpotifyID, requestBody.Name, requestBody.Script)
+	createDetails, err := models.CreateScript(sess.SpotifyID, requestBody.Name, requestBody.Description, requestBody.Script)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not create script: %s", err), http.StatusInternalServerError)
 		return
@@ -139,6 +142,7 @@ func UpdateScript(w http.ResponseWriter, r *http.Request) {
 	var requestBody struct {
 		Script      string `json:"script"`
 		Name        string `json:"name"`
+		Description string `json:"description"`
 		Permissions string `json:"permissions"`
 	}
 	err = json.Unmarshal(body, &requestBody)
@@ -146,11 +150,15 @@ func UpdateScript(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not parse request body: %s", err), http.StatusInternalServerError)
 		return
 	}
-	if requestBody.Script == "" && requestBody.Name == "" && requestBody.Permissions == "" {
-		common.Fail(w, errors.New("Name or script or permissions must be populated"), http.StatusBadRequest)
+	if requestBody.Permissions == "" {
+		common.Fail(w, errors.New("Permissions must be populated"), http.StatusBadRequest)
 		return
 	}
-	updateDetails, err := models.UpdateScript(existingScript.ID, requestBody.Name, requestBody.Script, requestBody.Permissions, models.ScriptSaveTypeDraft)
+	if err := validateScript(requestBody.Name, requestBody.Description, requestBody.Script); err != nil {
+		common.Fail(w, fmt.Errorf("Bad request: %s", err), http.StatusBadRequest)
+		return
+	}
+	updateDetails, err := models.UpdateScript(existingScript.ID, requestBody.Name, requestBody.Description, requestBody.Script, requestBody.Permissions, models.ScriptSaveTypeDraft)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not update script: %s", err), http.StatusInternalServerError)
 		return
@@ -172,6 +180,7 @@ func PublishScript(w http.ResponseWriter, r *http.Request) {
 	var requestBody struct {
 		Script      string `json:"script"`
 		Name        string `json:"name"`
+		Description string `json:"description"`
 		Permissions string `json:"permissions"`
 	}
 	err = json.Unmarshal(body, &requestBody)
@@ -179,11 +188,15 @@ func PublishScript(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not parse request body: %s", err), http.StatusInternalServerError)
 		return
 	}
-	if requestBody.Script == "" && requestBody.Name == "" && requestBody.Permissions == "" {
-		common.Fail(w, errors.New("Name or script or permissions must be populated"), http.StatusBadRequest)
+	if requestBody.Permissions == "" {
+		common.Fail(w, errors.New("Permissions must be populated"), http.StatusBadRequest)
 		return
 	}
-	updateDetails, err := models.UpdateScript(existingScript.ID, requestBody.Name, requestBody.Script, requestBody.Permissions, models.ScriptSaveTypePublished)
+	if err := validateScript(requestBody.Name, requestBody.Description, requestBody.Script); err != nil {
+		common.Fail(w, fmt.Errorf("Bad request: %s", err), http.StatusBadRequest)
+		return
+	}
+	updateDetails, err := models.UpdateScript(existingScript.ID, requestBody.Name, requestBody.Script, requestBody.Description, requestBody.Permissions, models.ScriptSaveTypePublished)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not update script: %s", err), http.StatusInternalServerError)
 		return
@@ -352,4 +365,20 @@ func DuplicateScriptVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	common.JSON(w, map[string]interface{}{"fork": forkDetails})
+}
+
+func validateScript(name, description, script string) error {
+	if script == "" {
+		return errors.New("Script cannot be empty")
+	}
+	if description != noHTML.Sanitize(description) {
+		return errors.New("Description contained HTML")
+	}
+	if uniseg.GraphemeClusterCount(name) > 60 {
+		return errors.New("Name is too long")
+	}
+	if len([]byte(description)) > 1024 {
+		return errors.New("Description is too long")
+	}
+	return nil
 }
