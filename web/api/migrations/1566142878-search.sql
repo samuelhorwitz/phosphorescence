@@ -30,26 +30,50 @@ create function build_document(text, text, text, text[], bool) returns tsvector 
 $$ language sql;
 
 -- A hashtag begins the second a hashmark is seen regardless of what preceeds it
--- and must be followed by a letter or number from across the entire Unicode
--- spectrum. Then, optionally, more letters and numbers, potentially with single
--- dashes or connectors interspersed throughout, but no trailing dashes or
--- connectors.
+-- and must be followed by (potentially "marked") letters or numbers from across
+-- the Unicode spectrum. These "marked" letters and numbers may have single
+-- dashes or connectors interspersed between. A "marked" letter or number is one
+-- in which we follow a stripped down TR29 extended grapheme algorithm to find
+-- graphemes. We only care about letter and number graphemes and furthermore
+-- do not care about any of the "prefix" parts as they are too similar to
+-- punctuation and symbols which we already do not care about in a hashtag. Also
+-- since we do not actually need to split by grapheme, Hangul handling is
+-- simplified as Hangul is just letter sequences anyway and we don't really care
+-- beyond that for our purposes. Basically, a letter or number MAY be followed
+-- by any number of marks or ZWJs or ZWNJs. This basically gives us a "grapheme
+-- run" of only letter or number graphemes without explicit splitting of
+-- individual graphemes, which is fine for simply matching a run of them.
+-- Another note is that in the spec, some spacing marks are excluded and some
+-- letters are promoted to spacing marks. This is irrelevant for us; the spacing
+-- marks that are excluded are exlcuded as they represent unique graphemes but
+-- our concern is runs of graphemes so we will want to keep them. The letters
+-- promoted to spacing marks will be picked up as letters anyway using our regex
+-- so in short, we do not have to explicitly care about them and can just use
+-- the general `\pM` to match all marks following any letter or number.
+-- http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries
 
 create function remove_hashtags(text) returns text as $$
-	$_[0] =~ s/#((?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*))//g;
+	$_[0] =~ s/#(([\pL\pN][\pM\x{200C}\x{200D}]*)+([\p{Pc}\p{Pd}]([\pL\pN][\pM\x{200C}\x{200D}]*)+)*)//g;
 	return $_[0];
 $$ language plperl;
 
 create function match_hashtags(text) returns text[][] as $$
-	@matches = ($_[0] =~ /#((?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*))/gi);
+	@matches = ($_[0] =~ /#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)/gi);
 	return [@matches];
 $$ language plperl;
 
 create function validate_hashtag(text) returns boolean as $$
-	return true if $_[0] =~ /^(?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*)$/i;
+	return true if $_[0] =~ /^([\pL\pN][\pM\x{200C}\x{200D}]*)+([\p{Pc}\p{Pd}]([\pL\pN][\pM\x{200C}\x{200D}]*)+)*$/i;
 	return false;
 $$ language plperl;
 
+-- This function may need to be updated in the future to strip ZWJ and ZWNJ
+-- code points as well. It is unclear whether those have significant semantic
+-- meaning when it comes to collation. Since we are already stripping accents
+-- (as best as Postgres can) and lowercasing everything, it's possible whatever
+-- semantic loss stripping these zero width controls inflicts is no worse.
+-- However Googling shows this is actually an open question in general and I
+-- don't know enough about the applicable languages and scripts to say.
 create function remove_allowed_connectors_from_hashtag(text) returns text as $$
 	$_[0] =~ s/[\p{Pc}\p{Pd}]//g;
 	return $_[0];

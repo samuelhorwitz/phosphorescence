@@ -54,3 +54,8 @@ cross join lateral (
 ```
 
 `#((?:[\pL\pN]+(?:[\p{Pc}\p{Pd}][\pL\pN]+)*))`
+
+```
+    r := regexp.MustCompile(`#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)`)
+    fmt.Println(strings.Join(r.FindAllString("#füg #각 #각 #क्षि-각_üsfweg", -1), ","))
+```
