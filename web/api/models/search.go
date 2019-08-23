@@ -64,20 +64,24 @@ func Query(q string) (searchResults []searchResult, _ error) {
 	return searchResults, nil
 }
 
-func RecommendedQuery(q string) (string, error) {
+func RecommendedQuery(q string) (queries []string, err error) {
 	firstPart, lastWord := splitQueryLastWord(q)
-	var recommendedWord string
-	if lastWord != "" {
-		fn := "get_recommended_word"
-		if string(firstPart[len(firstPart)-1]) == "#" {
-			fn = "get_recommended_tag"
-		}
-		err := postgresDB.QueryRow(fmt.Sprintf("select %s($1)", fn), lastWord).Scan(&recommendedWord)
-		if err != nil {
-			return "", fmt.Errorf("Couldn't get recommended query: %s", err)
-		}
+	if lastWord == "" {
+		return []string{firstPart}, nil
 	}
-	return fmt.Sprintf("%s%s", firstPart, recommendedWord), nil
+	fn := "get_recommended_word"
+	if len(firstPart) > 0 && string(firstPart[len(firstPart)-1]) == "#" {
+		fn = "get_recommended_tag"
+	}
+	var recommendedWords []string
+	err = postgresDB.QueryRow(fmt.Sprintf("select %s($1, 5)", fn), lastWord).Scan(pq.Array(&recommendedWords))
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't execute query: %s", err)
+	}
+	for _, recommendedWord := range recommendedWords {
+		queries = append(queries, fmt.Sprintf("%s%s", firstPart, recommendedWord))
+	}
+	return queries, nil
 }
 
 func parseQuery(q string) (_ string, strictMatches, tags []string) {

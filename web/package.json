@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "express": "^4.16.4",
+    "lodash": "^4.17.15",
     "pako": "^1.0.10"
   },
   "engines": {

@@ -168,20 +168,18 @@ create function get_close_phrase(text) returns text as $$
 	) lex;
 $$ language sql;
 
-create function get_recommended_word(text) returns text as $$
+create function get_recommended_word(text, int) returns text[] as $$
 	with original_word as (select substring(unaccent($1) from '^([^\s]+)(\s.*)?$') as original_word)
-	select word
+	select array_agg(word) from (select word
 	from searchable_lexemes, original_word
-	order by word <-> original_word asc
-	limit 1
+	order by word <-> original_word asc limit coalesce($2, 1)) as word
 $$ language sql;
 
-create function get_recommended_tag(text) returns text as $$
+create function get_recommended_tag(text, int) returns text[] as $$
 	with original_tag as (select substring(unaccent($1) from '^([^\s]+)(\s.*)?$') as original_tag)
-	select word
+	select array_agg(word) from (select word
 	from searchable_tag_lexemes, original_tag
-	order by word <-> original_tag asc
-	limit 1
+	order by word <-> original_tag asc limit coalesce($2, 1)) as word
 $$ language sql;
 
 create type search_result as (rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint);
