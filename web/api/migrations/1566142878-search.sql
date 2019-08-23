@@ -88,7 +88,7 @@ create function validate_and_clean_hashtag(text) returns text as $$
 $$ language sql;
 
 create function get_hashtags(text) returns text[] as $$
-	select array(select distinct unnest(array_remove(array(select clean_hashtag(array_to_string(match_hashtags($1), ','))), null)))
+	select array(select distinct clean_hashtag(hashtag) from unnest(match_hashtags($1)) as hashtag where hashtag is not null)
 $$ language sql;
 
 create materialized view searchables as
@@ -165,7 +165,7 @@ $$ language sql;
 
 create type search_result as (rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint);
 
-create function search(text) returns setof search_result as $$
+create function search(text, text[], text[]) returns setof search_result as $$
 	with
 	phraseA as (select phraseto_tsquery('simple', unaccent($1)) as phraseA),
 	phraseB as (select phraseto_tsquery('english', unaccent($1)) as phraseB),
@@ -178,7 +178,7 @@ create function search(text) returns setof search_result as $$
 		phraseD::text
 	], ''),'|')::tsquery as phrase from phraseA, phraseB, phraseC, phraseD)
 	select rank, id, type, name, description, author_name, likes from (
-		select rank, id, type, name, description, author_name, likes
+		select rank, id, type, name, description, author_name, likes, document, tags, original_name, original_description
 		from (
 			select distinct on (id) * from (
 				select (((ts_rank(document, phraseA) + (ts_rank(document, phraseB) * 0.4) + (ts_rank(document, phraseC) * 0.2) + (ts_rank(document, phraseD) * 0.1))) / 4)::real as rank,
@@ -187,23 +187,51 @@ create function search(text) returns setof search_result as $$
 				ts_headline('english'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
 				ts_headline('english'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
 				ts_headline('simple'::regconfig, author_name, phrase, 'StartSel = <mark>, StopSel = </mark>') as author_name,
-				searchables.likes
+				searchables.likes,
+				searchables.document,
+				searchables.tags,
+				searchables.unmodified_description as original_description,
+				searchables.name as original_name
 				from searchables, phrase, phraseA, phraseB, phraseC, phraseD
 				union
 				select greatest(similarity(unaccent($1), unaccent(searchables.name)), similarity(unaccent($1), unaccent(searchables.description))) as rank,
 				searchables.id,
 				searchables.type,
-				ts_headline('simple'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
-				ts_headline('simple'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
-				searchables.author_name,
-				searchables.likes
+				ts_headline('english'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
+				ts_headline('english'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
+				ts_headline('simple'::regconfig, author_name, phrase, 'StartSel = <mark>, StopSel = </mark>') as author_name,
+				searchables.likes,
+				searchables.document,
+				searchables.tags,
+				searchables.unmodified_description as original_description,
+				searchables.name as original_name
 				from searchables, phrase
 				where unaccent(searchables.name) ilike ('%' || unaccent($1) || '%')
 				or unaccent(searchables.description) ilike ('%' || unaccent($1) || '%')
+				union
+				select 0.1 ^ (1 / array_length($3, 1)) as rank,
+				searchables.id,
+				searchables.type,
+				ts_headline('english'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
+				ts_headline('english'::regconfig, unmodified_description, phrase, 'StartSel = <mark>, StopSel = </mark>') as description,
+				ts_headline('simple'::regconfig, author_name, phrase, 'StartSel = <mark>, StopSel = </mark>') as author_name,
+				searchables.likes,
+				searchables.document,
+				searchables.tags,
+				searchables.unmodified_description as original_description,
+				searchables.name as original_name
+				from searchables, phrase
+				where tags @> all (select array[clean_hashtag(rows)] from unnest($3) as rows)
 				order by rank desc, likes desc
 			) results
 		) searchables
 		where rank > 5.96e-08 -- epsilon
+		and case when $2 is null then true else
+			document @@ all (select phraseto_tsquery('english', rows) from unnest($2) as rows) or 
+			original_name ilike all (select '%' || unaccent(rows) || '%' from unnest($2) as rows) or
+			original_description ilike all (select '%' || unaccent(rows) || '%' from unnest($2) as rows)
+		end
+		and case when $3 is null then true else tags @> all (select array[clean_hashtag(rows)] from unnest($3) as rows) end
 	) searchables_uq
 	order by rank desc, likes desc
 $$ language sql;

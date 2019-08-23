@@ -3,14 +3,17 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/satori/go.uuid"
+	"log"
 	"regexp"
 )
 
 var (
 	markTag          = regexp.MustCompile(`(?i)</?mark>`)
 	hashtagFirstRune = regexp.MustCompile(`[\pL\pN]`)
+	quoted           = regexp.MustCompile(`(?i)[\p{Pi}\x{ff02}\x{ff07}"'](.*?)[\p{Pf}\x{ff02}\x{ff07}"']`)
+	hashtag          = regexp.MustCompile(`#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)`)
 )
 
 // rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint
@@ -35,7 +38,9 @@ const (
 )
 
 func Query(q string) (searchResults []searchResult, _ error) {
-	rows, err := postgresDB.Query("select rank, id, type, name, description, author_name, likes from search($1) limit 50", q)
+	q, strictMatches, tags := parseQuery(q)
+	log.Println(q, strictMatches, tags)
+	rows, err := postgresDB.Query("select rank, id, type, name, description, author_name, likes from search($1, $2, $3) limit 50", q, pq.Array(strictMatches), pq.Array(tags))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -60,10 +65,25 @@ func Query(q string) (searchResults []searchResult, _ error) {
 	return searchResults, nil
 }
 
+func parseQuery(q string) (_ string, strictMatches, tags []string) {
+	for _, match := range quoted.FindAllStringSubmatch(q, -1) {
+		strictMatches = append(strictMatches, match[1])
+	}
+	for _, match := range hashtag.FindAllStringSubmatch(q, -1) {
+		tags = append(tags, match[1])
+	}
+	return q, strictMatches, tags
+}
+
 func getPlaintextAndMarkIndices(markedUp string) (plain string, marks []int) {
 	offset := 0
 	lastEnd := 0
-	for i, index := range markTag.FindAllStringIndex(markedUp, -1) {
+	markSubstrings := markTag.FindAllStringIndex(markedUp, -1)
+	if len(markSubstrings) == 0 {
+		return markedUp, nil
+	}
+	plain += markedUp[0:markSubstrings[0][0]]
+	for i, index := range markSubstrings {
 		start := index[0]
 		end := index[1]
 		realStart := start

@@ -13,6 +13,20 @@ func Test_getPlaintextAndMarkIndices(t *testing.T) {
 	if rebuilt != "<mark>Foo</mark> bar <mark>#bat#</mark> #<mark>!az#</mark>" {
 		t.Fatalf("Unexpected reconstituted string: %s", rebuilt)
 	}
+	rebuilt, err = rebuild(getPlaintextAndMarkIndices("foobar <maRk>Foo</mArk> bar #<marK>bat#</maRk> #<marK>!az#</maRk>"))
+	if err != nil {
+		t.Fatalf("Could not rebuild string: %s", err)
+	}
+	if rebuilt != "foobar <mark>Foo</mark> bar <mark>#bat#</mark> #<mark>!az#</mark>" {
+		t.Fatalf("Unexpected reconstituted string: %s", rebuilt)
+	}
+	rebuilt, err = rebuild(getPlaintextAndMarkIndices("foobar no marks here"))
+	if err != nil {
+		t.Fatalf("Could not rebuild string: %s", err)
+	}
+	if rebuilt != "foobar no marks here" {
+		t.Fatalf("Unexpected reconstituted string: %s", rebuilt)
+	}
 }
 
 func rebuild(plain string, marksArr []int) (string, error) {
