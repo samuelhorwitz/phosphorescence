@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"github.com/satori/go.uuid"
-	"log"
 	"regexp"
 )
 
@@ -14,6 +13,7 @@ var (
 	hashtagFirstRune = regexp.MustCompile(`[\pL\pN]`)
 	quoted           = regexp.MustCompile(`(?i)[\p{Pi}\x{ff02}\x{ff07}"'](.*?)[\p{Pf}\x{ff02}\x{ff07}"']`)
 	hashtag          = regexp.MustCompile(`#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)`)
+	finalWord        = regexp.MustCompile(`^((?:\PZ*[\pZ\p{Pi}\p{Pf}\x{ff02}\x{ff07}"'#]+)*)(\PZ*)$`)
 )
 
 // rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint
@@ -39,7 +39,6 @@ const (
 
 func Query(q string) (searchResults []searchResult, _ error) {
 	q, strictMatches, tags := parseQuery(q)
-	log.Println(q, strictMatches, tags)
 	rows, err := postgresDB.Query("select rank, id, type, name, description, author_name, likes from search($1, $2, $3) limit 50", q, pq.Array(strictMatches), pq.Array(tags))
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -63,6 +62,22 @@ func Query(q string) (searchResults []searchResult, _ error) {
 		searchResults = append(searchResults, searchResult)
 	}
 	return searchResults, nil
+}
+
+func RecommendedQuery(q string) (string, error) {
+	firstPart, lastWord := splitQueryLastWord(q)
+	var recommendedWord string
+	if lastWord != "" {
+		fn := "get_recommended_word"
+		if string(firstPart[len(firstPart)-1]) == "#" {
+			fn = "get_recommended_tag"
+		}
+		err := postgresDB.QueryRow(fmt.Sprintf("select %s($1)", fn), lastWord).Scan(&recommendedWord)
+		if err != nil {
+			return "", fmt.Errorf("Couldn't get recommended query: %s", err)
+		}
+	}
+	return fmt.Sprintf("%s%s", firstPart, recommendedWord), nil
 }
 
 func parseQuery(q string) (_ string, strictMatches, tags []string) {
@@ -102,4 +117,9 @@ func getPlaintextAndMarkIndices(markedUp string) (plain string, marks []int) {
 	}
 	plain += markedUp[lastEnd:len(markedUp)]
 	return
+}
+
+func splitQueryLastWord(q string) (string, string) {
+	matches := finalWord.FindStringSubmatch(q)
+	return matches[1], matches[2]
 }

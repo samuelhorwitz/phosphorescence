@@ -151,6 +151,11 @@ select word from ts_stat('select build_document(name, description, author_name, 
 
 create index on searchable_lexemes using gin(word gin_trgm_ops);
 
+create materialized view searchable_tag_lexemes as
+select word from ts_stat('select to_tsvector(''simple'', unaccent(array_to_string(tags, '' ''))) from searchables');
+
+create index on searchable_tag_lexemes using gin(word gin_trgm_ops);
+
 create function get_close_phrase(text) returns text as $$
 	with original_words as (select regexp_split_to_table(unaccent($1), '\s+') as original_words)
 	select coalesce(string_agg(distinct lex.word, ' '), '') as corrected
@@ -161,6 +166,22 @@ create function get_close_phrase(text) returns text as $$
 		where similarity(word, original_words) >= 0.5
 		order by word <-> original_words asc
 	) lex;
+$$ language sql;
+
+create function get_recommended_word(text) returns text as $$
+	with original_word as (select substring(unaccent($1) from '^([^\s]+)(\s.*)?$') as original_word)
+	select word
+	from searchable_lexemes, original_word
+	order by word <-> original_word asc
+	limit 1
+$$ language sql;
+
+create function get_recommended_tag(text) returns text as $$
+	with original_tag as (select substring(unaccent($1) from '^([^\s]+)(\s.*)?$') as original_tag)
+	select word
+	from searchable_tag_lexemes, original_tag
+	order by word <-> original_tag asc
+	limit 1
 $$ language sql;
 
 create type search_result as (rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint);
