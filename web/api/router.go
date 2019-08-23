@@ -68,25 +68,28 @@ func initializeRoutes(cfg *config) http.Handler {
 	}
 	scriptRouter := func(r chi.Router) {
 		r.Use(middleware.Session)
-		r.Use(middleware.AuthenticatedSession)
+		r.Get("/search", phosphor.Search)
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Paginate)
-			r.Get("/", phosphor.ListPublicScripts)
-			r.Get("/my", phosphor.ListCurrentUserScripts)
-		})
-		r.Post("/", phosphor.CreateScript)
-		r.Route("/{scriptID}", func(r chi.Router) {
-			r.Use(middleware.AuthorizeReadScript)
-			r.Get("/", phosphor.GetScript)
-			r.Post("/fork", phosphor.ForkScript)
-			r.Route("/version", versionRouter)
-			r.Route("/versions", versionRouter)
+			r.Use(middleware.AuthenticatedSession)
+			r.Post("/", phosphor.CreateScript)
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.AuthorizePrivateScriptActions)
-				r.Post("/duplicate", phosphor.DuplicateScript)
-				r.Put("/", phosphor.UpdateScript)
-				r.Put("/publish", phosphor.PublishScript)
-				r.Delete("/", phosphor.DeleteScript)
+				r.Use(middleware.Paginate)
+				r.Get("/", phosphor.ListPublicScripts)
+				r.Get("/my", phosphor.ListCurrentUserScripts)
+			})
+			r.Route("/{scriptID}", func(r chi.Router) {
+				r.Use(middleware.AuthorizeReadScript)
+				r.Get("/", phosphor.GetScript)
+				r.Post("/fork", phosphor.ForkScript)
+				r.Route("/version", versionRouter)
+				r.Route("/versions", versionRouter)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.AuthorizePrivateScriptActions)
+					r.Post("/duplicate", phosphor.DuplicateScript)
+					r.Put("/", phosphor.UpdateScript)
+					r.Put("/publish", phosphor.PublishScript)
+					r.Delete("/", phosphor.DeleteScript)
+				})
 			})
 		})
 	}
