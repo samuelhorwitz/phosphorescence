@@ -15,6 +15,10 @@ func Search(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("Must include search query"), http.StatusBadRequest)
 		return
 	}
+	if len([]byte(query)) > 256 {
+		common.Fail(w, errors.New("Search query too long"), http.StatusBadRequest)
+		return
+	}
 	result, err := models.Query(query)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not execute search: %s", err), http.StatusInternalServerError)
