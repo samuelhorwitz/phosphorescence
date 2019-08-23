@@ -19,10 +19,10 @@ func Search(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("Search query too long"), http.StatusBadRequest)
 		return
 	}
-	result, err := models.Query(query)
+	results, err := models.Query(query)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not execute search: %s", err), http.StatusInternalServerError)
 		return
 	}
-	common.JSON(w, map[string]interface{}{"result": result})
+	common.JSON(w, map[string]interface{}{"results": results})
 }
