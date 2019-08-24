@@ -92,7 +92,7 @@ func parseQuery(q string) (_ string, strictMatches, tags []string) {
 	for _, match := range hashtag.FindAllStringSubmatch(q, -1) {
 		tags = append(tags, match[1])
 	}
-	return punctuation.ReplaceAllString(q, ""), strictMatches, tags
+	return punctuation.ReplaceAllString(q, " "), strictMatches, tags
 }
 
 func getPlaintextAndMarkIndices(markedUp string) (plain string, marks []int) {
