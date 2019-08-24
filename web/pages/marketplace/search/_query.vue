@@ -155,6 +155,9 @@
                 this.authorNames = authorNames;
                 this.descriptions = descriptions;
             }, 200)
+        },
+        beforeDestroy() {
+            this.$store.commit('marketplace/clearQuery');
         }
     };
 </script>

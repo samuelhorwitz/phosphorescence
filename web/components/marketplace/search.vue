@@ -109,7 +109,11 @@
                 this.cursor = 0;
             },
             search() {
-                this.$router.push({name: 'marketplace-search-query', params: {query: this.query}});
+                if (!this.query) {
+                    this.$router.push({name: 'marketplace', params: {query: this.query}});
+                } else {
+                    this.$router.push({name: 'marketplace-search-query', params: {query: this.query}});
+                }
                 this.$refs.query.blur();
             },
             searchFromCursor() {
@@ -121,6 +125,9 @@
                 this.search();
             },
             getRecommendedQueries: debounce(async function (query) {
+                if (!query) {
+                    return;
+                }
                 let queryRecommendationResponse = await fetch(`${process.env.API_ORIGIN}/scripts/query-recommendation?query=${encodeURIComponent(query)}`, {credentials: 'include'});
                 if (!queryRecommendationResponse.ok) {
                     this.recommendedQueries = null;
