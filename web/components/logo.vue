@@ -1,9 +1,9 @@
 <template>
-    <header class="wrapper">
+    <header class="wrapper" :class="{min: min}">
         <div class="container">
             <h1 @click="flash">
-                <nuxt-link to="/">
-                    <glitch :text="'Phosphorescence'" :enable="$store.state.loading.loading" />
+                <nuxt-link :to="to">
+                    <glitch :text="text" :enable="$store.state.loading.loading" />
                 </nuxt-link>
             </h1>
         </div>
@@ -25,6 +25,12 @@
         align-items: center;
         justify-content: center;
         grid-column: 1 / 3;
+    }
+
+    .wrapper.min {
+        background-color: rgb(40, 27, 61);
+        width: 7em;
+        height: 7em;
     }
 
     h1 {
@@ -99,6 +105,21 @@
     export default {
         components: {
             glitch
+        },
+        props: ['min'],
+        computed: {
+            text() {
+                if (this.min) {
+                    return 'P';
+                }
+                return 'Phosphorescence';
+            },
+            to() {
+                if (this.min) {
+                    return '/marketplace';
+                }
+                return '/';
+            }
         },
         methods: {
             flash() {

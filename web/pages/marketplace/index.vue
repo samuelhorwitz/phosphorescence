@@ -10,10 +10,7 @@
 </template>
 
 <style>
-    li {
-        appearance: none;
-        color: white;
-    }
+    
 </style>
 
 <script>
@@ -21,6 +18,7 @@
     import {getAccessToken} from '~/assets/session';
 
     export default {
+        layout: 'marketplace',
         async fetch({store, error}) {
             await getAccessToken();
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
