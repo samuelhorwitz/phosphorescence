@@ -11,6 +11,7 @@ import (
 var (
 	markTag          = regexp.MustCompile(`(?i)</?mark>`)
 	hashtagFirstRune = regexp.MustCompile(`[\pL\pN]`)
+	punctuation      = regexp.MustCompile(`[\p{Pi}\x{ff02}\x{ff07}"'#]`)
 	quoted           = regexp.MustCompile(`(?i)[\p{Pi}\x{ff02}\x{ff07}"'](.*?)[\p{Pf}\x{ff02}\x{ff07}"']`)
 	hashtag          = regexp.MustCompile(`#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)`)
 	finalWord        = regexp.MustCompile(`^((?:\PZ*[\pZ\p{Pi}\p{Pf}\x{ff02}\x{ff07}"'#]+)*)(\PZ*)$`)
@@ -91,7 +92,7 @@ func parseQuery(q string) (_ string, strictMatches, tags []string) {
 	for _, match := range hashtag.FindAllStringSubmatch(q, -1) {
 		tags = append(tags, match[1])
 	}
-	return q, strictMatches, tags
+	return punctuation.ReplaceAllString(q, ""), strictMatches, tags
 }
 
 func getPlaintextAndMarkIndices(markedUp string) (plain string, marks []int) {

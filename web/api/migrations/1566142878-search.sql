@@ -57,6 +57,11 @@ create function remove_hashtags(text) returns text as $$
 	return $_[0];
 $$ language plperl;
 
+create function remove_punctuation(text) returns text as $$
+	$_[0] =~ s/[#\p{Pi}\x{ff02}\x{ff07}"']//g;
+	return $_[0];
+$$ language plperl;
+
 create function match_hashtags(text) returns text[][] as $$
 	@matches = ($_[0] =~ /#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)/gi);
 	return [@matches];
@@ -97,6 +102,7 @@ select
 	type,
 	name,
 	unmodified_description,
+	cleaned_description,
 	description,
 	tags,
 	author_name,
@@ -108,6 +114,7 @@ from (
 		'script'::searchable_type as type,
 		scripts.name as name,
 		scripts.description as unmodified_description,
+		remove_punctuation(scripts.description) as cleaned_description,
 		remove_hashtags(scripts.description) as description,
 		get_hashtags(scripts.description) as tags,
 		users.name as author_name,
@@ -121,6 +128,7 @@ select
 	type,
 	name,
 	unmodified_description,
+	cleaned_description,
 	description,
 	tags,
 	author_name,
@@ -132,6 +140,7 @@ from (
 		'script_chain'::searchable_type as type,
 		script_chains.name as name,
 		script_chains.description as unmodified_description,
+		remove_punctuation(script_chains.description) as cleaned_description,
 		remove_hashtags(script_chains.description) as description,
 		get_hashtags(script_chains.description) as tags,
 		users.name as author_name,
@@ -197,9 +206,9 @@ create function search(text, text[], text[]) returns setof search_result as $$
 		phraseD::text
 	], ''),'|')::tsquery as phrase from phraseA, phraseB, phraseC, phraseD)
 	select rank, id, type, name, description, author_name, likes from (
-		select rank, id, type, name, description, author_name, likes, document, tags, original_name, original_description
+		select distinct on (id) rank, id, type, name, description, author_name, likes, document, tags, original_name, original_description
 		from (
-			select distinct on (id) * from (
+			select * from (
 				select (((ts_rank(document, phraseA) + (ts_rank(document, phraseB) * 0.4) + (ts_rank(document, phraseC) * 0.2) + (ts_rank(document, phraseD) * 0.1))) / 4)::real as rank,
 				searchables.id,
 				searchables.type,
@@ -213,7 +222,7 @@ create function search(text, text[], text[]) returns setof search_result as $$
 				searchables.name as original_name
 				from searchables, phrase, phraseA, phraseB, phraseC, phraseD
 				union
-				select greatest(similarity(unaccent($1), unaccent(searchables.name)), similarity(unaccent($1), unaccent(searchables.description))) as rank,
+				select greatest(similarity(unaccent($1), unaccent(searchables.name)), similarity(unaccent($1), unaccent(searchables.cleaned_description))) as rank,
 				searchables.id,
 				searchables.type,
 				ts_headline('english'::regconfig, name, phrase, 'StartSel = <mark>, StopSel = </mark>') as name,
@@ -226,7 +235,7 @@ create function search(text, text[], text[]) returns setof search_result as $$
 				searchables.name as original_name
 				from searchables, phrase
 				where unaccent(searchables.name) ilike ('%' || unaccent($1) || '%')
-				or unaccent(searchables.description) ilike ('%' || unaccent($1) || '%')
+				or unaccent(searchables.cleaned_description) ilike ('%' || unaccent($1) || '%')
 				union
 				select 0.1 ^ (1 / array_length($3, 1)) as rank,
 				searchables.id,
@@ -247,8 +256,8 @@ create function search(text, text[], text[]) returns setof search_result as $$
 		where rank > 5.96e-08 -- epsilon
 		and case when $2 is null then true else
 			document @@ all (select phraseto_tsquery('english', rows) from unnest($2) as rows) or 
-			original_name ilike all (select '%' || unaccent(rows) || '%' from unnest($2) as rows) or
-			original_description ilike all (select '%' || unaccent(rows) || '%' from unnest($2) as rows)
+			unaccent(original_name) ilike all (select '%' || unaccent(rows) || '%' from unnest($2) as rows) or
+			unaccent(original_description) ilike all (select '%' || unaccent(rows) || '%' from unnest($2) as rows)
 		end
 		and case when $3 is null then true else tags @> all (select array[clean_hashtag(rows)] from unnest($3) as rows) end
 	) searchables_uq

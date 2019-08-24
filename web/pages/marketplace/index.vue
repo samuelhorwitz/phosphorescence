@@ -1,20 +1,21 @@
 <template>
-    <div>
-        <input type="text" v-model="query" v-on:keydown.stop>
-        <ul>
-            <li v-for="recommended of recommendedQueries">
-                {{recommended}}
-            </li>
-        </ul>
-    </div>
+    <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+        cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </p>
 </template>
 
 <style>
-    
+    p {
+        margin: 2em;
+    }
 </style>
 
 <script>
-    import {debounce} from 'lodash';
     import {getAccessToken} from '~/assets/session';
 
     export default {
@@ -27,26 +28,6 @@
             }
             let {user} = await userResponse.json();
             store.commit('user/user', user);
-        },
-        data() {
-            return {
-                query: "",
-                recommendedQueries: null
-            };
-        },
-        watch: {
-            query: 'getRecommendedQueries'
-        },
-        methods: {
-            getRecommendedQueries: debounce(async function (query) {
-                let queryRecommendationResponse = await fetch(`${process.env.API_ORIGIN}/scripts/query-recommendation?query=${encodeURIComponent(query)}`, {credentials: 'include'});
-                this.recommendedQueries = null;
-                if (!queryRecommendationResponse.ok) {
-                    return;
-                }
-                let {recommended} = await queryRecommendationResponse.json();
-                this.recommendedQueries = recommended;
-            }, 200)
         }
     };
 </script>

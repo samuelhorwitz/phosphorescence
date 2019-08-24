@@ -29,8 +29,8 @@
 
     .wrapper.min {
         background-color: rgb(40, 27, 61);
-        width: 7em;
-        height: 7em;
+        width: 6.5em;
+        height: 6.5em;
     }
 
     h1 {

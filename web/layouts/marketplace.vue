@@ -4,6 +4,7 @@
             <logo min="true"></logo>
         </aside>
         <main>
+            <navigation></navigation>
             <nuxt/>
         </main>
     </div>
@@ -27,15 +28,18 @@
 
     main {
         flex: 4;
+        overflow-y: auto;
     }
 </style>
 
 <script>
     import logo from '~/components/logo';
+    import navigation from '~/components/marketplace/navigation';
 
     export default {
         components: {
-            logo
+            logo,
+            navigation
         },
         middleware: 'authenticated',
         created() {
