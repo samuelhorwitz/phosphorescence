@@ -1,8 +1,8 @@
 <template>
     <div>
         <input type="text" ref="query" v-model="query" @focus="showRecommended" @blur="hideRecommended" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
-        <ul v-if="isFocused && !recommendedHidden && recommendedQueries && recommendedQueries.length > 1">
-            <li v-for="(recommended, index) of recommendedQueries" :class="{selected: index + 1 === cursor}">
+        <ul v-if="isFocused && !recommendedHidden && recommendedQueries && recommendedQueries.length > 1" ref="dropdown">
+            <li v-for="(recommended, index) of recommendedQueries" :class="{selected: index + 1 === cursor}" tabindex="0" @click="selectRecommendation(index)" @focus="setCursor(index)" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
                 {{recommended}}
             </li>
         </ul>
@@ -43,6 +43,16 @@
 
     li {
         padding: 0px 0.25em;
+        cursor: pointer;
+    }
+
+    li:hover {
+        background-color: cyan;
+        color: white;
+    }
+
+    li:focus {
+        outline: none;
     }
 
     li.selected {
@@ -78,7 +88,10 @@
                 this.isFocused = true;
                 this.recommendedHidden = false;
             },
-            hideRecommended() {
+            hideRecommended(e) {
+                if (e.relatedTarget && e.relatedTarget.parentNode === this.$refs.dropdown) {
+                    return;
+                }
                 this.isFocused = false;
                 this.recommendedHidden = true;
                 this.cursor = 0;
@@ -96,6 +109,9 @@
                 }
                 e.preventDefault();
                 this.cursor--;
+            },
+            setCursor(index) {
+                this.cursor = index + 1;
             },
             handleEnter() {
                 if (this.cursor === 0) {
@@ -122,6 +138,10 @@
                 }
                 this.query = this.recommendedQueries[this.cursor - 1] + ' ';
                 this.recommendedHidden = true;
+                this.search();
+            },
+            selectRecommendation(index) {
+                this.query = this.recommendedQueries[index] + ' ';
                 this.search();
             },
             getRecommendedQueries: debounce(async function (query) {

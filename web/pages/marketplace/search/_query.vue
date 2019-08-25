@@ -9,7 +9,7 @@
                 <h3 v-if="!names[index] || !authorNames[index]">
                     <span class="name">{{searchResult.name}}</span>&nbsp;&horbar;&nbsp;<span class="authorName">{{searchResult.authorName}}</span>
                 </h3>
-                <p v-if="descriptions[index]" v-html="descriptions[index]"></p>
+                <p v-if="descriptions[index]" v-html="descriptions[index]" @click="handleClicks"></p>
                 <p v-if="!descriptions[index]">&hellip;{{searchResult.description}}&hellip;</p>
             </li>
         </ol>
@@ -76,7 +76,7 @@
 
 <script>
     import {getAccessToken} from '~/assets/session';
-    import {getSafeHtml, buildMarker, buildTagMarker} from '~/assets/safehtml';
+    import {getSafeHtml, buildMarker, buildTagMarker, combineMarkers, handleClicks} from '~/assets/safehtml';
     import {debounce} from 'lodash';
 
     export default {
@@ -124,18 +124,21 @@
                 node.classList.add('searchResult');
                 for (let i in searchResults) {
                     let searchResult = searchResults[i];
-                    names[i] = getSafeHtml(searchResult.name, buildMarker(searchResult.nameMarks, node));
-                    authorNames[i] = getSafeHtml(searchResult.authorName, buildMarker(searchResult.authorNameMarks, node));
-                    let descriptionMarker = buildTagMarker(searchResult.description, buildMarker(searchResult.descriptionMarks, node));
-                    descriptions[i] = '&hellip;' + getSafeHtml(searchResult.description, descriptionMarker) + '&hellip;';
+                    names[i] = getSafeHtml(searchResult.name, buildMarker(JSON.parse(JSON.stringify(searchResult.nameMarks || [])), node));
+                    authorNames[i] = getSafeHtml(searchResult.authorName, buildMarker(JSON.parse(JSON.stringify(searchResult.authorNameMarks || [])), node));
+                    let descriptionMarker = buildMarker(JSON.parse(JSON.stringify(searchResult.descriptionMarks || [])), node);
+                    let descriptionTagMarker = buildTagMarker(searchResult.description);
+                    descriptions[i] = '&hellip;' + getSafeHtml(searchResult.description, combineMarkers(descriptionTagMarker, descriptionMarker)) + '&hellip;';
                 }
                 this.names = names;
                 this.authorNames = authorNames;
                 this.descriptions = descriptions;
-            }, 200)
+            }, 200),
+            handleClicks
         },
-        beforeDestroy() {
+        beforeRouteLeave(to, from, next) {
             this.$store.commit('marketplace/clearQuery');
+            next();
         }
     };
 </script>
