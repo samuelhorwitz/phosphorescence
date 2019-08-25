@@ -4,14 +4,10 @@
         <h2 v-if="!searchResults">No search results found</h2>
         <ol v-if="searchResults">
             <li v-for="(searchResult, index) of searchResults">
-                <h3 v-if="names[index] && authorNames[index]">
-                    <span class="name" v-html="names[index]"></span>&nbsp;&horbar;&nbsp;<span class="authorName" v-html="authorNames[index]"></span>
+                <h3>
+                    <router-link :to="'/marketplace/' + builderTypePathFragment[searchResult.resultType] + '/' + encodeURIComponent(searchResult.id)"><span class="name" v-html="names[index]"></span></router-link>&nbsp;&horbar;&nbsp;<span class="authorName" v-html="authorNames[index]"></span><spotifyUserLink id="" :name="authorNames[index]" :isAuthor="true" />
                 </h3>
-                <h3 v-if="!names[index] || !authorNames[index]">
-                    <span class="name">{{searchResult.name}}</span>&nbsp;&horbar;&nbsp;<span class="authorName">{{searchResult.authorName}}</span>
-                </h3>
-                <p v-if="descriptions[index]" v-html="descriptions[index]" @click="handleClicks"></p>
-                <p v-if="!descriptions[index]">&hellip;{{searchResult.description}}&hellip;</p>
+                <p v-html="descriptions[index]" @click="handleClicks"></p>
             </li>
         </ol>
         <footer v-if="searchResults">
@@ -67,10 +63,13 @@
 <script>
     import {getAccessToken} from '~/assets/session';
     import {getSafeHtml, buildMarker, buildTagMarker, combineMarkers, handleClicks} from '~/assets/safehtml';
-    import {debounce} from 'lodash';
+    import spotifyUserLink from '~/components/marketplace/spotifyuserlink';
 
     export default {
         layout: 'marketplace',
+        components: {
+            spotifyUserLink
+        },
         async fetch({store, params, error}) {
             await getAccessToken();
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
@@ -79,56 +78,43 @@
             }
             let {user} = await userResponse.json();
             store.commit('user/user', user);
+        },
+        async asyncData({store, params, error}) {
             let {query} = params;
             store.commit('marketplace/setQuery', query);
             let searchResponse = await fetch(`${process.env.API_ORIGIN}/scripts/search?query=${encodeURIComponent(query)}`, {credentials: 'include'});
             if (!searchResponse.ok) {
                 return error({statusCode: userResponse.status, message: 'Could not perform search'});
             }
-            let {results} = await searchResponse.json();
-            store.commit('marketplace/setSearchResults', results);
-        },
-        data() {
+            let {results: searchResults} = await searchResponse.json();
+            let names = [], authorNames = [], descriptions = [];
+            let node = document.createElement('mark');
+            node.classList.add('searchResult');
+            for (let i in searchResults) {
+                let searchResult = searchResults[i];
+                names[i] = getSafeHtml(searchResult.name, buildMarker(JSON.parse(JSON.stringify(searchResult.nameMarks || [])), node));
+                authorNames[i] = getSafeHtml(searchResult.authorName, buildMarker(JSON.parse(JSON.stringify(searchResult.authorNameMarks || [])), node));
+                let descriptionMarker = buildMarker(JSON.parse(JSON.stringify(searchResult.descriptionMarks || [])), node);
+                let descriptionTagMarker = buildTagMarker(searchResult.description);
+                descriptions[i] = '&hellip;' + getSafeHtml(searchResult.description, combineMarkers(descriptionTagMarker, descriptionMarker)) + '&hellip;';
+            }
             return {
-                names: [],
-                authorNames: [],
-                descriptions: []
+                searchResults,
+                names,
+                authorNames,
+                descriptions
             };
         },
-        computed: {
-            searchResults: {
-                get() { return this.$store.state.marketplace.searchResults; },
-                set(searchResults) { this.$store.commit('marketplace/setSearchResults', searchResults); }
-            }
-        },
-        watch: {
-            searchResults: {
-                immediate: true,
-                handler: 'buildMarkedText'
-            }
-        },
+        watchQuery: ['query'],
         methods: {
-            buildMarkedText: debounce(function (searchResults) {
-                let names = [], authorNames = [], descriptions = [];
-                let node = document.createElement('mark');
-                node.classList.add('searchResult');
-                for (let i in searchResults) {
-                    let searchResult = searchResults[i];
-                    names[i] = getSafeHtml(searchResult.name, buildMarker(JSON.parse(JSON.stringify(searchResult.nameMarks || [])), node));
-                    authorNames[i] = getSafeHtml(searchResult.authorName, buildMarker(JSON.parse(JSON.stringify(searchResult.authorNameMarks || [])), node));
-                    let descriptionMarker = buildMarker(JSON.parse(JSON.stringify(searchResult.descriptionMarks || [])), node);
-                    let descriptionTagMarker = buildTagMarker(searchResult.description);
-                    descriptions[i] = '&hellip;' + getSafeHtml(searchResult.description, combineMarkers(descriptionTagMarker, descriptionMarker)) + '&hellip;';
-                }
-                this.names = names;
-                this.authorNames = authorNames;
-                this.descriptions = descriptions;
-            }, 200),
             handleClicks
         },
         beforeRouteLeave(to, from, next) {
             this.$store.commit('marketplace/clearQuery');
             next();
+        },
+        created() {
+            this.builderTypePathFragment = {'script': 'script', 'script_chain': 'scriptchain'};
         }
     };
 </script>

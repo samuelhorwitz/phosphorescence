@@ -2,12 +2,11 @@
     <section>
         <h2>#{{$route.params.tag}}</h2>
         <ol v-if="tags">
-            <li v-for="(tag, index) of tags">
+            <li v-for="(tag, index) of tags" tabindex="0">
                 <h3>
-                    <span class="name">{{tag.name}}</span>&nbsp;&horbar;&nbsp;<span class="authorName">{{tag.authorName}}</span>
+                    <router-link :to="'/marketplace/' + builderTypePathFragment[tag.resultType] + '/' + encodeURIComponent(tag.id)"><span class="name">{{tag.name}}</span></router-link>&nbsp;&horbar;&nbsp;<span class="authorName">{{tag.authorName}}</span><spotifyUserLink id="" :name="tag.authorName" :isAuthor="true"/>
                 </h3>
-                <p v-if="descriptions[index]" v-html="descriptions[index]" @click="handleClicks"></p>
-                <p v-if="!descriptions[index]">{{tag.description}}</p>
+                <p v-html="descriptions[index]" @click="handleClicks"></p>
             </li>
         </ol>
         <footer v-if="tags">
@@ -60,10 +59,13 @@
 <script>
     import {getAccessToken} from '~/assets/session';
     import {getSafeHtml, buildTagMarker, handleClicks} from '~/assets/safehtml';
-    import {debounce} from 'lodash';
+    import spotifyUserLink from '~/components/marketplace/spotifyuserlink';
 
     export default {
         layout: 'marketplace',
+        components: {
+            spotifyUserLink
+        },
         async fetch({store, error}) {
             await getAccessToken();
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
@@ -73,41 +75,32 @@
             let {user} = await userResponse.json();
             store.commit('user/user', user);
         },
-        watchQuery: ['tag'],
-        data() {
-            return {
-                tags: [],
-                descriptions: []
-            };
-        },
-        watch: {
-            tags: {
-                immediate: true,
-                handler: 'buildMarkedText'
-            }
-        },
-        async created() {
-            let tag = this.$route.params.tag;
+        async asyncData({params, error}) {
+            let {tag} = params;
             if (!tag) {
-                return;
+                return error({statusCode: 400, message: 'No tag'});
             }
             let tagResponse = await fetch(`${process.env.API_ORIGIN}/scripts/search-tag?tag=${tag}`, {credentials: 'include'});
             if (!tagResponse.ok) {
-                return;
+                return error({statusCode: tagResponse.status, message: 'Could not get tag'});
             }
-            let {results} = await tagResponse.json();
-            this.tags = results;
+            let {results: tags} = await tagResponse.json();
+            let descriptions = [];
+            for (let i in tags) {
+                let tag = tags[i];
+                descriptions[i] = getSafeHtml(tag.description, buildTagMarker(tag.description));
+            }
+            return {
+                tags,
+                descriptions
+            };
         },
+        watchQuery: ['tag'],
         methods: {
-            buildMarkedText: debounce(function (tags) {
-                let descriptions = [];
-                for (let i in tags) {
-                    let tag = tags[i];
-                    descriptions[i] = getSafeHtml(tag.description, buildTagMarker(tag.description));
-                }
-                this.descriptions = descriptions;
-            }, 200),
             handleClicks
+        },
+        created() {
+            this.builderTypePathFragment = {'script': 'script', 'script_chain': 'scriptchain'};
         }
     };
 </script>

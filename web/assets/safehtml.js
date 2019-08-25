@@ -7,6 +7,7 @@ export function buildTagMarker(text) {
     XRegExp.forEach(text, hashtagMatcher, match => {
         let node = document.createElement('a');
         node.href = `/marketplace/tag/${encodeURIComponent(match[2])}`;
+        node.rel = 'tag';
         node.setAttribute('data-bound-html-internal-link', true);
         marks.push({
             index: match.index,

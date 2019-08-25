@@ -1,8 +1,8 @@
 <template>
     <div>
-        <input type="text" ref="query" v-model="query" @focus="showRecommended" @blur="hideRecommended" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
+        <input type="search" ref="query" placeholder="Search" autocomplete="off" v-model="query" @focus="showRecommended" @blur="hideRecommended" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
         <ul v-if="isFocused && !recommendedHidden && recommendedQueries && recommendedQueries.length > 1" ref="dropdown">
-            <li v-for="(recommended, index) of recommendedQueries" :class="{selected: index + 1 === cursor}" tabindex="0" @click="selectRecommendation(index)" @focus="setCursor(index)" @blur="hideRecommended" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
+            <li v-for="(recommended, index) of recommendedQueries" :class="{selected: index + 1 === cursor}" tabindex="-1" @click="selectRecommendation(index)" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
                 {{recommended}}
             </li>
         </ul>
@@ -89,9 +89,6 @@
                 this.recommendedHidden = false;
             },
             hideRecommended(e) {
-                if (e.relatedTarget && e.relatedTarget.parentNode === this.$refs.dropdown) {
-                    return;
-                }
                 this.isFocused = false;
                 this.recommendedHidden = true;
                 this.cursor = 0;
@@ -109,9 +106,6 @@
                 }
                 e.preventDefault();
                 this.cursor--;
-            },
-            setCursor(index) {
-                this.cursor = index + 1;
             },
             handleEnter() {
                 if (this.cursor === 0) {

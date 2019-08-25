@@ -20,8 +20,10 @@ var scriptsNamespace = uuid.NewV5(common.PhosphorUUIDV5Namespace, "scripts")
 type Script struct {
 	ID                      uuid.UUID      `json:"id"`
 	Name                    nullString     `json:"name"`
+	Description             nullString     `json:"description"`
 	AuthorID                uuid.UUID      `json:"authorId"`
 	AuthorSpotifyID         nullString     `json:"authorSpotifyId"`
+	AuthorName              nullString     `json:"authorName"`
 	ForkedFromScriptID      nullUUID       `json:"forkedFromScriptId"`
 	ForkedFromScriptVersion nullTime       `json:"forkedFromScriptVersion"`
 	IsPrivate               bool           `json:"isPrivate,omitempty"`
@@ -58,7 +60,17 @@ const (
 
 func GetScriptWithAuthorizationCheck(spotifyUserID string, scriptID uuid.UUID) (Script, bool, error) {
 	var script Script
-	err := psql.Select("scripts.id", "scripts.author_id", "scripts.name", "users.spotify_id", "scripts.forked_from_script_id", "scripts.forked_from_script_version_created_at", "scripts.is_private", "scripts.created_at").
+	err := psql.Select(
+		"scripts.id",
+		"scripts.author_id",
+		"scripts.name",
+		"scripts.description",
+		"users.spotify_id",
+		"users.name",
+		"scripts.forked_from_script_id",
+		"scripts.forked_from_script_version_created_at",
+		"scripts.is_private",
+		"scripts.created_at").
 		From("scripts_view as scripts").
 		LeftJoin("users_view users on users.id = scripts.author_id").
 		Where(sq.And{
@@ -68,7 +80,17 @@ func GetScriptWithAuthorizationCheck(spotifyUserID string, scriptID uuid.UUID) (
 				sq.Eq{"scripts.is_private": false},
 			},
 		}).
-		RunWith(postgresDB).QueryRow().Scan(&script.ID, &script.AuthorID, &script.Name, &script.AuthorSpotifyID, &script.ForkedFromScriptID, &script.ForkedFromScriptVersion, &script.IsPrivate, &script.CreatedAt)
+		RunWith(postgresDB).QueryRow().Scan(
+		&script.ID,
+		&script.AuthorID,
+		&script.Name,
+		&script.Description,
+		&script.AuthorSpotifyID,
+		&script.AuthorName,
+		&script.ForkedFromScriptID,
+		&script.ForkedFromScriptVersion,
+		&script.IsPrivate,
+		&script.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return Script{}, false, nil
@@ -112,7 +134,17 @@ func GetScriptsBySpotifyUserID(spotifyUserID string, count uint64, from time.Tim
 	if !includePrivate {
 		where = append(where, sq.Eq{"scripts.is_private": false})
 	}
-	rows, err := psql.Select("scripts.id", "scripts.author_id", "scripts.name", "users.spotify_id", "scripts.forked_from_script_id", "scripts.forked_from_script_version_created_at", "scripts.is_private", "scripts.created_at").
+	rows, err := psql.Select(
+		"scripts.id",
+		"scripts.author_id",
+		"scripts.name",
+		"scripts.description",
+		"users.spotify_id",
+		"users.name",
+		"scripts.forked_from_script_id",
+		"scripts.forked_from_script_version_created_at",
+		"scripts.is_private",
+		"scripts.created_at").
 		From("scripts_view as scripts").
 		Join("users_view users on users.id = scripts.author_id").
 		Where(where).
@@ -125,7 +157,17 @@ func GetScriptsBySpotifyUserID(spotifyUserID string, count uint64, from time.Tim
 	defer rows.Close()
 	for rows.Next() {
 		var script Script
-		err := rows.Scan(&script.ID, &script.AuthorID, &script.Name, &script.AuthorSpotifyID, &script.ForkedFromScriptID, &script.ForkedFromScriptVersion, &script.IsPrivate, &script.CreatedAt)
+		err := rows.Scan(
+			&script.ID,
+			&script.AuthorID,
+			&script.Name,
+			&script.Description,
+			&script.AuthorSpotifyID,
+			&script.AuthorName,
+			&script.ForkedFromScriptID,
+			&script.ForkedFromScriptVersion,
+			&script.IsPrivate,
+			&script.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("Could not scan row: %s", err)
 		}
@@ -195,7 +237,17 @@ func GetNewScripts(count uint64, from time.Time) (scripts []Script, err error) {
 	if !from.IsZero() {
 		where = append(where, sq.Lt{"scripts.created_at": from})
 	}
-	rows, err := psql.Select("scripts.id", "scripts.author_id", "scripts.name", "users.spotify_id", "scripts.forked_from_script_id", "scripts.forked_from_script_version_created_at", "scripts.is_private", "scripts.created_at").
+	rows, err := psql.Select(
+		"scripts.id",
+		"scripts.author_id",
+		"scripts.name",
+		"scripts.description",
+		"users.spotify_id",
+		"users.name",
+		"scripts.forked_from_script_id",
+		"scripts.forked_from_script_version_created_at",
+		"scripts.is_private",
+		"scripts.created_at").
 		From("scripts_view as scripts").
 		LeftJoin("users_view users on users.id = scripts.author_id").
 		Where(where).
@@ -208,7 +260,17 @@ func GetNewScripts(count uint64, from time.Time) (scripts []Script, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		var script Script
-		err := rows.Scan(&script.ID, &script.AuthorID, &script.Name, &script.AuthorSpotifyID, &script.ForkedFromScriptID, &script.ForkedFromScriptVersion, &script.IsPrivate, &script.CreatedAt)
+		err := rows.Scan(
+			&script.ID,
+			&script.AuthorID,
+			&script.Name,
+			&script.Description,
+			&script.AuthorSpotifyID,
+			&script.AuthorName,
+			&script.ForkedFromScriptID,
+			&script.ForkedFromScriptVersion,
+			&script.IsPrivate,
+			&script.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("Could not scan row: %s", err)
 		}

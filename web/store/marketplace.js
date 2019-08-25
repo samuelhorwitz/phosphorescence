@@ -1,6 +1,5 @@
 export const state = () => ({
-    query: '',
-    searchResults: null
+    query: ''
 });
 
 export const mutations = {
@@ -9,8 +8,5 @@ export const mutations = {
     },
     clearQuery(state) {
         state.query = '';
-    },
-    setSearchResults(state, searchResults) {
-        state.searchResults = searchResults;
     }
 };
