@@ -145,7 +145,7 @@ export function getSafeHtml(text, marker) {
 export function handleClicks(e) {
     let {target} = e;
     while (target && target.tagName !== 'A') target = target.parentNode;
-    if (target.getAttribute('data-bound-html-internal-link') === 'true') {
+    if (target && target.getAttribute('data-bound-html-internal-link') === 'true') {
         let {altKey, ctrlKey, metaKey, shiftKey, button, defaultPrevented} = e;
         if (metaKey || altKey || ctrlKey || shiftKey) return;
         if (defaultPrevented) return;

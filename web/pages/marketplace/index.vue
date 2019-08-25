@@ -10,9 +10,6 @@
 </template>
 
 <style>
-    p {
-        margin: 2em;
-    }
 </style>
 
 <script>

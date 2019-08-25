@@ -3,10 +3,12 @@
         <aside>
             <logo min="true"></logo>
         </aside>
-        <main>
+        <div class="mainWrapper">
             <navigation></navigation>
-            <nuxt/>
-        </main>
+            <main>
+                <nuxt/>
+            </main>
+        </div>
     </div>
 </template>
 
@@ -21,13 +23,20 @@
     aside {
         display: flex;
         align-items: flex-start;
-        flex: 1;
+        width: 20em;
         height: 100%;
         background: linear-gradient(to top, rgb(244, 187, 251), rgb(0, 27, 244) 50%, rgb(40, 27, 61) 80%);
     }
 
     main {
-        flex: 4;
+        flex: 1;
+        margin: 0px 2em;
+    }
+
+    .mainWrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
         overflow-y: auto;
     }
 </style>

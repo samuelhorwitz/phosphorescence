@@ -20,10 +20,6 @@
 </template>
 
 <style scoped>
-    section {
-        margin-left: 2em;
-    }
-
     ol {
         list-style: none;
         margin: 0px;
@@ -58,16 +54,6 @@
         font-style: italic;
         font-size: 1.25em;
         margin-bottom: 2em;
-    }
-</style>
-
-<style>
-    mark.searchResult {
-        background-color: inherit;
-        font-weight: bold;
-        text-decoration: underline;
-        background-color: magenta;
-        color: white;
     }
 </style>
 

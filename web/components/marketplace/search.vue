@@ -2,7 +2,7 @@
     <div>
         <input type="text" ref="query" v-model="query" @focus="showRecommended" @blur="hideRecommended" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
         <ul v-if="isFocused && !recommendedHidden && recommendedQueries && recommendedQueries.length > 1" ref="dropdown">
-            <li v-for="(recommended, index) of recommendedQueries" :class="{selected: index + 1 === cursor}" tabindex="0" @click="selectRecommendation(index)" @focus="setCursor(index)" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
+            <li v-for="(recommended, index) of recommendedQueries" :class="{selected: index + 1 === cursor}" tabindex="0" @click="selectRecommendation(index)" @focus="setCursor(index)" @blur="hideRecommended" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @keydown.esc="handleEscape">
                 {{recommended}}
             </li>
         </ul>
@@ -22,6 +22,7 @@
         padding: 0px;
         padding-left: 0.25em;
         font-size: 2em;
+        border: 2px inset rgb(231, 231, 231);
     }
 
     input:focus {
@@ -36,8 +37,7 @@
         padding: 0px;
         width: 100%;
         background-color: white;
-        border: 2px solid rgb(238, 238, 238);
-        border-top: 0px;
+        border: 1px solid rgb(183, 183, 183);
         box-sizing: border-box;
     }
 
@@ -47,7 +47,7 @@
     }
 
     li:hover {
-        background-color: cyan;
+        background-color: navy;
         color: white;
     }
 
@@ -56,7 +56,7 @@
     }
 
     li.selected {
-        background-color: cyan;
+        background-color: navy;
         color: white;
     }
 </style>

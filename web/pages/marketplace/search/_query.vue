@@ -1,6 +1,7 @@
 <template>
     <section>
-        <h2>Search Results</h2>
+        <h2 v-if="searchResults">Search Results</h2>
+        <h2 v-if="!searchResults">No search results found</h2>
         <ol v-if="searchResults">
             <li v-for="(searchResult, index) of searchResults">
                 <h3 v-if="names[index] && authorNames[index]">
@@ -16,17 +17,10 @@
         <footer v-if="searchResults">
             End of results
         </footer>
-        <aside v-if="!searchResults">
-            No search results found
-        </aside>
     </section>
 </template>
 
 <style scoped>
-    section {
-        margin-left: 2em;
-    }
-
     ol {
         list-style: none;
         margin: 0px;
@@ -53,10 +47,6 @@
         margin-left: 1em;
     }
 
-    aside {
-        font-size: 3em;
-    }
-
     footer {
         font-style: italic;
         font-size: 1.25em;
@@ -69,7 +59,7 @@
         background-color: inherit;
         font-weight: bold;
         text-decoration: underline;
-        background-color: magenta;
+        background-color: teal;
         color: white;
     }
 </style>
