@@ -27,6 +27,20 @@ func Search(w http.ResponseWriter, r *http.Request) {
 	common.JSON(w, map[string]interface{}{"results": results})
 }
 
+func SearchTag(w http.ResponseWriter, r *http.Request) {
+	tag := r.URL.Query().Get("tag")
+	if tag == "" {
+		common.Fail(w, errors.New("Must include search tag"), http.StatusBadRequest)
+		return
+	}
+	results, err := models.QueryTag(tag)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Could not execute tag search: %s", err), http.StatusInternalServerError)
+		return
+	}
+	common.JSON(w, map[string]interface{}{"results": results})
+}
+
 func RecommendedQuery(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	if query == "" {

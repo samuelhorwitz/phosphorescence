@@ -19,16 +19,16 @@ var (
 
 // rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint
 type searchResult struct {
-	Rank             float64    `json:"rank"`
+	Rank             float64    `json:"rank,omitempty"`
 	ID               uuid.UUID  `json:"id"`
 	ResultType       resultType `json:"resultType"`
 	Name             string     `json:"name"`
 	Description      string     `json:"description"`
 	AuthorName       string     `json:"authorName"`
 	LikeCount        uint64     `json:"likeCount"`
-	NameMarks        []int      `json:"nameMarks"`
-	DescriptionMarks []int      `json:"descriptionMarks"`
-	AuthorNameMarks  []int      `json:"authorNameMarks"`
+	NameMarks        []int      `json:"nameMarks,omitempty"`
+	DescriptionMarks []int      `json:"descriptionMarks,omitempty"`
+	AuthorNameMarks  []int      `json:"authorNameMarks,omitempty"`
 }
 
 type resultType string
@@ -60,6 +60,26 @@ func Query(q string) (searchResults []searchResult, _ error) {
 		searchResult.Name, searchResult.NameMarks = getPlaintextAndMarkIndices(name)
 		searchResult.AuthorName, searchResult.AuthorNameMarks = getPlaintextAndMarkIndices(authorName)
 		searchResult.Description, searchResult.DescriptionMarks = getPlaintextAndMarkIndices(description)
+		searchResults = append(searchResults, searchResult)
+	}
+	return searchResults, nil
+}
+
+func QueryTag(tag string) (searchResults []searchResult, _ error) {
+	rows, err := postgresDB.Query("select id, type, name, unmodified_description, author_name, likes from search_hashtag($1) limit 100", tag)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Tag search failed: %s", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var searchResult searchResult
+		err := rows.Scan(&searchResult.ID, &searchResult.ResultType, &searchResult.Name, &searchResult.Description, &searchResult.AuthorName, &searchResult.LikeCount)
+		if err != nil {
+			return nil, fmt.Errorf("Could not scan row: %s", err)
+		}
 		searchResults = append(searchResults, searchResult)
 	}
 	return searchResults, nil

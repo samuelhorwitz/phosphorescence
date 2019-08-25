@@ -69,6 +69,7 @@ func initializeRoutes(cfg *config) http.Handler {
 	scriptRouter := func(r chi.Router) {
 		r.Use(middleware.Session)
 		r.Get("/search", phosphor.Search)
+		r.Get("/search-tag", phosphor.SearchTag)
 		r.Get("/query-recommendation", phosphor.RecommendedQuery)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthenticatedSession)

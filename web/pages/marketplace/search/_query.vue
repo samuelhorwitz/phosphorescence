@@ -76,33 +76,8 @@
 
 <script>
     import {getAccessToken} from '~/assets/session';
+    import {getSafeHtml, buildMarker, buildTagMarker} from '~/assets/safehtml';
     import {debounce} from 'lodash';
-
-    function buildMarkedText(text, marks) {
-        if (!marks || marks.length === 0 || marks.length % 2 !== 0) {
-            return text;
-        }
-        let el = document.createElement('div');
-        let lead = document.createTextNode(text.substring(0, marks[0]));
-        el.appendChild(lead);
-        let lastMark;
-        for (let i = 0; i < marks.length; i += 2) {
-            let startMark = marks[i];
-            let endMark = marks[i + 1];
-            if (lastMark) {
-                let t = document.createTextNode(text.substring(lastMark, startMark));
-                el.appendChild(t);
-            }
-            let mark = document.createElement('mark');
-            mark.classList.add('searchResult');
-            mark.innerText = text.substring(startMark, endMark);
-            el.appendChild(mark);
-            lastMark = endMark;
-        }
-        let tail = document.createTextNode(text.substring(marks[marks.length - 1]));
-        el.appendChild(tail);
-        return el.innerHTML;
-    }
 
     export default {
         layout: 'marketplace',
@@ -145,11 +120,14 @@
         methods: {
             buildMarkedText: debounce(function (searchResults) {
                 let names = [], authorNames = [], descriptions = [];
+                let node = document.createElement('mark');
+                node.classList.add('searchResult');
                 for (let i in searchResults) {
                     let searchResult = searchResults[i];
-                    names[i] = buildMarkedText(searchResult.name, searchResult.nameMarks);
-                    authorNames[i] = buildMarkedText(searchResult.authorName, searchResult.authorNameMarks);
-                    descriptions[i] = '&hellip;' + buildMarkedText(searchResult.description, searchResult.descriptionMarks) + '&hellip;';
+                    names[i] = getSafeHtml(searchResult.name, buildMarker(searchResult.nameMarks, node));
+                    authorNames[i] = getSafeHtml(searchResult.authorName, buildMarker(searchResult.authorNameMarks, node));
+                    let descriptionMarker = buildTagMarker(searchResult.description, buildMarker(searchResult.descriptionMarks, node));
+                    descriptions[i] = '&hellip;' + getSafeHtml(searchResult.description, descriptionMarker) + '&hellip;';
                 }
                 this.names = names;
                 this.authorNames = authorNames;
