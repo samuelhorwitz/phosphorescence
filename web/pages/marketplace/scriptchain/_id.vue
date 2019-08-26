@@ -51,7 +51,7 @@
             if (!id) {
                 return error({statusCode: 400, message: 'No script chain id'});
             }
-            let scriptChainResponse = await fetch(`${process.env.API_ORIGIN}/scriptchains/${id}`, {credentials: 'include'});
+            let scriptChainResponse = await fetch(`${process.env.API_ORIGIN}/script-chains/${id}`, {credentials: 'include'});
             if (!scriptChainResponse.ok) {
                 return error({statusCode: scriptChainResponse.status, message: 'Could not get script chain'});
             }

@@ -5,7 +5,7 @@
         <ol v-if="searchResults">
             <li v-for="(searchResult, index) of searchResults">
                 <h3>
-                    <router-link :to="'/marketplace/' + builderTypePathFragment[searchResult.resultType] + '/' + encodeURIComponent(searchResult.id)"><span class="name" v-html="names[index]"></span></router-link>&nbsp;&horbar;&nbsp;<span class="authorName" v-html="authorNames[index]"></span><spotifyUserLink id="" :name="authorNames[index]" :isAuthor="true" />
+                    <router-link :to="'/marketplace/' + builderTypePathFragment[searchResult.resultType] + '/' + encodeURIComponent(searchResult.id)"><span class="name" v-html="names[index]"></span></router-link>&nbsp;&horbar;&nbsp;<span class="authorName" v-html="authorNames[index]"></span>
                 </h3>
                 <p v-html="descriptions[index]" @click="handleClicks"></p>
             </li>
@@ -36,6 +36,7 @@
     h3 {
         margin: 0px;
         margin-bottom: 1em;
+        position: relative;
     }
 
     p {
@@ -63,13 +64,11 @@
 <script>
     import {getAccessToken} from '~/assets/session';
     import {getSafeHtml, buildMarker, buildTagMarker, combineMarkers, handleClicks} from '~/assets/safehtml';
-    import spotifyUserLink from '~/components/marketplace/spotifyuserlink';
+    import verifiedBadge from '~/components/marketplace/verifiedbadge';
 
     export default {
         layout: 'marketplace',
-        components: {
-            spotifyUserLink
-        },
+        components: {verifiedBadge},
         async fetch({store, params, error}) {
             await getAccessToken();
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
@@ -82,7 +81,7 @@
         async asyncData({store, params, error}) {
             let {query} = params;
             store.commit('marketplace/setQuery', query);
-            let searchResponse = await fetch(`${process.env.API_ORIGIN}/scripts/search?query=${encodeURIComponent(query)}`, {credentials: 'include'});
+            let searchResponse = await fetch(`${process.env.API_ORIGIN}/search/${encodeURIComponent(query)}`, {credentials: 'include'});
             if (!searchResponse.ok) {
                 return error({statusCode: userResponse.status, message: 'Could not perform search'});
             }

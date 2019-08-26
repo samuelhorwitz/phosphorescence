@@ -3,6 +3,7 @@ package models
 import (
 	"compress/gzip"
 	"database/sql"
+	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,7 +38,7 @@ type ScriptVersion struct {
 	FileID    uuid.UUID      `json:"fileId"`
 }
 
-type CreateOrUpdateResponse struct {
+type CreateOrUpdateScriptResponse struct {
 	ID          uuid.UUID `json:"id"`
 	FileID      uuid.UUID `json:"fileId"`
 	Name        string    `json:"name"`
@@ -283,36 +284,36 @@ func GetNewScripts(count uint64, from time.Time) (scripts []Script, err error) {
 	return scripts, nil
 }
 
-func CreateScript(spotifyUserID, name, description, script string) (CreateOrUpdateResponse, error) {
+func CreateScript(spotifyUserID, name, description, script string) (CreateOrUpdateScriptResponse, error) {
 	scriptFileID, err := pushScriptToObjectStorage(script)
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
 	}
 	tx, err := postgresDB.Begin()
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not start transaction: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not start transaction: %s", err)
 	}
 	userID, err := mapSpotifyIDToOurID(tx, spotifyUserID)
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
 	}
 	scriptID := uuid.NewV4()
 	_, err = psql.Insert("scripts").Columns("id", "author_id", "name", "description").
 		Values(scriptID, userID, stringOrNull(name), stringOrNull(description)).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
 	}
 	_, err = psql.Insert("script_versions").Columns("script_id", "type", "file_id").
 		Values(scriptID, ScriptSaveTypeDraft, scriptFileID).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
 	}
 	if err = tx.Commit(); err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
 	}
-	return CreateOrUpdateResponse{
+	return CreateOrUpdateScriptResponse{
 		ID:          scriptID,
 		FileID:      scriptFileID,
 		Name:        name,
@@ -320,16 +321,19 @@ func CreateScript(spotifyUserID, name, description, script string) (CreateOrUpda
 	}, nil
 }
 
-func UpdateScript(scriptID uuid.UUID, name, description, script, permissions string, scriptSaveType ScriptSaveType) (CreateOrUpdateResponse, error) {
-	res := CreateOrUpdateResponse{}
+func UpdateScript(scriptID uuid.UUID, name, description, script, permissions string, scriptSaveType ScriptSaveType) (CreateOrUpdateScriptResponse, error) {
+	if name == "" && permissions == permissionsPublic {
+		return CreateOrUpdateScriptResponse{}, errors.New("Public scripts must have a name")
+	}
+	res := CreateOrUpdateScriptResponse{}
 	tx, err := postgresDB.Begin()
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not start transaction: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not start transaction: %s", err)
 	}
 	if script != "" {
 		scriptFileID, err := pushScriptToObjectStorage(script)
 		if err != nil {
-			return CreateOrUpdateResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
+			return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
 		}
 		var mostRecentFileID uuid.UUID
 		var mostRecentType ScriptSaveType
@@ -340,7 +344,7 @@ func UpdateScript(scriptID uuid.UUID, name, description, script, permissions str
 			Limit(1).
 			RunWith(tx).QueryRow().Scan(&mostRecentFileID, &mostRecentType)
 		if err != nil {
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not check most recent script version file ID: %s", err))
+			return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not check most recent script version file ID: %s", err))
 		}
 		// Don't create a new version row if the code is the exact same, unless we are publishing and the previous save was not a publish
 		if !uuid.Equal(mostRecentFileID, scriptFileID) || (mostRecentType != ScriptSaveTypePublished && scriptSaveType == ScriptSaveTypePublished) {
@@ -348,7 +352,7 @@ func UpdateScript(scriptID uuid.UUID, name, description, script, permissions str
 				Values(scriptID, scriptSaveType, scriptFileID).
 				RunWith(tx).Exec()
 			if err != nil {
-				return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
+				return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
 			}
 		}
 		res.ID = scriptID
@@ -374,7 +378,7 @@ func UpdateScript(scriptID uuid.UUID, name, description, script, permissions str
 		case permissionsPrivate:
 			isPrivate = true
 		default:
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script permissions, invalid permissions %s", permissions))
+			return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script permissions, invalid permissions %s", permissions))
 		}
 		updateBuilder.Set("isPrivate", isPrivate)
 		res.Permissions = permissions
@@ -383,11 +387,11 @@ func UpdateScript(scriptID uuid.UUID, name, description, script, permissions str
 	if shouldUpdate {
 		_, err := updateBuilder.Exec()
 		if err != nil {
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script details: %s", err))
+			return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script details: %s", err))
 		}
 	}
 	if err = tx.Commit(); err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
 	}
 	return res, nil
 }
@@ -417,14 +421,14 @@ func DeleteScriptVersion(scriptID uuid.UUID, scriptVersionID time.Time) error {
 	return nil
 }
 
-func ForkScript(spotifyUserID string, toForkScriptID uuid.UUID, toForkScriptName string, toForkVersionID time.Time, onlyPublished bool) (CreateOrUpdateResponse, error) {
+func ForkScript(spotifyUserID string, toForkScriptID uuid.UUID, toForkScriptName string, toForkVersionID time.Time, onlyPublished bool) (CreateOrUpdateScriptResponse, error) {
 	tx, err := postgresDB.Begin()
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not start transaction: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not start transaction: %s", err)
 	}
 	userID, err := mapSpotifyIDToOurID(tx, spotifyUserID)
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
 	}
 	where := sq.Eq{
 		"script_id": toForkScriptID,
@@ -444,25 +448,25 @@ func ForkScript(spotifyUserID string, toForkScriptID uuid.UUID, toForkScriptName
 	err = sel.Where(where).
 		RunWith(tx).QueryRow().Scan(&toForkVersion.CreatedAt, &toForkVersion.Type, &toForkVersion.FileID)
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get script version: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get script version: %s", err))
 	}
 	scriptID := uuid.NewV4()
 	_, err = psql.Insert("scripts").Columns("id", "author_id", "name", "forked_from_script_id", "forked_from_script_version_created_at").
 		Values(scriptID, userID, stringOrNull(toForkScriptName), toForkScriptID, toForkVersion.CreatedAt).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
 	}
 	_, err = psql.Insert("script_versions").Columns("script_id", "type", "file_id").
 		Values(scriptID, ScriptSaveTypeFork, toForkVersion.FileID).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
 	}
 	if err = tx.Commit(); err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
 	}
-	return CreateOrUpdateResponse{
+	return CreateOrUpdateScriptResponse{
 		ID:          scriptID,
 		FileID:      toForkVersion.FileID,
 		Name:        toForkScriptName,

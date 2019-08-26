@@ -4,7 +4,7 @@
         <ol v-if="tags">
             <li v-for="(tag, index) of tags" tabindex="0">
                 <h3>
-                    <router-link :to="'/marketplace/' + builderTypePathFragment[tag.resultType] + '/' + encodeURIComponent(tag.id)"><span class="name">{{tag.name}}</span></router-link>&nbsp;&horbar;&nbsp;<span class="authorName">{{tag.authorName}}</span><spotifyUserLink id="" :name="tag.authorName" :isAuthor="true"/>
+                    <router-link :to="'/marketplace/' + builderTypePathFragment[tag.resultType] + '/' + encodeURIComponent(tag.id)"><span class="name">{{tag.name}}</span></router-link>&nbsp;&horbar;&nbsp;<span class="authorName">{{tag.authorName}}</span>
                 </h3>
                 <p v-html="descriptions[index]" @click="handleClicks"></p>
             </li>
@@ -59,13 +59,9 @@
 <script>
     import {getAccessToken} from '~/assets/session';
     import {getSafeHtml, buildTagMarker, handleClicks} from '~/assets/safehtml';
-    import spotifyUserLink from '~/components/marketplace/spotifyuserlink';
 
     export default {
         layout: 'marketplace',
-        components: {
-            spotifyUserLink
-        },
         async fetch({store, error}) {
             await getAccessToken();
             let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
@@ -80,7 +76,7 @@
             if (!tag) {
                 return error({statusCode: 400, message: 'No tag'});
             }
-            let tagResponse = await fetch(`${process.env.API_ORIGIN}/scripts/search-tag?tag=${tag}`, {credentials: 'include'});
+            let tagResponse = await fetch(`${process.env.API_ORIGIN}/search/tag/${tag}`, {credentials: 'include'});
             if (!tagResponse.ok) {
                 return error({statusCode: tagResponse.status, message: 'Could not get tag'});
             }

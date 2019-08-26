@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 )
 
 func Search(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
+	query := chi.URLParam(r, "query")
 	if query == "" {
 		common.Fail(w, errors.New("Must include search query"), http.StatusBadRequest)
 		return
@@ -28,7 +29,7 @@ func Search(w http.ResponseWriter, r *http.Request) {
 }
 
 func SearchTag(w http.ResponseWriter, r *http.Request) {
-	tag := r.URL.Query().Get("tag")
+	tag := chi.URLParam(r, "tag")
 	if tag == "" {
 		common.Fail(w, errors.New("Must include search tag"), http.StatusBadRequest)
 		return
@@ -42,7 +43,7 @@ func SearchTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func RecommendedQuery(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
+	query := chi.URLParam(r, "query")
 	if query == "" {
 		common.Fail(w, errors.New("Must include search query"), http.StatusBadRequest)
 		return
