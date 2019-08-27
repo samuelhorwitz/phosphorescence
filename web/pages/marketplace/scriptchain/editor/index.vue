@@ -1,0 +1,101 @@
+<template>
+    <section>
+        <h2>Script Chain Editor</h2>
+        <p>Script chains are collections of scripts which are run in sequence in order to produce a playlist of tracks. Various scripts may be used to handle different phases of the playlist building from reducing the available pool of tracks to choosing subsequent ones.</p><p>This is a lighter weight version of writing a full-featured script and leverages existing script functionality while reducing flexibility. It is useful for combining scripts which already do mostly what you would like, but would work better together.</p>
+        <div class="wrapper">
+            <figure>
+                <figcaption>
+                    <h3>Pruners</h3>
+                    <p>Pruners reduce the set of tracks which are available to the seeder and builder. Pruners may be chained, each subsequent prune reducing the set further. They are optional.</p>
+                </figcaption>
+                <ul class="content">
+                    <li>Pruner 1</li>
+                    <li>Pruner 2</li>
+                    <li>blank</li>
+                    <li>blank</li>
+                    <li>blank</li>
+                </ul>
+            </figure>
+            <figure>
+                <figcaption>
+                    <h3>Seeder</h3>
+                    <p>The seeder picks the first track, assuming the user did not specify a seed track themselves (such as through drag and drop). It is optional; the builder's seeder function will be used as a fallback.</p>
+                </figcaption>
+                <div class="content">Seeder</div>
+            </figure>
+            <figure>
+                <figcaption>
+                    <h3 class="required">Builder</h3>
+                    <p>The builder script is responsible for selecting each track in the playlist after the initial track. It may also select the initial track if there is no seeder or user-supplied seed track. It is required.</p>
+                </figcaption>
+                <div class="content">Builder</div>
+            </figure>
+        </div>
+    </section>
+</template>
+
+<style scoped>
+    h2 {
+        margin: 0px;
+        margin-top: 1em;
+    }
+
+    h3 {
+        margin: 0px;
+        margin-top: 0.5em;
+    }
+
+    figure {
+        display: flex;
+        margin: 4em 0px;
+    }
+
+    figcaption {
+        flex: 1;
+        border-right: 1px solid black;
+        margin-right: 1em;
+        padding: 0px 1em;
+        text-align: right;
+    }
+
+    figcaption p {
+        text-align: justify;
+        margin-top: 1em;
+    }
+
+    .content {
+        flex: 1;
+    }
+
+    ul {
+        list-style: none;
+        margin: 0px;
+        padding: 0px;
+    }
+
+    li {
+        margin: 0.5em 0px;
+    }
+
+    .required::after {
+        content: '*';
+        margin-left: 0.5em;
+    }
+</style>
+
+<script>
+    import {getAccessToken} from '~/assets/session';
+
+    export default {
+        layout: 'marketplace',
+        async fetch({store, error}) {
+            await getAccessToken();
+            let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
+            if (!userResponse.ok) {
+                return error({statusCode: userResponse.status, message: "Could not get user information"});
+            }
+            let {user} = await userResponse.json();
+            store.commit('user/user', user);
+        }
+    };
+</script>
