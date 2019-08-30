@@ -15,6 +15,7 @@ var (
 	quoted           = regexp.MustCompile(`(?i)[\p{Pi}\x{ff02}\x{ff07}"'](.*?)[\p{Pf}\x{ff02}\x{ff07}"']`)
 	hashtag          = regexp.MustCompile(`#((?:[\pL\pN][\pM\x{200C}\x{200D}]*)+(?:[\p{Pc}\p{Pd}](?:[\pL\pN][\pM\x{200C}\x{200D}]*)+)*)`)
 	finalWord        = regexp.MustCompile(`^((?:\PZ*[\pZ\p{Pi}\p{Pf}\x{ff02}\x{ff07}"'#]+)*)(\PZ*)$`)
+	uuidv4           = regexp.MustCompile(`(?i)[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[ab89][a-f0-9]{3}-?[a-f0-9]{12}`)
 )
 
 // rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint
@@ -39,7 +40,20 @@ const (
 )
 
 func Query(q string) (searchResults []searchResult, _ error) {
-	q, strictMatches, tags := parseQuery(q)
+	q, potentialUUID, strictMatches, tags := parseQuery(q)
+	if potentialUUID != "" {
+		var searchResult searchResult
+		err := postgresDB.QueryRow("select 1 as rank, id, type, name, description, author_name, likes from searchables where id = $1", potentialUUID).
+			Scan(&searchResult.Rank, &searchResult.ID, &searchResult.ResultType, &searchResult.Name, &searchResult.Description, &searchResult.AuthorName, &searchResult.LikeCount)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				return nil, fmt.Errorf("Search failed: %s", err)
+			}
+		} else {
+			searchResults = append(searchResults, searchResult)
+			return searchResults, nil
+		}
+	}
 	rows, err := postgresDB.Query("select rank, id, type, name, description, author_name, likes from search($1, $2, $3) limit 50", q, pq.Array(strictMatches), pq.Array(tags))
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -105,14 +119,14 @@ func RecommendedQuery(q string) (queries []string, err error) {
 	return queries, nil
 }
 
-func parseQuery(q string) (_ string, strictMatches, tags []string) {
+func parseQuery(q string) (_, _ string, strictMatches, tags []string) {
 	for _, match := range quoted.FindAllStringSubmatch(q, -1) {
 		strictMatches = append(strictMatches, match[1])
 	}
 	for _, match := range hashtag.FindAllStringSubmatch(q, -1) {
 		tags = append(tags, match[1])
 	}
-	return punctuation.ReplaceAllString(q, " "), strictMatches, tags
+	return punctuation.ReplaceAllString(q, " "), uuidv4.FindString(q), strictMatches, tags
 }
 
 func getPlaintextAndMarkIndices(markedUp string) (plain string, marks []int) {

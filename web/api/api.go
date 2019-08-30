@@ -79,15 +79,19 @@ func main() {
 }
 
 func initialize(cfg *config) {
+	log.Println("Initializing...")
 	rand.Seed(time.Now().UnixNano())
+	log.Println("Randomness initialized")
 	common.Initialize(&common.Config{
 		IsProduction:   cfg.isProduction,
 		SpotifyTimeout: cfg.handlerTimeout,
 		RedisHost:      cfg.redisHost,
 	})
+	log.Println("Common initialized")
 	middleware.Initialize(&middleware.Config{
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
 	})
+	log.Println("Middleware initialized")
 	spotify.Initialize(&spotify.Config{
 		IsProduction:   cfg.isProduction,
 		PhosphorOrigin: cfg.phosphorOrigin,
@@ -96,21 +100,25 @@ func initialize(cfg *config) {
 		SpacesEndpoint: cfg.spacesTracksEndpoint,
 		SpacesRegion:   cfg.spacesTracksRegion,
 	})
+	log.Println("Spotify handlers initialized")
 	phosphor.Initialize(&phosphor.Config{
 		IsProduction:   cfg.isProduction,
 		PhosphorOrigin: cfg.phosphorOrigin,
 		MailgunAPIKey:  cfg.mailgunAPIKey,
 	})
+	log.Println("Phosphor handlers initialized")
 	spotifyclient.Initialize(&spotifyclient.Config{
 		SpotifyClientID: cfg.spotifyClientID,
 		SpotifySecret:   cfg.spotifySecret,
 		APIOrigin:       cfg.apiOrigin,
 		BaseHTTPTimeout: cfg.handlerTimeout,
 	})
+	log.Println("Spotify client initialized")
 	session.Initialize(&session.Config{
 		CookieDomain: cfg.cookieDomain,
 		IsProduction: cfg.isProduction,
 	})
+	log.Println("Session handling initialized")
 	models.Initialize(&models.Config{
 		SpacesID:                 cfg.spacesID,
 		SpacesSecret:             cfg.spacesSecret,
@@ -121,12 +129,14 @@ func initialize(cfg *config) {
 		SpacesScriptsEndpoint:    cfg.spacesScriptsEndpoint,
 		SpacesScriptsRegion:      cfg.spacesScriptsRegion,
 	})
+	log.Println("Models initialized")
 	tracks.Initialize(&tracks.Config{
 		SpacesID:       cfg.spacesID,
 		SpacesSecret:   cfg.spacesSecret,
 		SpacesEndpoint: cfg.spacesTracksEndpoint,
 		SpacesRegion:   cfg.spacesTracksRegion,
 	})
+	log.Println("Tracks initialized")
 }
 
 func run(cfg *config) {
