@@ -20,16 +20,17 @@ var (
 
 // rank real, id uuid, type searchable_type, name text, description text, author_name text, likes bigint
 type searchResult struct {
-	Rank             float64    `json:"rank,omitempty"`
-	ID               uuid.UUID  `json:"id"`
-	ResultType       resultType `json:"resultType"`
-	Name             string     `json:"name"`
-	Description      string     `json:"description"`
-	AuthorName       string     `json:"authorName"`
-	LikeCount        uint64     `json:"likeCount"`
-	NameMarks        []int      `json:"nameMarks,omitempty"`
-	DescriptionMarks []int      `json:"descriptionMarks,omitempty"`
-	AuthorNameMarks  []int      `json:"authorNameMarks,omitempty"`
+	Rank               float64    `json:"rank,omitempty"`
+	ID                 uuid.UUID  `json:"id"`
+	ResultType         resultType `json:"resultType"`
+	Name               string     `json:"name"`
+	Description        string     `json:"description"`
+	AuthorName         string     `json:"authorName"`
+	LikeCount          uint64     `json:"likeCount"`
+	NameMarks          []int      `json:"nameMarks,omitempty"`
+	DescriptionMarks   []int      `json:"descriptionMarks,omitempty"`
+	AuthorNameMarks    []int      `json:"authorNameMarks,omitempty"`
+	PartialDescription bool       `json:"partialDescription,omitempty"`
 }
 
 type resultType string
@@ -43,13 +44,14 @@ func Query(q string) (searchResults []searchResult, _ error) {
 	q, potentialUUID, strictMatches, tags := parseQuery(q)
 	if potentialUUID != "" {
 		var searchResult searchResult
-		err := postgresDB.QueryRow("select 1 as rank, id, type, name, description, author_name, likes from searchables where id = $1", potentialUUID).
+		err := postgresDB.QueryRow("select 1 as rank, id, type, name, unmodified_description, author_name, likes from searchables where id = $1", potentialUUID).
 			Scan(&searchResult.Rank, &searchResult.ID, &searchResult.ResultType, &searchResult.Name, &searchResult.Description, &searchResult.AuthorName, &searchResult.LikeCount)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				return nil, fmt.Errorf("Search failed: %s", err)
 			}
 		} else {
+			searchResult.PartialDescription = false
 			searchResults = append(searchResults, searchResult)
 			return searchResults, nil
 		}
@@ -74,6 +76,7 @@ func Query(q string) (searchResults []searchResult, _ error) {
 		searchResult.Name, searchResult.NameMarks = getPlaintextAndMarkIndices(name)
 		searchResult.AuthorName, searchResult.AuthorNameMarks = getPlaintextAndMarkIndices(authorName)
 		searchResult.Description, searchResult.DescriptionMarks = getPlaintextAndMarkIndices(description)
+		searchResult.PartialDescription = true
 		searchResults = append(searchResults, searchResult)
 	}
 	return searchResults, nil
@@ -94,6 +97,7 @@ func QueryTag(tag string) (searchResults []searchResult, _ error) {
 		if err != nil {
 			return nil, fmt.Errorf("Could not scan row: %s", err)
 		}
+		searchResult.PartialDescription = false
 		searchResults = append(searchResults, searchResult)
 	}
 	return searchResults, nil

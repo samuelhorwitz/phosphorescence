@@ -95,7 +95,10 @@
                 authorNames[i] = getSafeHtml(searchResult.authorName, buildMarker(JSON.parse(JSON.stringify(searchResult.authorNameMarks || [])), node));
                 let descriptionMarker = buildMarker(JSON.parse(JSON.stringify(searchResult.descriptionMarks || [])), node);
                 let descriptionTagMarker = buildTagMarker(searchResult.description);
-                descriptions[i] = '&hellip;' + getSafeHtml(searchResult.description, combineMarkers(descriptionTagMarker, descriptionMarker)) + '&hellip;';
+                descriptions[i] = getSafeHtml(searchResult.description, combineMarkers(descriptionTagMarker, descriptionMarker));
+                if (searchResult.partialDescription) {
+                    descriptions[i] = `&hellip;${descriptions[i]}&hellip;`;
+                }
             }
             return {
                 searchResults,
