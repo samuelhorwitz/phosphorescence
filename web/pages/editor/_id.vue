@@ -4,7 +4,6 @@
 
 <script>
     import editor from '~/components/ide/editor';
-    import {getAccessToken} from '~/assets/session';
 
     export default {
         layout: 'ide',
@@ -12,14 +11,6 @@
             editor
         },
         async fetch({store, params, error}) {
-            await getAccessToken();
-            let {id: scriptId} = params;
-            let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
-            if (!userResponse.ok) {
-                return error({statusCode: userResponse.status, message: "Could not get user information"});
-            }
-            let {user} = await userResponse.json();
-            store.commit('user/user', user);
             if (scriptId != null) {
                 let scriptResponse = await fetch(`${process.env.API_ORIGIN}/script/${scriptId}`, {credentials: 'include'});
                 if (!scriptResponse.ok) {

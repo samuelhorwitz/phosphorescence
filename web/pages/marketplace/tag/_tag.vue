@@ -57,20 +57,10 @@
 </style>
 
 <script>
-    import {getAccessToken} from '~/assets/session';
     import {getSafeHtml, buildTagMarker, handleClicks} from '~/assets/safehtml';
 
     export default {
         layout: 'marketplace',
-        async fetch({store, error}) {
-            await getAccessToken();
-            let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
-            if (!userResponse.ok) {
-                return error({statusCode: userResponse.status, message: "Could not get user information"});
-            }
-            let {user} = await userResponse.json();
-            store.commit('user/user', user);
-        },
         async asyncData({params, error}) {
             let {tag} = params;
             if (!tag) {

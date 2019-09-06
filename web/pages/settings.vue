@@ -64,14 +64,6 @@
 
 <script>
     export default {
-        async fetch({store, error}) {
-            let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
-            if (!userResponse.ok) {
-                return error({statusCode: userResponse.status, message: "Could not get user information"});
-            }
-            let {user} = await userResponse.json();
-            store.commit('user/user', user);
-        },
         data() {
             return {
                 alreadyAuthenticated: this.$store.state.user.user.authenticated,
