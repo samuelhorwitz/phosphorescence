@@ -268,3 +268,7 @@ create function search_hashtag(text) returns setof searchables as $$
 	select * from searchables where tags @> array[validate_and_clean_hashtag($1)]
 	order by likes desc
 $$ language sql;
+
+alter materialized view searchables owner to phosphor_api;
+alter materialized view searchable_lexemes owner to phosphor_api;
+alter materialized view searchable_tag_lexemes owner to phosphor_api;

@@ -67,6 +67,7 @@ func initializeRoutes(cfg *config) http.Handler {
 		})
 	}
 	scriptRouter := func(r chi.Router) {
+		r.Use(middleware.Disable) // TODO remove this when ready
 		r.Use(middleware.Session)
 		r.Use(middleware.AuthenticatedSession)
 		r.Post("/", phosphor.CreateScript)
@@ -92,52 +93,53 @@ func initializeRoutes(cfg *config) http.Handler {
 	}
 	r.Route("/script", scriptRouter)
 	r.Route("/scripts", scriptRouter)
-	// scriptChainVersionRouter := func(r chi.Router) {
-	// 	r.Group(func(r chi.Router) {
-	// 		r.Use(middleware.Paginate)
-	// 		r.Get("/", phosphor.GetScriptChainVersions)
-	// 		r.Group(func(r chi.Router) {
-	// 			r.Use(middleware.AuthorizePrivateScriptActions)
-	// 			r.Get("/draft", phosphor.GetPrivateScriptChainVersions)
-	// 			r.Get("/drafts", phosphor.GetPrivateScriptChainVersions)
-	// 		})
-	// 	})
-	// 	r.Route("/{scriptChainVersionID}", func(r chi.Router) {
-	// 		r.Use(middleware.AuthorizeReadScriptVersion)
-	// 		r.Get("/", phosphor.GetScriptChainVersion)
-	// 		r.Post("/fork", phosphor.ForkScriptChainVersion)
-	// 		r.Group(func(r chi.Router) {
-	// 			r.Use(middleware.AuthorizePrivateScriptActions)
-	// 			r.Post("/duplicate", phosphor.DuplicateScriptChainVersion)
-	// 			r.Delete("/", phosphor.DeleteScriptChainVersion)
-	// 		})
-	// 	})
-	// }
-	// scriptChainRouter := func(r chi.Router) {
-	// 	r.Use(middleware.Session)
-	// 	r.Use(middleware.AuthenticatedSession)
-	// 	r.Post("/", phosphor.CreateScriptChain)
-	// 	r.Group(func(r chi.Router) {
-	// 		r.Use(middleware.Paginate)
-	// 		r.Get("/", phosphor.ListPublicScriptChains)
-	// 		r.Get("/my", phosphor.ListCurrentUserScriptChains)
-	// 	})
-	// 	r.Route("/{scriptChainID}", func(r chi.Router) {
-	// 		r.Use(middleware.AuthorizeReadScript)
-	// 		r.Get("/", phosphor.GetScriptChain)
-	// 		r.Post("/fork", phosphor.ForkScriptChain)
-	// 		r.Route("/version", scriptChainVersionRouter)
-	// 		r.Route("/versions", scriptChainVersionRouter)
-	// 		r.Group(func(r chi.Router) {
-	// 			r.Use(middleware.AuthorizePrivateScriptActions)
-	// 			r.Post("/duplicate", phosphor.DuplicateScriptChain)
-	// 			r.Put("/", phosphor.UpdateScriptChain)
-	// 			r.Delete("/", phosphor.DeleteScriptChain)
-	// 		})
-	// 	})
-	// }
-	// r.Route("/script-chain", scriptChainRouter)
-	// r.Route("/script-chains", scriptChainRouter)
+	scriptChainVersionRouter := func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Paginate)
+			// r.Get("/", phosphor.GetScriptChainVersions)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.AuthorizePrivateScriptActions)
+				// r.Get("/draft", phosphor.GetPrivateScriptChainVersions)
+				// r.Get("/drafts", phosphor.GetPrivateScriptChainVersions)
+			})
+		})
+		r.Route("/{scriptChainVersionID}", func(r chi.Router) {
+			r.Use(middleware.AuthorizeReadScriptVersion)
+			// r.Get("/", phosphor.GetScriptChainVersion)
+			// r.Post("/fork", phosphor.ForkScriptChainVersion)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.AuthorizePrivateScriptActions)
+				// r.Post("/duplicate", phosphor.DuplicateScriptChainVersion)
+				// r.Delete("/", phosphor.DeleteScriptChainVersion)
+			})
+		})
+	}
+	scriptChainRouter := func(r chi.Router) {
+		r.Use(middleware.Disable) // TODO remove this when ready
+		r.Use(middleware.Session)
+		r.Use(middleware.AuthenticatedSession)
+		// r.Post("/", phosphor.CreateScriptChain)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Paginate)
+			// r.Get("/", phosphor.ListPublicScriptChains)
+			// r.Get("/my", phosphor.ListCurrentUserScriptChains)
+		})
+		r.Route("/{scriptChainID}", func(r chi.Router) {
+			r.Use(middleware.AuthorizeReadScript)
+			// r.Get("/", phosphor.GetScriptChain)
+			// r.Post("/fork", phosphor.ForkScriptChain)
+			r.Route("/version", scriptChainVersionRouter)
+			r.Route("/versions", scriptChainVersionRouter)
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.AuthorizePrivateScriptActions)
+				// r.Post("/duplicate", phosphor.DuplicateScriptChain)
+				// r.Put("/", phosphor.UpdateScriptChain)
+				// r.Delete("/", phosphor.DeleteScriptChain)
+			})
+		})
+	}
+	r.Route("/script-chain", scriptChainRouter)
+	r.Route("/script-chains", scriptChainRouter)
 	userRouter := func(r chi.Router) {
 		r.Use(middleware.Session)
 		r.Route("/me", func(r chi.Router) {

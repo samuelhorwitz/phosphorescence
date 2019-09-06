@@ -120,6 +120,7 @@ func initialize(cfg *config) {
 	})
 	log.Println("Session handling initialized")
 	models.Initialize(&models.Config{
+		IsProduction:             cfg.isProduction,
 		SpacesID:                 cfg.spacesID,
 		SpacesSecret:             cfg.spacesSecret,
 		PostgresConnectionString: cfg.postgresConnectionString,

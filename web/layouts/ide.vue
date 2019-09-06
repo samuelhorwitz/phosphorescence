@@ -49,7 +49,7 @@
             sidebar,
             detailsPane
         },
-        middleware: 'authenticated',
+        middleware: ['authenticated', 'disabled'],
         created() {
             this.$store.commit('ide/restore');
         }

@@ -50,7 +50,7 @@
             logo,
             navigation
         },
-        middleware: 'authenticated',
+        middleware: ['authenticated', 'disabled'],
         created() {
             this.$store.dispatch('loading/endLoadAfterDelay');
         }

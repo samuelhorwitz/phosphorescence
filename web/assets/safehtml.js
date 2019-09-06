@@ -166,29 +166,9 @@ export function handleClicks(e) {
 
 /*
 
+Example 1:
+
 <em>#Profit-<mark>focused</mark></em>
-
-0 15 em
-8 15 mark
-
-0 15 em
-0  8 text fragment
-8 15 mark
-
-
-      (0,15)
-       /   \
-    (0,8) (8,15)
-
-
-{
-    0: {
-        15: [em]
-    },
-    8: {
-        15: [mark]
-    }
-}
 
 [(0, open, em), (8, open, mark), (15, close, mark), (15, close, em)]
 
@@ -199,20 +179,13 @@ create "focused" text node, add to current parent (mark)
 pop current parent (dispose mark, back to em)
 pop current parent (dispose em, back to root)
 
+Example 2 (unbalanced):
+
 <em>foo<mark>ba</em>rrrr</mark>
 should rebalance to
 <em>foo<mark>ba</mark></em><mark>rrrr</mark>
 
 [(0, open, em), (3, open, mark), (5, close, em), (9, close, mark)]
 [(0, open, em), (3, open, mark), (5, close, mark), (5, close, em), (5, open, mark), (9, close, mark)]
-
-create em, set as current parent
-create "foo" text node, add to current parent (em)
-create mark, add to current parent (em) and set as current parent
-create "ba" text node, add to current parent (mark)
-pop current parent onto renest stack (mark, back to em)
-pop current parent (dispose em, back to root)
-pop from renest and set current parent (mark)
-create "rrrr" text node, add to current parent (mark)
 
 */
