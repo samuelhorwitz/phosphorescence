@@ -2,6 +2,8 @@ import RecordCrateWorker from 'worker-loader!~/assets/recordcrate.worker.js';
 import {encoder} from '~/common/textencoding';
 import {sendTrackBlobToEos, sendTrackToEos, buildPlaylist} from '~/assets/eos';
 import _builders from '~/builders/index';
+import SecureMessenger from '~/secure-messenger/secure-messenger';
+import throttle from 'lodash/throttle';
 export const builders = Object.freeze(_builders);
 
 const cacheVersion = 'v1';
@@ -9,34 +11,29 @@ const baseTracksUrl = '/tracks.json';
 const processedTracksUrl = '/processed-tracks.json';
 let initializeCalled = false;
 
-export async function initialize(countryCode) {
+export async function initialize(countryCode, loadingHandler) {
     if (initializeCalled) {
         return;
     }
     initializeCalled = true;
-    let data = await getProcessedTracks(countryCode);
+    let data = await getProcessedTracks(countryCode, loadingHandler);
     await sendTrackBlobToEos(data);
 }
 
 export async function processTrack(countryCode, track) {
     let recordCrateWorker = new RecordCrateWorker();
-    let processedTrack = await new Promise((resolve, reject) => {
-        recordCrateWorker.addEventListener('message', async ({data}) => {
-            if (data.type === 'sendProcessedTrack') {
-                await sendTrackToEos(data.data);
-                resolve(data.data);
-            }
-            else {
-                reject(`Could not get processed track (type: ${data.type})`);
-            }
-        });
-        recordCrateWorker.postMessage({type: 'sendTrack', track, countryCode});
-    });
+    let messenger = new SecureMessenger(location.origin);
+    await messenger.listen(recordCrateWorker);
+    let {data} = await messenger.postMessage({type: 'sendTrack', track, countryCode});
+    if (data.type === 'sendProcessedTrack') {
+        await sendTrackToEos(data.data);
+    }
+    messenger.close();
     recordCrateWorker.terminate();
-    return processedTrack;
+    return data.data;
 }
 
-export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners) {
+export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent) {
     if (!builder) {
         builder = builders.randomwalk;
     }
@@ -46,7 +43,7 @@ export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTr
     let playlist;
     let dimensions;
     try {
-        let response = await buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners);
+        let response = await buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent);
         playlist = response.playlist;
         dimensions = response.dimensions;
     }
@@ -66,7 +63,7 @@ async function getTracks() {
             return response;
         }
     } else {
-        console.log('Browser does not support cache');
+        console.warn('Browser does not support cache');
     }
     let tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
     let {tracksUrl} = await tracksUrlResponse.json();
@@ -82,7 +79,7 @@ async function getTracks() {
     return response;
 }
 
-async function getProcessedTracks(countryCode) {
+async function getProcessedTracks(countryCode, loadingHandler) {
     let req = getProcessedTracksRequest(countryCode);
     let cache;
     if ('caches' in window) {
@@ -93,23 +90,27 @@ async function getProcessedTracks(countryCode) {
             return data;
         }
     } else {
-        console.log('Browser does not support cache');
+        console.warn('Browser does not support cache');
     }
     let tracksResponse = await getTracks();
     let expires = tracksResponse.headers.get('expires');
-    let tracks = await tracksResponse.arrayBuffer();
-    let recordCrateWorker = new RecordCrateWorker();
-    let gzipData = await new Promise((resolve, reject) => {
-        recordCrateWorker.addEventListener('message', async ({data}) => {
-            if (data.type === 'sendProcessedTracks') {
-                resolve(data.gzipData);
-            }
-            else {
-                reject();
-            }
-        });
-        recordCrateWorker.postMessage({type: 'sendTracks', tracks, countryCode});
+    let tracks = await getArrayBufferWithProgress(tracksResponse, percent => {
+        loadingHandler(percent * 0.45);
     });
+    let recordCrateWorker = new RecordCrateWorker();
+    let messenger = new SecureMessenger(location.origin);
+    await messenger.listen(recordCrateWorker);
+    await messenger.openInterruptListenerPort({type: 'initializeLoadingNotificationChannel'}, ({type, value}) => {
+        if (type == 'loadPercent') {
+            loadingHandler(0.45 + (value * 0.45));
+        }
+    });
+    let {data} = await messenger.postMessage({type: 'sendTracks', tracks, countryCode});
+    let gzipData;
+    if (data.type === 'sendProcessedTracks') {
+        gzipData = data.gzipData;
+    }
+    messenger.close();
     recordCrateWorker.terminate();
     if (cache && expires) {
         console.log('Caching good processed tracks JSON for next time');
@@ -133,27 +134,52 @@ async function getProcessedTracks(countryCode) {
     return gzipData;
 }
 
+// https://javascript.info/fetch-progress
+async function getArrayBufferWithProgress(response, progressHandler) {
+    progressHandler = throttle(progressHandler, 100);
+    let reader = response.body.getReader();
+    let contentLength = +response.headers.get('Content-Length');
+    let receivedLength = 0;
+    let chunks = [];
+    while (true) {
+        let {done, value} = await reader.read();
+        if (done) {
+            break;
+        }
+        chunks.push(value);
+        receivedLength += value.length;
+        progressHandler(receivedLength / contentLength);
+    }
+    let chunksAll = new Uint8Array(receivedLength);
+    let position = 0;
+    for(let chunk of chunks) {
+        chunksAll.set(chunk, position);
+        position += chunk.length;
+    }
+    return chunksAll.buffer;
+}
+
 async function getFromCache(cache, request) {
     let url = request.url || request;
     let response = await cache.match(request);
     if (!response) {
-        console.log(`${url} not found in cache`);
+        console.info(`${url} not found in cache`);
         return;
     }
-    console.log(`${url} found in cache`);
+    console.info(`${url} found in cache`);
     let expiresHeader = response.headers.get('expires');
     if (!expiresHeader) {
-        console.log(`${url} has no expiration header, ignoring`)
+        console.info(`${url} has no expiration header, ignoring`)
         return
     }
-    console.log(`Cached ${url} has expiration header:`, expiresHeader);
+    console.info(`Cached ${url} has expiration header:`, expiresHeader);
     let expires = new Date(expiresHeader);
     let now = new Date();
     if (expires > now) {
-        console.log(`Cached ${url} expiration header is in the future, using cache:`, expires);
+        console.info(`Cached ${url} expiration header is in the future, using cache:`, expires);
         return response;
     } else {
-        console.log(`Cached ${url} has expired, ignoring`);
+        console.info(`Cached ${url} has expired, ignoring`);
     }
 }
 

@@ -662,7 +662,7 @@
         async created() {
             this.$store.commit('loading/startLoad');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Initializing Spotify web player');
-            this.$store.dispatch('loading/initializeProgress', {id: 'player', weight: 5, ms: 10});
+            this.$store.commit('loading/initializeProgress', {id: 'player', weight: 5});
             try {
                 let playerWrapper = await initializePlayer(this.$store, 'tracks');
                 this.destroyer = playerWrapper.destroyer;

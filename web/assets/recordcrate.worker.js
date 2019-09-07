@@ -2,6 +2,8 @@ import {loadModel, tensor2d, tidy} from '@tensorflow/tfjs';
 import {getTrackTag} from '~/common/normalize';
 import {encoder, decoder} from '~/common/textencoding';
 import pako from 'pako';
+import SecureMessenger from '~/secure-messenger/secure-messenger';
+import throttle from 'lodash/throttle';
 
 const modelsReady = new Promise(async resolve => {
     let aModel = await loadModel('/models/aetherealness/model.json');
@@ -11,37 +13,62 @@ const modelsReady = new Promise(async resolve => {
     resolve({aModel, pModel, meanstd});
 });
 
-addEventListener('message', async ({data}) => {
-    try {
+let loadingInterruptPort;
+let throttledLoadingMessage;
+let loadingPercentBase = 0;
+
+(async () => {
+    let messenger = new SecureMessenger(location.origin);
+    await messenger.knock([self]);
+    messenger.messageHandlerLoop((data, interruptPort, finish) => {
         if (data.type == 'sendTracks') {
-            let tracks = JSON.parse(decoder.decode(data.tracks));
-            let countryCode = data.countryCode;
-            tracks = filterTracks(tracks, countryCode);
-            console.log('Processing tracks...');
-            tracks = await getEvocativeness(tracks);
-            console.log('Tracks processed');
-            let {tags, idsToTags} = buildTags(tracks);
-            let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
-            let gzipResponseData = pako.gzip(responseData, {level: 9});
-            postMessage({type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer});
+            finish();
+            return handleSendTracks(data);
         } else if (data.type == 'sendTrack') {
-            let track = data.track;
-            console.log('Processing track...');
-            track = await getEvocativenessOfSingleTrack(track);
-            console.log('Track processed');
-            let tag = getTrackTag(track.track);
-            postMessage({type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}});
+            finish();
+            return handleSendTrack(data);
+        } else if (data.type == 'initializeLoadingNotificationChannel') {
+            loadingInterruptPort = interruptPort;
+            throttledLoadingMessage = throttle(loadingInterruptPort.postMessage.bind(loadingInterruptPort), 100);
+            return {type: 'acknowledge'};
         }
-    } catch (e) {
-        console.error('Could not process track', e);
-        postMessage({type: 'processError'});
-    }
-});
+        return {type: 'error', error: 'invalid request'};
+    }, event => {
+        console.error('Record crate worker could not handle Phosphor message', event);
+    });
+})();
+
+async function handleSendTracks(data) {
+    let tracks = JSON.parse(decoder.decode(data.tracks));
+    let countryCode = data.countryCode;
+    tracks = filterTracks(tracks, countryCode);
+    console.log('Processing tracks...');
+    tracks = await getEvocativeness(tracks);
+    console.log('Tracks processed');
+    let {tags, idsToTags} = buildTags(tracks);
+    let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
+    let gzipResponseData = pako.gzip(responseData, {level: 9});
+    loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
+    return {type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer};
+}
+
+async function handleSendTrack(data) {
+    let track = data.track;
+    let countryCode = data.countryCode;
+    console.log('Processing track...');
+    track = await getEvocativenessOfSingleTrack(track);
+    console.log('Track processed');
+    let tag = getTrackTag(track.track);
+    return {type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}};
+}
 
 function buildTags(tracks) {
+    let trackEntries = Object.entries(tracks);
     let tags = {};
-    let idsToTags = {}
-    for (let [id, {track}] of Object.entries(tracks)) {
+    let idsToTags = {};
+    let i = 0;
+    for (let [id, {track}] of trackEntries) {
+        i++;
         let tag = getTrackTag(track);
         if (tags[tag]) {
             tags[tag].push(id);
@@ -50,16 +77,23 @@ function buildTags(tracks) {
             tags[tag] = [id];
         }
         idsToTags[id] = tag;
+        updateLoadingPercent(i / trackEntries.length, 0.3);
     }
+    loadingPercentBase = 0.9;
     return {tags, idsToTags};
 }
 
 async function getEvocativeness(tracks) {
+    let trackEntries = Object.entries(tracks);
     let {aModel, pModel, meanstd} = await modelsReady;
-    for (let [id, track] of Object.entries(tracks)) {
+    let i = 0;
+    for (let [id, track] of trackEntries) {
+        i++;
         let {features} = track;
         tracks[id].evocativeness = predict(features, aModel, pModel, meanstd);
+        updateLoadingPercent(i / trackEntries.length, 0.3);
     }
+    loadingPercentBase = 0.6;
     return tracks;
 }
 
@@ -99,12 +133,21 @@ function predict(a, aModel, pModel, meanstd) {
 }
 
 function filterTracks(tracks, countryCode) {
-    console.log('Tracks before region pruning:', Object.keys(tracks).length);
-    for (let [id, track] of Object.entries(tracks)) {
+    let trackEntries = Object.entries(tracks);
+    console.info('Tracks before region pruning:', trackEntries.length);
+    let i = 0;
+    for (let [id, track] of trackEntries) {
+        i++;
         if (track.track.available_markets.indexOf(countryCode) == -1) {
             delete tracks[id];
         }
+        updateLoadingPercent(i / trackEntries.length, 0.3);
     }
-    console.log('Tracks after region pruning:', Object.keys(tracks).length);
+    loadingPercentBase = 0.3;
+    console.info('Tracks after region pruning:', Object.keys(tracks).length);
     return tracks;
+}
+
+function updateLoadingPercent(partialPercent, percentOfTotal) {
+    throttledLoadingMessage({type: 'loadPercent', value: loadingPercentBase + (partialPercent * percentOfTotal)});
 }

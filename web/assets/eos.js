@@ -1,59 +1,53 @@
 import {encoder} from '~/common/textencoding';
+import SecureMessenger from '~/secure-messenger/secure-messenger';
 
-let iframe;
+let messenger;
+let terminationPort;
 
 export function initialize() {
-    return new Promise(resolve => {
-        iframe = document.createElement('iframe');
+    return new Promise(async (resolve, reject) => {
+        let iframe = document.createElement('iframe');
         iframe.src = process.env.EOS_ORIGIN;
         iframe.sandbox = 'allow-scripts allow-same-origin';
         iframe.style.display = 'none';
         iframe.addEventListener('load', () => {
             resolve();
         });
+        messenger = new SecureMessenger(process.env.EOS_ORIGIN);
+        let ready = messenger.listen(iframe);
         document.body.appendChild(iframe);
+        await ready;
+        let {type, interruptPort} = await messenger.postMessage({type: 'requestTerminationChannel'});
+        if (type !== 'terminationChannel') {
+            reject('Could not open termination channel');
+        }
+        terminationPort = interruptPort;
     });
 }
 
-export function sendTrackBlobToEos(raw) {
-    return new Promise((resolve, reject) => {
-        let channel = new MessageChannel();
-        channel.port1.onmessage = ({origin, data}) => {
-            if (data.type === 'acknowledge') {
-                resolve();
-            }
-            else if (data.type === 'error') {
-                reject(data.error);
-            }
-            else {
-                reject(`Unknown error when sending track data: ${data.type}`)
-            }
-            channel.port1.close();
-        };
-        iframe.contentWindow.postMessage({type: 'loadTracks', tracks: raw, responsePort: channel.port2}, process.env.EOS_ORIGIN, [channel.port2]);
-    });
+export async function sendTrackBlobToEos(raw) {
+    let {data} = await messenger.postMessage({type: 'loadTracks', tracks: raw});
+    if (data.type === 'acknowledge') {
+        return;
+    }
+    else if (data.type === 'error') {
+        throw new Error(data.error);
+    }
+    throw new Error(`Unknown error when sending track data: ${data.type}`);
 }
 
-export function sendTrackToEos(track) {
-    return new Promise((resolve, reject) => {
-        let channel = new MessageChannel();
-        channel.port1.onmessage = ({origin, data}) => {
-            if (data.type === 'acknowledge') {
-                resolve();
-            }
-            else if (data.type === 'error') {
-                reject(data.error);
-            }
-            else {
-                reject(`Unknown error when sending track data: ${data.type}`)
-            }
-            channel.port1.close();
-        };
-        iframe.contentWindow.postMessage({type: 'loadAdditionalTrack', track, responsePort: channel.port2}, process.env.EOS_ORIGIN, [channel.port2]);
-    });
+export async function sendTrackToEos(track) {
+    let {data} = await messenger.postMessage({type: 'loadAdditionalTrack', track});
+    if (data.type === 'acknowledge') {
+        return;
+    }
+    else if (data.type === 'error') {
+        throw new Error(data.error);
+    }
+    throw new Error(`Unknown error when sending track data: ${data.type}`);
 }
 
-export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firstTrack, pruners) {
+export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firstTrack, pruners, loadPercent) {
     let allDimensions = [];
     let prunedTrackIds;
     function appendDimensions(newDims) {
@@ -62,23 +56,33 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
         }
         allDimensions = [...allDimensions, ...newDims].filter((val, index, arr) => arr.indexOf(val) === index);
     }
+    let totalLoaders = pruners.length + 1;
+    loadPercent(0.1);
     if (pruners) {
+        let i = 0;
         for (let pruner of pruners) {
             let script = encoder.encode(pruner);
-            let response = await callBuilder({prunedTrackIds, script}, 'pruneTracks');
+            let response = await callBuilder({prunedTrackIds, script}, 'pruneTracks', percent => {
+                loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + (i / totalLoaders))));
+            });
             if (!prunedTrackIds) {
                 prunedTrackIds = [];
             }
             prunedTrackIds = [...prunedTrackIds, ...response.prunedTrackIds];
             appendDimensions(response.dimensions);
+            i++;
         }
     }
     let script = encoder.encode(builder);
     if (firstTrackBuilder) {
-        let response = await callBuilder({firstTrackOnly: true, prunedTrackIds, script: encoder.encode(firstTrackBuilder)}, 'buildPlaylist');
+        let response = await callBuilder({firstTrackOnly: true, prunedTrackIds, script: encoder.encode(firstTrackBuilder)}, 'buildPlaylist', () => {
+            loadPercent(0.1 + (0.9 * (((1 / trackCount) / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+        });
         let firstTrack = response.playlist[0];
         appendDimensions(response.dimensions);
-        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist');
+        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist', percent => {
+            loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+        });
         appendDimensions(dimensions);
         return {
             playlist,
@@ -86,7 +90,9 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
         };
     }
     else if (firstTrack) {
-        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist');
+        let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist', percent => {
+            loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+        });
         appendDimensions(dimensions);
         return {
             playlist,
@@ -94,7 +100,9 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
         };
     }
     else {
-        let {playlist, dimensions} = await callBuilder({trackCount, prunedTrackIds, script}, 'buildPlaylist');
+        let {playlist, dimensions} = await callBuilder({trackCount, prunedTrackIds, script}, 'buildPlaylist', percent => {
+            loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+        });
         appendDimensions(dimensions);
         return {
             playlist,
@@ -104,27 +112,25 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
 }
 
 export function terminatePlaylistBuilding() {
-    iframe.contentWindow.postMessage({type: 'terminateAll'}, process.env.EOS_ORIGIN);
+    terminationPort.postMessage({type: 'terminateAll'});
 }
 
-function callBuilder(body, type) {
-    return new Promise((resolve, reject) => {
-        let channel = new MessageChannel();
-        channel.port1.onmessage = ({origin, data}) => {
-            if (data.type === 'playlist') {
-                resolve({playlist: data.playlist, dimensions: data.dimensions});
-            }
-            else if (data.type === 'prunedTracks') {
-                resolve({prunedTrackIds: data.prunedTrackIds, dimensions: data.dimensions});
-            }
-            else if (data.type === 'playlistError') {
-                reject(data.error);
-            }
-            else {
-                reject(`Unknown error when building playlist: ${data.type}`)
-            }
-            channel.port1.close();
-        };
-        iframe.contentWindow.postMessage(Object.assign({type, responsePort: channel.port2}, body), process.env.EOS_ORIGIN, [channel.port2]);
+async function callBuilder(body, type, loadPercentHandler) {
+    let {closer} = await messenger.openInterruptListenerPort({type: 'initializeLoadingNotificationChannel'}, ({type, value}) => {
+        if (type == 'loadPercent') {
+            loadPercentHandler && loadPercentHandler(value);
+        }
     });
+    let {data} = await messenger.postMessage(Object.assign({type}, body));
+    closer();
+    if (data.type === 'playlist') {
+        return {playlist: data.playlist, dimensions: data.dimensions};
+    }
+    else if (data.type === 'prunedTracks') {
+        return {prunedTrackIds: data.prunedTrackIds, dimensions: data.dimensions};
+    }
+    else if (data.type === 'error') {
+        throw new Error(data.error);
+    }
+    throw new Error(`Unknown error: ${data.type}`);
 }

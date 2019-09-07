@@ -371,14 +371,16 @@
                 }
                 let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
                 this.$store.commit('loading/resetProgress');
-                this.$store.dispatch('loading/initializeProgress', {id: 'generate', amount: 2, ms: 200});
+                this.$store.commit('loading/initializeProgress', {id: 'generate'});
                 this.$store.commit('loading/playlistGenerating');
                 let pruners;
                 if (this.$store.state.preferences.onlyTheHits) {
                     pruners = [builders.hits];
                 }
                 try {
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle], null, pruners);
+                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle], null, pruners, percent => {
+                        this.$store.commit('loading/tickProgress', {id: 'generate', percent});
+                    });
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 }
                 catch (e) {
@@ -386,6 +388,7 @@
                     // TODO add some visual UI indication
                 }
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
+                this.$store.commit('loading/resetProgress');
                 this.$store.commit('loading/clearMessage', messageId);
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');

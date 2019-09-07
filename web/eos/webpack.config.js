@@ -8,6 +8,21 @@ module.exports = () => {
     return {
         mode: 'development',
         entry: './index.js',
+        module: {
+          rules: [
+            {
+              test: /\.js$/,
+              exclude: /node_modules/,
+              use: {
+                loader: 'babel-loader',
+                options: {
+                  presets: [['@babel/preset-env', {"targets": {"node": "current"}}]],
+                  plugins: ['@babel/plugin-proposal-class-properties']
+                }
+              }
+            }
+          ]
+        },
         plugins: [
             new webpack.DefinePlugin({
               'process.env.PHOSPHOR_ORIGIN': JSON.stringify(process.env.PHOSPHOR_ORIGIN)

@@ -57,13 +57,13 @@ async function initializePlayerListeners(store, storePrefix) {
 
         // Playback status updates
         player.addListener('player_state_changed', state => {
-            console.log('Player state changed');
+            console.debug('Player state changed');
             if (!state) {
-                console.log('Device disconnected');
+                console.warn('Device disconnected');
                 store.commit(`${storePrefix}/disconnected`);
                 return;
             }
-            console.log(state);
+            console.debug(state);
             store.commit(`${storePrefix}/connected`);
             let ourCurrentTrack = store.getters[`${storePrefix}/currentTrack`];
             let trackOkay = true;
@@ -92,14 +92,14 @@ async function initializePlayerListeners(store, storePrefix) {
 
         // Ready
         player.addListener('ready', ({ device_id }) => {
-            console.log('Ready with Device ID', device_id);
+            console.info('Ready with Device ID', device_id);
             resolve({player, deviceId: device_id});
         });
 
         // Not Ready
         player.addListener('not_ready', ({ device_id }) => {
             // TODO
-            console.log('Device ID has gone offline', device_id);
+            console.warn('Device ID has gone offline', device_id);
         });
 
         // Connect to the player!
