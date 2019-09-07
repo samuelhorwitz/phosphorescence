@@ -236,7 +236,8 @@
             this.$store.commit('tracks/restore');
             this.$store.commit('loading/playlistGenerating');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading and processing track data');
-            this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: this.$store.getters['tracks/playlistLoaded'] ? 95 : 60});
+            this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: 60});
+            this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
             await initialize(this.$store.state.user.user.country, percent => {
                 this.$store.commit('loading/tickProgress', {id: 'tracks', percent});
             });
@@ -250,7 +251,6 @@
                     loadingMessage += ' (random)';
                 }
                 let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
-                this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
                 let pruners;
                 if (this.$store.state.preferences.onlyTheHits) {
                     pruners = [builders.hits];
@@ -268,6 +268,8 @@
                     // TODO add some visual UI indication
                 }
                 this.$store.commit('loading/clearMessage', messageId);
+            } else {
+                this.$store.commit('loading/completeProgress', {id: 'generate'});
             }
             this.$store.commit('loading/resetProgress');
             this.$store.commit('loading/playlistGenerationComplete');

@@ -139,6 +139,8 @@ async function getArrayBufferWithProgress(response, progressHandler) {
     progressHandler = throttle(progressHandler, 100);
     let reader = response.body.getReader();
     let contentLength = +response.headers.get('Content-Length');
+    let multiplier = response.headers.get('Content-Encoding') === 'gzip' ? 6 : 1;
+    contentLength *= multiplier;
     let receivedLength = 0;
     let chunks = [];
     while (true) {
