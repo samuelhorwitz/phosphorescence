@@ -44,7 +44,8 @@ module.exports = {
   plugins: [
     {ssr: false, src: '~plugins/eos.js'},
     {ssr: false, src: '~plugins/monaco.js'},
-    {ssr: false, src: '~plugins/ios-rubberband-bg.js'}
+    {ssr: false, src: '~plugins/ios-rubberband-bg.js'},
+    {ssr: false, src: '~plugins/consola.js'}
   ],
   css: ['~/css/main.css'],
   mode: 'spa',
@@ -68,9 +69,13 @@ module.exports = {
       }
     }
   },
+  loading: {
+    color: 'aqua'
+  },
   env: {
     EOS_ORIGIN: process.env.EOS_ORIGIN,
     API_ORIGIN: process.env.API_ORIGIN,
-    SCRIPTS_ORIGIN: process.env.SCRIPTS_ORIGIN
+    SCRIPTS_ORIGIN: process.env.SCRIPTS_ORIGIN,
+    CONSOLA_LEVEL: process.env.NODE_ENV === 'production' ? process.env.CONSOLA_LEVEL : 0
   }
 };

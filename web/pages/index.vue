@@ -40,7 +40,6 @@
                     {{loadMessage.description}}...
                 </li>
             </ul>
-            <progress max="100" :value="$store.getters['loading/progress']">{{$store.getters['loading/progress']}}%</progress>
         </aside>
     </article>
 </template>

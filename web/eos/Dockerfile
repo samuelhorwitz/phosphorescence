@@ -12,6 +12,7 @@ RUN npm ci
 FROM dependencies AS build
 WORKDIR /app
 COPY ./common /app/common
+COPY ./secure-messenger /app/secure-messenger
 COPY ./eos /app/eos
 WORKDIR /app/eos
 ARG PHOSPHOR_ORIGIN

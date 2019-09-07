@@ -4,7 +4,6 @@ export const state = () => ({
     descriptions: [],
     progresses: {},
     progressWeights: {},
-    progressIntervals: {},
     playlistGenerating: false
 });
 
@@ -32,36 +31,23 @@ export const mutations = {
         }
         state.descriptions = newDescriptions;
     },
-    initializeProgress(state, {id, weight, intervalId}) {
-        if (state.progressIntervals[id]) {
-            clearInterval(state.progressIntervals[id]);
-        }
+    initializeProgress(state, {id, weight}) {
         if (!weight) {
             weight = 100;
         }
         weight = Math.min(weight, 100);
         state.progresses[id] = 0;
         state.progressWeights[id] = weight;
-        state.progressIntervals[id] = intervalId;
     },
-    tickProgress(state, {id, amount}) {
-        if (!amount) {
-            amount = 1;
-        }
-        let old = state.progresses[id];
-        state.progresses = {...state.progresses, [id]: Math.min(old + amount, 99)};
+    tickProgress(state, {id, percent}) {
+        state.progresses = {...state.progresses, [id]: percent};
     },
     completeProgress(state, {id}) {
-        state.progresses = {...state.progresses, [id]: 100};
-        clearInterval(state.progressIntervals[id]);
+        state.progresses = {...state.progresses, [id]: 1};
     },
     resetProgress(state) {
-        for (let i in state.progressIntervals) {
-            clearInterval(state.progressIntervals[i]);
-        }
         state.progresses = {};
         state.progressWeights = {};
-        state.progressIntervals = {};
     },
     playlistGenerating(state) {
         state.playlistGenerating = true;
@@ -89,12 +75,6 @@ export const actions = {
         let id = descriptionId++;
         commit('pushMessage', {id, description});
         return id;
-    },
-    initializeProgress({state, commit}, {id, weight, ms, amount}) {
-        let intervalId = setInterval(() => {
-            commit('tickProgress', {id, amount});
-        }, ms);
-        commit('initializeProgress', {id, weight, intervalId});
     }
 }
 
@@ -102,7 +82,7 @@ export const getters = {
     progress(state) {
         let total = 0;
         for (let i in state.progresses) {
-            total += state.progresses[i] * (state.progressWeights[i] / 100)
+            total += state.progresses[i] * state.progressWeights[i]
         }
         return total;
     }

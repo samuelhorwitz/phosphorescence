@@ -1,8 +1,7 @@
-let safePostMessage = self.postMessage;
-let checksFailed = true;
+import SecureMessenger from '../secure-messenger/secure-messenger';
 
 // First lets lockdown and run sanity checks
-(async () => {
+async function runChecks() {
     ['indexedDB', 'caches', 'CacheStorage', 'Caches', 'postMessage', 'close'].forEach(o => {
         let t = self;
         while (!!Object.getOwnPropertyDescriptor(t, o) || !!t.__lookupGetter__(o)) {
@@ -58,16 +57,15 @@ let checksFailed = true;
     for (let key in failedChecks) {
         let failedCheck = failedChecks[key];
         if (failedCheck) {
-            return;
+            return true;
         }
     }
 
-    // Everything is okay
-    checksFailed = false;
-})();
+    return false;
+}
 
 // Now lets run code
-(() => {
+(async () => {
     const kdTree = require('./kdtree').default;
     const {getTrackTag} = require('../common/normalize');
 
@@ -84,29 +82,34 @@ let checksFailed = true;
 
     require('./api.js').injector({getTree, getIdToTagMap, registerDimension});
 
-    addEventListener('message', async ({data}) => {
-        // The secret is used so that the worker code cannot try and falsify a postMessage to `self`
-        // The message handlers set up to listen to this worker pass in a secret they expect back
-        // on response which lives inside this closure and cannot be accessed by user code.
-        let secret = data.secret;
-        if (checksFailed) {
+    let messenger = new SecureMessenger(location.origin);
+    let loadingInterruptPort;
+    await messenger.knock([self]);
+    let failedChecks = await runChecks();
+    messenger.messageHandlerLoop((data, interruptPort, finish) => {
+        if (failedChecks) {
+            finish();
             console.error('Checks failed');
-            safePostMessage({type: 'playlistError', error: 'checks failed', secret});
-            return;
+            return {type: 'error', error: 'checks failed'};
         }
-        if (data.type !== 'buildPlaylist' && data.type !== 'pruneTracks') {
-            console.error('Unexpected request', data.type);
-            safePostMessage({type: 'playlistError', error: 'unexpected request type', secret});
-            return;
+        if (data.type == 'buildPlaylist') {
+            finish();
+            return handleBuildPlaylist(data);
+        } else if (data.type == 'pruneTracks') {
+            finish();
+            return handlePruneTracks(data);
+        } else if (data.type == 'initializeLoadingNotificationChannel') {
+            loadingInterruptPort = interruptPort;
+            return {type: 'acknowledge'};
         }
-        let trackData = await new Promise(async resolve => {
-            let response = await fetch(data.tracksUrl);
-            resolve(await response.json());
-        });
-        let additionalTrackData = await new Promise(async resolve => {
-            let response = await fetch(data.additionalTracksUrl);
-            resolve(await response.json());
-        });
+        return {type: 'error', error: 'invalid request'};
+    }, event => {
+        console.error('Eos worker could not handle Eos message', event);
+    });
+
+    async function handleTrackData(data) {
+        let trackData = await (await fetch(data.tracksUrl)).json();
+        let additionalTrackData = await (await fetch(data.additionalTracksUrl)).json();
         tags = trackData.tags;
         idToTagMap = trackData.idsToTags;
         unprunedTracks = trackData.tracks;
@@ -132,49 +135,53 @@ let checksFailed = true;
                 evocativeness: track.evocativeness
             };
         }
-        console.log(`${Object.keys(unprunedTracks).length} unpruned tracks, ${Object.keys(tracks).length} pruned tracks, ${Object.keys(additionalTracks).length} additional tracks`)
-        if (data.type === 'pruneTracks') {
-            console.log('Pruning...');
-            let prunedTrackIds;
-            try {
-                prunedTrackIds = await prune(data.script);
-            }
-            catch (e) {
-                console.error('Could not prune tracks:', e);
-                safePostMessage({type: 'playlistError', error: e.message, secret});
-                return;
-            }
-            console.log(`Tracks pruned down to ${prunedTrackIds.length}`);
-            safePostMessage({type: 'prunedTracks', prunedTrackIds, dimensions: extraDimensions, secret});
-        } else {
-            let trackCount = data.trackCount;
-            let firstTrack;
-            if (data.firstTrackOnly) {
-                console.log('Getting first track...');
-                trackCount = 1;
-            }
-            else {
-                if (data.firstTrack) {
-                    firstTrack = data.firstTrack;
-                }
-                console.log('Getting tracks...');
-            }
-            let playlist;
-            try {
-                playlist = await buildPlaylist(data.script, trackCount, firstTrack);
-            }
-            catch (e) {
-                console.error('Could not build playlist:', e);
-                safePostMessage({type: 'playlistError', error: e.message, secret});
-                return;
-            }
-            let dimensions = [...extraDimensions];
-            if (tree) {
-                dimensions = [...dimensions, ...tree.getDimensions()];
-            }
-            safePostMessage({type: 'playlist', playlist, dimensions, secret});
+        console.info(`${Object.keys(unprunedTracks).length} unpruned tracks, ${Object.keys(tracks).length} pruned tracks, ${Object.keys(additionalTracks).length} additional tracks`)
+    }
+
+    async function handleBuildPlaylist(data) {
+        await handleTrackData(data);
+        let trackCount = data.trackCount;
+        let firstTrack;
+        if (data.firstTrackOnly) {
+            console.debug('Getting first track...');
+            trackCount = 1;
         }
-    });
+        else {
+            if (data.firstTrack) {
+                firstTrack = data.firstTrack;
+            }
+            console.debug('Getting tracks...');
+        }
+        let playlist;
+        try {
+            playlist = await buildPlaylist(data.script, trackCount, firstTrack);
+        }
+        catch (e) {
+            console.error('Could not build playlist:', e);
+            return {type: 'playlistError', error: e.message};
+        }
+        let dimensions = [...extraDimensions];
+        if (tree) {
+            dimensions = [...dimensions, ...tree.getDimensions()];
+        }
+        return {type: 'playlist', playlist, dimensions};
+    }
+
+    async function handlePruneTracks(data) {
+        await handleTrackData(data);
+        console.debug('Pruning...');
+        let prunedTrackIds;
+        try {
+            prunedTrackIds = await prune(data.script);
+        }
+        catch (e) {
+            console.error('Could not prune tracks:', e);
+            return {type: 'playlistError', error: e.message};
+        }
+        console.debug(`Tracks pruned down to ${prunedTrackIds.length}`);
+        loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
+        return {type: 'prunedTracks', prunedTrackIds, dimensions: extraDimensions};
+    }
 
     async function prune(script) {
         let blobUrl = URL.createObjectURL(new Blob([script], {type: 'application/javascript'}));
@@ -208,6 +215,7 @@ let checksFailed = true;
         else {
             tree && tree.removeById(firstTrack.track.id);
         }
+        loadingInterruptPort.postMessage({type: 'loadPercent', value: 1 / goalTracks});
         tags[getTrackTag(firstTrack.track)] = true;
         playlist.push(firstTrack);
         for (let i = 0; i < goalTracks - 1; i++) {
@@ -220,6 +228,7 @@ let checksFailed = true;
             }
             tags[getTrackTag(nextTrack.track)] = true;
             playlist.push(nextTrack);
+            loadingInterruptPort.postMessage({type: 'loadPercent', value: (i + 2) / goalTracks});
         }
         return JSON.parse(JSON.stringify(playlist));
     }
