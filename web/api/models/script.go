@@ -3,6 +3,7 @@ package models
 import (
 	"compress/gzip"
 	"database/sql"
+	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,8 +21,10 @@ var scriptsNamespace = uuid.NewV5(common.PhosphorUUIDV5Namespace, "scripts")
 type Script struct {
 	ID                      uuid.UUID      `json:"id"`
 	Name                    nullString     `json:"name"`
+	Description             nullString     `json:"description"`
 	AuthorID                uuid.UUID      `json:"authorId"`
 	AuthorSpotifyID         nullString     `json:"authorSpotifyId"`
+	AuthorName              nullString     `json:"authorName"`
 	ForkedFromScriptID      nullUUID       `json:"forkedFromScriptId"`
 	ForkedFromScriptVersion nullTime       `json:"forkedFromScriptVersion"`
 	IsPrivate               bool           `json:"isPrivate,omitempty"`
@@ -35,10 +38,11 @@ type ScriptVersion struct {
 	FileID    uuid.UUID      `json:"fileId"`
 }
 
-type CreateOrUpdateResponse struct {
+type CreateOrUpdateScriptResponse struct {
 	ID          uuid.UUID `json:"id"`
 	FileID      uuid.UUID `json:"fileId"`
 	Name        string    `json:"name"`
+	Description string    `json:"description"`
 	Permissions string    `json:"permissions"`
 }
 
@@ -57,7 +61,17 @@ const (
 
 func GetScriptWithAuthorizationCheck(spotifyUserID string, scriptID uuid.UUID) (Script, bool, error) {
 	var script Script
-	err := psql.Select("scripts.id", "scripts.author_id", "scripts.name", "users.spotify_id", "scripts.forked_from_script_id", "scripts.forked_from_script_version_created_at", "scripts.is_private", "scripts.created_at").
+	err := psql.Select(
+		"scripts.id",
+		"scripts.author_id",
+		"scripts.name",
+		"scripts.description",
+		"users.spotify_id",
+		"users.name",
+		"scripts.forked_from_script_id",
+		"scripts.forked_from_script_version_created_at",
+		"scripts.is_private",
+		"scripts.created_at").
 		From("scripts_view as scripts").
 		LeftJoin("users_view users on users.id = scripts.author_id").
 		Where(sq.And{
@@ -67,7 +81,17 @@ func GetScriptWithAuthorizationCheck(spotifyUserID string, scriptID uuid.UUID) (
 				sq.Eq{"scripts.is_private": false},
 			},
 		}).
-		RunWith(postgresDB).QueryRow().Scan(&script.ID, &script.AuthorID, &script.Name, &script.AuthorSpotifyID, &script.ForkedFromScriptID, &script.ForkedFromScriptVersion, &script.IsPrivate, &script.CreatedAt)
+		RunWith(postgresDB).QueryRow().Scan(
+		&script.ID,
+		&script.AuthorID,
+		&script.Name,
+		&script.Description,
+		&script.AuthorSpotifyID,
+		&script.AuthorName,
+		&script.ForkedFromScriptID,
+		&script.ForkedFromScriptVersion,
+		&script.IsPrivate,
+		&script.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return Script{}, false, nil
@@ -111,7 +135,17 @@ func GetScriptsBySpotifyUserID(spotifyUserID string, count uint64, from time.Tim
 	if !includePrivate {
 		where = append(where, sq.Eq{"scripts.is_private": false})
 	}
-	rows, err := psql.Select("scripts.id", "scripts.author_id", "scripts.name", "users.spotify_id", "scripts.forked_from_script_id", "scripts.forked_from_script_version_created_at", "scripts.is_private", "scripts.created_at").
+	rows, err := psql.Select(
+		"scripts.id",
+		"scripts.author_id",
+		"scripts.name",
+		"scripts.description",
+		"users.spotify_id",
+		"users.name",
+		"scripts.forked_from_script_id",
+		"scripts.forked_from_script_version_created_at",
+		"scripts.is_private",
+		"scripts.created_at").
 		From("scripts_view as scripts").
 		Join("users_view users on users.id = scripts.author_id").
 		Where(where).
@@ -124,7 +158,17 @@ func GetScriptsBySpotifyUserID(spotifyUserID string, count uint64, from time.Tim
 	defer rows.Close()
 	for rows.Next() {
 		var script Script
-		err := rows.Scan(&script.ID, &script.AuthorID, &script.Name, &script.AuthorSpotifyID, &script.ForkedFromScriptID, &script.ForkedFromScriptVersion, &script.IsPrivate, &script.CreatedAt)
+		err := rows.Scan(
+			&script.ID,
+			&script.AuthorID,
+			&script.Name,
+			&script.Description,
+			&script.AuthorSpotifyID,
+			&script.AuthorName,
+			&script.ForkedFromScriptID,
+			&script.ForkedFromScriptVersion,
+			&script.IsPrivate,
+			&script.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("Could not scan row: %s", err)
 		}
@@ -194,7 +238,17 @@ func GetNewScripts(count uint64, from time.Time) (scripts []Script, err error) {
 	if !from.IsZero() {
 		where = append(where, sq.Lt{"scripts.created_at": from})
 	}
-	rows, err := psql.Select("scripts.id", "scripts.author_id", "scripts.name", "users.spotify_id", "scripts.forked_from_script_id", "scripts.forked_from_script_version_created_at", "scripts.is_private", "scripts.created_at").
+	rows, err := psql.Select(
+		"scripts.id",
+		"scripts.author_id",
+		"scripts.name",
+		"scripts.description",
+		"users.spotify_id",
+		"users.name",
+		"scripts.forked_from_script_id",
+		"scripts.forked_from_script_version_created_at",
+		"scripts.is_private",
+		"scripts.created_at").
 		From("scripts_view as scripts").
 		LeftJoin("users_view users on users.id = scripts.author_id").
 		Where(where).
@@ -207,7 +261,17 @@ func GetNewScripts(count uint64, from time.Time) (scripts []Script, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		var script Script
-		err := rows.Scan(&script.ID, &script.AuthorID, &script.Name, &script.AuthorSpotifyID, &script.ForkedFromScriptID, &script.ForkedFromScriptVersion, &script.IsPrivate, &script.CreatedAt)
+		err := rows.Scan(
+			&script.ID,
+			&script.AuthorID,
+			&script.Name,
+			&script.Description,
+			&script.AuthorSpotifyID,
+			&script.AuthorName,
+			&script.ForkedFromScriptID,
+			&script.ForkedFromScriptVersion,
+			&script.IsPrivate,
+			&script.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("Could not scan row: %s", err)
 		}
@@ -220,36 +284,36 @@ func GetNewScripts(count uint64, from time.Time) (scripts []Script, err error) {
 	return scripts, nil
 }
 
-func CreateScript(spotifyUserID, name, script string) (CreateOrUpdateResponse, error) {
+func CreateScript(spotifyUserID, name, description, script string) (CreateOrUpdateScriptResponse, error) {
 	scriptFileID, err := pushScriptToObjectStorage(script)
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
 	}
 	tx, err := postgresDB.Begin()
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not start transaction: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not start transaction: %s", err)
 	}
 	userID, err := mapSpotifyIDToOurID(tx, spotifyUserID)
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
 	}
 	scriptID := uuid.NewV4()
-	_, err = psql.Insert("scripts").Columns("id", "author_id", "name").
-		Values(scriptID, userID, nameToNullName(name)).
+	_, err = psql.Insert("scripts").Columns("id", "author_id", "name", "description").
+		Values(scriptID, userID, stringOrNull(name), stringOrNull(description)).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
 	}
 	_, err = psql.Insert("script_versions").Columns("script_id", "type", "file_id").
 		Values(scriptID, ScriptSaveTypeDraft, scriptFileID).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
 	}
 	if err = tx.Commit(); err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
 	}
-	return CreateOrUpdateResponse{
+	return CreateOrUpdateScriptResponse{
 		ID:          scriptID,
 		FileID:      scriptFileID,
 		Name:        name,
@@ -257,16 +321,19 @@ func CreateScript(spotifyUserID, name, script string) (CreateOrUpdateResponse, e
 	}, nil
 }
 
-func UpdateScript(scriptID uuid.UUID, name, script, permissions string, scriptSaveType ScriptSaveType) (CreateOrUpdateResponse, error) {
-	res := CreateOrUpdateResponse{}
+func UpdateScript(scriptID uuid.UUID, name, description, script, permissions string, scriptSaveType ScriptSaveType) (CreateOrUpdateScriptResponse, error) {
+	if name == "" && permissions == permissionsPublic {
+		return CreateOrUpdateScriptResponse{}, errors.New("Public scripts must have a name")
+	}
+	res := CreateOrUpdateScriptResponse{}
 	tx, err := postgresDB.Begin()
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not start transaction: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not start transaction: %s", err)
 	}
 	if script != "" {
 		scriptFileID, err := pushScriptToObjectStorage(script)
 		if err != nil {
-			return CreateOrUpdateResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
+			return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not push script to Spaces: %s", err)
 		}
 		var mostRecentFileID uuid.UUID
 		var mostRecentType ScriptSaveType
@@ -277,7 +344,7 @@ func UpdateScript(scriptID uuid.UUID, name, script, permissions string, scriptSa
 			Limit(1).
 			RunWith(tx).QueryRow().Scan(&mostRecentFileID, &mostRecentType)
 		if err != nil {
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not check most recent script version file ID: %s", err))
+			return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not check most recent script version file ID: %s", err))
 		}
 		// Don't create a new version row if the code is the exact same, unless we are publishing and the previous save was not a publish
 		if !uuid.Equal(mostRecentFileID, scriptFileID) || (mostRecentType != ScriptSaveTypePublished && scriptSaveType == ScriptSaveTypePublished) {
@@ -285,20 +352,23 @@ func UpdateScript(scriptID uuid.UUID, name, script, permissions string, scriptSa
 				Values(scriptID, scriptSaveType, scriptFileID).
 				RunWith(tx).Exec()
 			if err != nil {
-				return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
+				return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
 			}
 		}
 		res.ID = scriptID
 		res.FileID = scriptFileID
 	}
+	updateBuilder := psql.Update("scripts").Where(sq.Eq{"id": scriptID}).RunWith(tx)
+	shouldUpdate := false
 	if name != "" {
-		_, err = psql.Update("scripts").Set("name", name).
-			Where(sq.Eq{"id": scriptID}).
-			RunWith(tx).Exec()
-		if err != nil {
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script name: %s", err))
-		}
+		updateBuilder.Set("name", name)
 		res.Name = name
+		shouldUpdate = true
+	}
+	if description != "" {
+		updateBuilder.Set("description", description)
+		res.Description = description
+		shouldUpdate = true
 	}
 	if permissions != "" {
 		var isPrivate bool
@@ -308,18 +378,20 @@ func UpdateScript(scriptID uuid.UUID, name, script, permissions string, scriptSa
 		case permissionsPrivate:
 			isPrivate = true
 		default:
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script permissions, invalid permissions %s", permissions))
+			return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script permissions, invalid permissions %s", permissions))
 		}
-		_, err = psql.Update("scripts").Set("isPrivate", isPrivate).
-			Where(sq.Eq{"id": scriptID}).
-			RunWith(tx).Exec()
-		if err != nil {
-			return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script permissions: %s", err))
-		}
+		updateBuilder.Set("isPrivate", isPrivate)
 		res.Permissions = permissions
+		shouldUpdate = true
+	}
+	if shouldUpdate {
+		_, err := updateBuilder.Exec()
+		if err != nil {
+			return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not update script details: %s", err))
+		}
 	}
 	if err = tx.Commit(); err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
 	}
 	return res, nil
 }
@@ -349,14 +421,14 @@ func DeleteScriptVersion(scriptID uuid.UUID, scriptVersionID time.Time) error {
 	return nil
 }
 
-func ForkScript(spotifyUserID string, toForkScriptID uuid.UUID, toForkScriptName string, toForkVersionID time.Time, onlyPublished bool) (CreateOrUpdateResponse, error) {
+func ForkScript(spotifyUserID string, toForkScriptID uuid.UUID, toForkScriptName string, toForkVersionID time.Time, onlyPublished bool) (CreateOrUpdateScriptResponse, error) {
 	tx, err := postgresDB.Begin()
 	if err != nil {
-		return CreateOrUpdateResponse{}, fmt.Errorf("Could not start transaction: %s", err)
+		return CreateOrUpdateScriptResponse{}, fmt.Errorf("Could not start transaction: %s", err)
 	}
 	userID, err := mapSpotifyIDToOurID(tx, spotifyUserID)
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get user ID from Spotify ID: %s", err))
 	}
 	where := sq.Eq{
 		"script_id": toForkScriptID,
@@ -376,25 +448,25 @@ func ForkScript(spotifyUserID string, toForkScriptID uuid.UUID, toForkScriptName
 	err = sel.Where(where).
 		RunWith(tx).QueryRow().Scan(&toForkVersion.CreatedAt, &toForkVersion.Type, &toForkVersion.FileID)
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get script version: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not get script version: %s", err))
 	}
 	scriptID := uuid.NewV4()
 	_, err = psql.Insert("scripts").Columns("id", "author_id", "name", "forked_from_script_id", "forked_from_script_version_created_at").
-		Values(scriptID, userID, nameToNullName(toForkScriptName), toForkScriptID, toForkVersion.CreatedAt).
+		Values(scriptID, userID, stringOrNull(toForkScriptName), toForkScriptID, toForkVersion.CreatedAt).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script: %s", err))
 	}
 	_, err = psql.Insert("script_versions").Columns("script_id", "type", "file_id").
 		Values(scriptID, ScriptSaveTypeFork, toForkVersion.FileID).
 		RunWith(tx).Exec()
 	if err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not insert new script version: %s", err))
 	}
 	if err = tx.Commit(); err != nil {
-		return CreateOrUpdateResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
+		return CreateOrUpdateScriptResponse{}, common.TryToRollback(tx, fmt.Errorf("Could not commit: %s", err))
 	}
-	return CreateOrUpdateResponse{
+	return CreateOrUpdateScriptResponse{
 		ID:          scriptID,
 		FileID:      toForkVersion.FileID,
 		Name:        toForkScriptName,
@@ -463,13 +535,13 @@ func isScriptIDInObjectStorage(scriptID uuid.UUID) (bool, error) {
 	return true, nil
 }
 
-func nameToNullName(name string) sql.NullString {
-	var nullName sql.NullString
-	if name == "" {
-		nullName.Valid = false
+func stringOrNull(str string) sql.NullString {
+	var nullString sql.NullString
+	if str == "" {
+		nullString.Valid = false
 	} else {
-		nullName.Valid = true
-		nullName.String = name
+		nullString.Valid = true
+		nullString.String = str
 	}
-	return nullName
+	return nullString
 }

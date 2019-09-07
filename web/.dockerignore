@@ -24,6 +24,7 @@ pgdata/*
 api/.gitignore
 api/Dockerfile
 api/vendor/*
+api/mocks/*
 api/api
 jobs/.gitignore
 jobs/vendor/*

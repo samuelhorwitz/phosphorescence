@@ -6,7 +6,9 @@
   "private": true,
   "dependencies": {
     "express": "^4.16.4",
-    "pako": "^1.0.10"
+    "lodash": "^4.17.15",
+    "pako": "^1.0.10",
+    "xregexp": "^4.2.4"
   },
   "engines": {
     "node": "^10.0.0"
