@@ -1,6 +1,7 @@
 <template>
     <aside ref="elastic" :class="{real: useRealHeader}">
         <div class="container">
+            <loadingBar></loadingBar>
             <p v-show="failed">somethin went wrong :'(</p>
             <p v-show="noTrackCurrentlyPlaying">no track currently playing</p>
             <p v-show="isPulling">create playlist from current track</p>
@@ -60,6 +61,7 @@
 
 <script>
     import {builders, loadNewPlaylist, processTrack} from '~/assets/recordcrate';
+    import loadingBar from '~/components/loading-bar';
 
     const failed = -3;
     const playlistGenerating = -2;
@@ -72,6 +74,9 @@
     const barHeight = 60;
 
     export default {
+        components: {
+            loadingBar
+        },
         data() {
             return {
                 state: notTouched,
@@ -190,6 +195,7 @@
             async generateFromTrack() {
                 this.$store.commit('loading/startLoad');
                 this.$store.commit('loading/playlistGenerating');
+                this.$store.commit('loading/initializeProgress', {id: 'generate'});
                 try {
                     let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
                     let {track} = await trackResponse.json();
@@ -198,7 +204,9 @@
                     if (this.$store.state.preferences.onlyTheHits) {
                         pruners = [builders.hits];
                     }
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners);
+                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners, percent => {
+                        this.$store.commit('loading/tickProgress', {id: 'generate', percent});
+                    });
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                     if (this.trackState.isPlaying) {
                         let now = new Date().getTime();
@@ -216,6 +224,8 @@
                     await new Promise(res => setTimeout(res, 1000));
                 }
                 this.state = complete;
+                this.$store.commit('loading/completeProgress', {id: 'generate'});
+                this.$store.commit('loading/resetProgress');
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
                 this.track = null;

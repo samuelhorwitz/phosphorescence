@@ -1,6 +1,6 @@
 <template>
     <div class="mainContainer" ref="mainContainer">
-        <loadingBar></loadingBar>
+        <loadingBar v-if="!isIOS"></loadingBar>
         <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
             {{dropText}}
         </div>
