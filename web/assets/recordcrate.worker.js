@@ -45,7 +45,7 @@ async function handleSendTracks(data) {
     console.log('Processing tracks...');
     tracks = await getEvocativeness(tracks);
     console.log('Tracks processed');
-    let {tags, idsToTags} = buildTags(tracks);
+    let {tags, idsToTags} = await buildTags(tracks);
     let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
     let gzipResponseData = pako.gzip(responseData, {level: 9});
     loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
@@ -58,18 +58,18 @@ async function handleSendTrack(data) {
     console.log('Processing track...');
     track = await getEvocativenessOfSingleTrack(track);
     console.log('Track processed');
-    let tag = getTrackTag(track.track);
+    let tag = await getTrackTag(track.track);
     return {type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}};
 }
 
-function buildTags(tracks) {
+async function buildTags(tracks) {
     let trackEntries = Object.entries(tracks);
     let tags = {};
     let idsToTags = {};
     let i = 0;
     for (let [id, {track}] of trackEntries) {
         i++;
-        let tag = getTrackTag(track);
+        let tag = await getTrackTag(track);
         if (tags[tag]) {
             tags[tag].push(id);
         }
