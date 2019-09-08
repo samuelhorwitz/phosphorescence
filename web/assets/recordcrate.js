@@ -138,9 +138,7 @@ async function getProcessedTracks(countryCode, loadingHandler) {
 async function getArrayBufferWithProgress(response, progressHandler) {
     progressHandler = throttle(progressHandler, 100);
     let reader = response.body.getReader();
-    let contentLength = +response.headers.get('Content-Length');
-    let multiplier = response.headers.get('Content-Encoding') === 'gzip' ? 6 : 1;
-    contentLength *= multiplier;
+    let contentLength = +(response.headers.get('x-amz-meta-uncompressed-length') || response.headers.get('Content-Length'));
     let receivedLength = 0;
     let chunks = [];
     while (true) {

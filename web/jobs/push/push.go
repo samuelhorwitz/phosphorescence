@@ -79,6 +79,7 @@ func uploadTrackList(key string, trackJSON []byte) (err error) {
 		ContentType:     aws.String("application/json"),
 		ContentEncoding: aws.String("gzip"),
 		CacheControl:    aws.String("private"),
+		Metadata:        map[string]*string{"uncompressed-length": aws.String(fmt.Sprintf("%d", len(trackJSON)))},
 		Expires:         aws.Time(time.Now().AddDate(0, 0, 1).Add(10 * time.Minute)),
 		Key:             aws.String(key),
 		Body:            reader,
