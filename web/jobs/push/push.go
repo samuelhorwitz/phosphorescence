@@ -87,5 +87,25 @@ func uploadTrackList(key string, trackJSON []byte) (err error) {
 	if err != nil {
 		return fmt.Errorf("Could not upload to Spaces: %s", err)
 	}
+	_, err = s3Service.PutBucketCors(&s3.PutBucketCorsInput{
+		Bucket: aws.String("phosphorescence-tracks"),
+		CORSConfiguration: &s3.CORSConfiguration{
+			CORSRules: []*s3.CORSRule{&s3.CORSRule{
+				AllowedOrigins: aws.StringSlice([]string{"https://phosphor.me"}),
+				AllowedMethods: aws.StringSlice([]string{"GET"}),
+				ExposeHeaders: aws.StringSlice([]string{
+					"cache-control",
+					"content-length",
+					"content-type",
+					"expires",
+					"last-modified",
+					"x-amz-meta-uncompressed-length",
+				}),
+			}},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("Could not set CORS config: %s", err)
+	}
 	return nil
 }
