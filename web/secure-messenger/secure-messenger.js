@@ -222,7 +222,7 @@ export default class SecureMessenger {
             for (let i = 0; i < elements.length; i++) {
                 this.#logger.debug(`Knocking on element ${i}...`);
                 let port = getPort();
-                if (elements[i] instanceof Worker || (global.WorkerGlobalScope && elements[i] instanceof WorkerGlobalScope)) {
+                if ((typeof Worker !== 'undefined' && elements[i] instanceof Worker) || (typeof WorkerGlobalScope !== 'undefined' && elements[i] instanceof WorkerGlobalScope)) {
                     if (this.#remoteOrigin !== location.origin) {
                         throw new Error('Origin must be current origin if worker knock');
                     }

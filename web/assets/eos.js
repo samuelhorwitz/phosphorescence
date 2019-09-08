@@ -56,7 +56,11 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
         }
         allDimensions = [...allDimensions, ...newDims].filter((val, index, arr) => arr.indexOf(val) === index);
     }
-    let totalLoaders = pruners.length + 1;
+    let prunersLength = 0;
+    if (pruners && pruners.length) {
+        prunersLength = pruners.length;
+    }
+    let totalLoaders = prunersLength + 1;
     loadPercent(0.1);
     if (pruners) {
         let i = 0;
