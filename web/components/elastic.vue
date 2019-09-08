@@ -62,6 +62,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    aside.real .svgContainer {
         min-width: 10em;
         min-height: 10em;
     }

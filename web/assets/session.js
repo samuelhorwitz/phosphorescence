@@ -2,7 +2,7 @@ export async function getAccessToken() {
     let tokenResponse = await fetch(`${process.env.API_ORIGIN}/spotify/token`, {credentials: 'include'});
     let {token} = await tokenResponse.json();
     if (!token) {
-        authorizeUserRedirect();
+        location.reload();
         return;
     }
     return token;
