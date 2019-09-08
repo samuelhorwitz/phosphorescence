@@ -216,7 +216,7 @@ async function runChecks() {
             tree && tree.removeById(firstTrack.track.id);
         }
         loadingInterruptPort.postMessage({type: 'loadPercent', value: 1 / goalTracks});
-        tags[getTrackTag(firstTrack.track)] = true;
+        tags[await getTrackTag(firstTrack.track)] = true;
         playlist.push(firstTrack);
         for (let i = 0; i < goalTracks - 1; i++) {
             let nextTrack = await getTrack(function() {
@@ -226,7 +226,7 @@ async function runChecks() {
             if (!nextTrack) {
                 throw new Error(`Builder was unable to get track ${i + 2}`);
             }
-            tags[getTrackTag(nextTrack.track)] = true;
+            tags[await getTrackTag(nextTrack.track)] = true;
             playlist.push(nextTrack);
             loadingInterruptPort.postMessage({type: 'loadPercent', value: (i + 2) / goalTracks});
         }
