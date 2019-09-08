@@ -40,9 +40,15 @@ export const mutations = {
         state.progressWeights[id] = weight;
     },
     tickProgress(state, {id, percent}) {
+        if (typeof state.progresses[id] === 'undefined') {
+            return;
+        }
         state.progresses = {...state.progresses, [id]: percent};
     },
     completeProgress(state, {id}) {
+        if (typeof state.progresses[id] === 'undefined') {
+            return;
+        }
         state.progresses = {...state.progresses, [id]: 1};
     },
     resetProgress(state) {
@@ -82,7 +88,7 @@ export const getters = {
     progress(state) {
         let total = 0;
         for (let i in state.progresses) {
-            total += state.progresses[i] * state.progressWeights[i]
+            total += state.progresses[i] * state.progressWeights[i];
         }
         return total;
     }

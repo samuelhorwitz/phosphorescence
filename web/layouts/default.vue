@@ -349,6 +349,7 @@
                 }
                 let trackParts = url.split('/');
                 let trackId = trackParts[trackParts.length - 1];
+                this.$store.commit('loading/initializeProgress', {id: 'generate'});
                 try {
                     let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${trackId}`, {credentials: 'include'});
                     let {track} = await trackResponse.json();
@@ -357,13 +358,17 @@
                     if (this.$store.state.preferences.onlyTheHits) {
                         pruners = [builders.hits];
                     }
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners);
+                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners, percent => {
+                        this.$store.commit('loading/tickProgress', {id: 'generate', percent});
+                    });
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 }
                 catch (e) {
                     console.error('Playlist generation failed', e);
                     // TODO add some visual UI indication
                 }
+                this.$store.commit('loading/completeProgress', {id: 'generate'});
+                this.$store.commit('loading/resetProgress');
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
             }
