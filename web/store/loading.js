@@ -27,6 +27,8 @@ export const mutations = {
         for (let i in state.descriptions) {
             if (state.descriptions[i].id !== messageId) {
                 newDescriptions.push(state.descriptions[i]);
+            } else {
+                newDescriptions.push(Object.assign({done: true}, state.descriptions[i]));
             }
         }
         state.descriptions = newDescriptions;

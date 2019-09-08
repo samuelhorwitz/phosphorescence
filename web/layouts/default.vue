@@ -235,10 +235,16 @@
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
             this.$store.commit('loading/playlistGenerating');
-            let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading and processing track data');
+            let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading track data');
             this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: 60});
             this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
-            await initialize(this.$store.state.user.user.country, percent => {
+            let downloadingPhase = true;
+            await initialize(this.$store.state.user.user.country, async (percent, processingBegan) => {
+                if (downloadingPhase && processingBegan) {
+                    this.$store.commit('loading/clearMessage', messageId);
+                    messageId = await this.$store.dispatch('loading/pushMessage', 'Processing track data');
+                    downloadingPhase = false;
+                }
                 this.$store.commit('loading/tickProgress', {id: 'tracks', percent});
             });
             this.$store.commit('loading/completeProgress', {id: 'tracks'});

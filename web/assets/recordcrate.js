@@ -102,7 +102,7 @@ async function getProcessedTracks(countryCode, loadingHandler) {
     await messenger.listen(recordCrateWorker);
     await messenger.openInterruptListenerPort({type: 'initializeLoadingNotificationChannel'}, ({type, value}) => {
         if (type == 'loadPercent') {
-            loadingHandler(0.45 + (value * 0.45));
+            loadingHandler(0.45 + (value * 0.45), true);
         }
     });
     let {data} = await messenger.postMessage({type: 'sendTracks', tracks, countryCode});

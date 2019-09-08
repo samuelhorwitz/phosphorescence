@@ -34,9 +34,8 @@
             </table>
         </div>
         <aside class="loading" v-show="!$store.getters['tracks/playlistLoaded']">
-            <h2>Loading</h2>
             <ul>
-                <li class="loadingMessage" v-for="loadMessage in $store.state.loading.descriptions">
+                <li class="loadingMessage" v-for="loadMessage in $store.state.loading.descriptions" :class="{done: loadMessage.done}">
                     {{loadMessage.description}}...
                 </li>
             </ul>
@@ -46,28 +45,18 @@
 
 <style scoped>
     article.loading {
-        align-items: center;
-        justify-content: center;
+        align-items: flex-start;
     }
 
     aside.loading {
         overflow: auto;
-        border: 7px outset aquamarine;
-        box-sizing: border-box;
-        background-color: magenta;
+        color: white;
         padding: 1em;
         flex: 1;
-        height: 10em;
-        font-size: 16px;
         z-index: 10000000;
         display: flex;
         flex-direction: column;
-    }
-
-    aside.loading h2 {
-        text-align: center;
-        padding: 0px;
-        margin: 0px;
+        align-items: center;
     }
 
     aside.loading ul {
@@ -78,6 +67,21 @@
 
     li.loadingMessage {
         display: block;
+        font-size: 3em;
+    }
+
+    li.loadingMessage:not(.done)::before {
+        content: '‣';
+        color: magenta;
+        display: inline-block;
+        width: 1em;
+    }
+
+    li.loadingMessage.done::before {
+        content: '✓';
+        color: cyan;
+        display: inline-block;
+        width: 1em;
     }
 
     progress {

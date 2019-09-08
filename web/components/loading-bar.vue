@@ -5,8 +5,8 @@
 <style scoped>
     progress {
         width: 100%;
-        position: absolute;
-        top: 0px;
+        position: fixed;
+        top: env(safe-area-inset-top, 0px);
         height: 2px;
         appearance: none;
         border: 0px;
@@ -65,7 +65,7 @@
                             clearInterval(this.interval);
                             return;
                         }
-                        this.loadingProgressSticky += 0.1;
+                        this.loadingProgressSticky += 0.05;
                     }, 10);
                 }
             }
