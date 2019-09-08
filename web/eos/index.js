@@ -6,18 +6,18 @@ import pako from 'pako';
 let additionalTracks = {};
 let tracksReadyResolver;
 let tracksReady = new Promise(resolve => tracksReadyResolver = resolve);
-let loadingInterruptPort;
 let phosphorMessenger;
 const terminationEvent = 'eosTerminateAll';
 
 (async () => {
     phosphorMessenger = new SecureMessenger(process.env.PHOSPHOR_ORIGIN);
     await phosphorMessenger.knock([parent]);
+    let loadingInterruptPort;
     phosphorMessenger.messageHandlerLoop((data, interruptPort) => {
         if (data.type == 'buildPlaylist') {
-            return handleBuildPlaylist(data);
+            return handleBuildPlaylist(loadingInterruptPort, data);
         } else if (data.type == 'pruneTracks') {
-            return handlePruneTracks(data);
+            return handlePruneTracks(loadingInterruptPort, data);
         } else if (data.type == 'loadTracks') {
             return handleLoadTracks(data);
         } else if (data.type == 'loadAdditionalTrack') {
@@ -28,6 +28,7 @@ const terminationEvent = 'eosTerminateAll';
         } else if (data.type == 'requestTerminationChannel') {
             return phosphorMessenger.respondWithInterruptListenerPort('terminationChannel', ({type}) => {
                 if (type === 'terminateAll') {
+                    console.debug('Should dispatch termination event...');
                     dispatchEvent(new Event(terminationEvent));
                 }
             }, event => {
@@ -40,8 +41,8 @@ const terminationEvent = 'eosTerminateAll';
     });
 })();
 
-async function handleBuildPlaylist(data) {
-    let response = await (await buildRunner())({
+async function handleBuildPlaylist(loadingInterruptPort, data) {
+    let response = await buildRunner(loadingInterruptPort)({
         type: 'buildPlaylist',
         tracksUrl: await tracksReady,
         additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
@@ -57,8 +58,8 @@ async function handleBuildPlaylist(data) {
     return {type: 'error', error: response.error || 'Unknown error'};
 }
 
-async function handlePruneTracks(data) {
-    let response = await (await buildRunner())({
+async function handlePruneTracks(loadingInterruptPort, data) {
+    let response = await buildRunner(loadingInterruptPort)({
         type: 'pruneTracks',
         tracksUrl: await tracksReady,
         additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
@@ -82,26 +83,32 @@ function handleLoadAdditionalTrack(data) {
     return {type: 'acknowledge'};
 }
 
-async function buildRunner() {
+function buildRunner(loadingInterruptPort) {
     let workerMessenger = new SecureMessenger(location.origin);
     let runner = new RunnerWorker();
+    let terminationHandler;
     let terminationPromise = new Promise(resolve => {
-        addEventListener(terminationEvent, async () => {
+        terminationHandler = () => {
+            console.debug("Should terminate...");
             runner.terminate();
             resolve({type: 'runnerError', error: 'User killed builder'});
-        }, {once: true});
-    });
-    await workerMessenger.listen(runner);
-    await workerMessenger.openInterruptListenerPort({type: 'initializeLoadingNotificationChannel'}, ({type, value}) => {
-        if (type == 'loadPercent') {
-            loadingInterruptPort.postMessage({type, value});
-        }
+        };
+        addEventListener(terminationEvent, terminationHandler);
     });
     return (postData) => {
         return Promise.race([terminationPromise, new Promise(async resolve => {
+            await workerMessenger.listen(runner);
+            await workerMessenger.openInterruptListenerPort({type: 'initializeLoadingNotificationChannel'}, ({type, value}) => {
+                if (type == 'loadPercent') {
+                    loadingInterruptPort.postMessage({type, value});
+                }
+            });
             let {data} = await workerMessenger.postMessage(postData);
             runner.terminate();
             resolve(data);
-        })]);
+        })]).then(passThru => {
+            removeEventListener(terminationEvent, terminationHandler);
+            return passThru;
+        });
     };
 }
