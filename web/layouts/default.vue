@@ -1,18 +1,20 @@
 <template>
-    <div class="mainContainer" ref="mainContainer">
-        <loadingBar v-if="!isIOS"></loadingBar>
-        <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
-            {{dropText}}
+    <div>
+        <elastic v-if="isIOS" :container="$refs.mainContainer"></elastic>
+        <div class="mainContainer" ref="mainContainer">
+            <loadingBar v-if="!isIOS"></loadingBar>
+            <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
+                {{dropText}}
+            </div>
+            <logo></logo>
+            <toolbar></toolbar>
+            <main :class="{playlistLoaded: $store.getters['tracks/playlistLoaded']}">
+                <nuxt/>
+            </main>
+            <album></album>
+            <player></player>
+            <foot></foot>
         </div>
-        <elastic v-if="isIOS"></elastic>
-        <logo></logo>
-        <toolbar></toolbar>
-        <main :class="{playlistLoaded: $store.getters['tracks/playlistLoaded']}">
-            <nuxt/>
-        </main>
-        <album></album>
-        <player></player>
-        <foot></foot>
     </div>
 </template>
 

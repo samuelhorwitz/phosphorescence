@@ -3,8 +3,9 @@
         <div class="wrapper">
             <div class="bg"></div>
             <menu>
-                <li class="menuItem" @click="regenerate()">
-                    <button :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
+                <li class="menuItem regenerateOrCancel" @click="regenerateOrCancel()">
+                    <button v-if="!$store.state.loading.playlistGenerating" :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
+                    <button v-if="$store.state.loading.playlistGenerating">Cancel</button>
                 </li>
                 <li class="menuItem toPage" :class="{active: advancedOpen}" @click="toggledAdvanced()">
                     <button>Advanced</button>
@@ -42,8 +43,9 @@
                     <label for="onlyTheHits">Only Hits</label>
                     <input name="onlyTheHits" type="checkbox" v-model="onlyTheHits">
                 </li>
-                <li class="advancedMenuItem">
-                    <button @click="regenerate()" :disabled="$store.state.loading.loading || $nuxt.$route.path !== '/'">Generate!</button>
+                <li class="advancedMenuItem" @click="regenerateOrCancel()">
+                    <button v-if="!$store.state.loading.playlistGenerating" :disabled="$store.state.loading.loading || $nuxt.$route.path !== '/'">Generate!</button>
+                    <button v-if="$store.state.loading.playlistGenerating">Cancel</button>
                 </li>
             </ul>
         </aside>
@@ -324,6 +326,7 @@
 <script>
     import {logout} from '~/assets/session';
     import {builders, loadNewPlaylist} from '~/assets/recordcrate';
+    import {terminatePlaylistBuilding} from '~/assets/eos';
 
     export default {
         data() {
@@ -358,6 +361,13 @@
              }
         },
         methods: {
+            regenerateOrCancel() {
+                if (this.$store.state.loading.playlistGenerating) {
+                    terminatePlaylistBuilding();
+                } else {
+                    this.regenerate();
+                }
+            },
             async regenerate() {
                 if (!this.$store.getters['tracks/stopped'] && !confirm('This will destroy the current playlist. Are you sure?')) {
                     return;
