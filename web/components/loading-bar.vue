@@ -109,21 +109,26 @@
         mounted() {
             addEventListener('orientationchange', this.resetNotchMode);
             this.resetNotchMode();
-            this.$nextTick(() => {
-                this.initializeCanvas();
-            });
         },
         beforeDestroy() {
             removeEventListener('orientationchange', this.resetNotchMode);
         },
         methods: {
             resetNotchMode() {
+                let oldNotchMode = this.notchMode;
                 if (this.isNotchedFullscreenIphonePortrait()) {
                     this.notchMode = true;
+                } else {
+                    this.notchMode = false;
+                }
+                if (this.notchMode && !oldNotchMode) {
+                    this.$nextTick(() => {
+                        this.initializeCanvas();
+                    });
                 }
             },
             isNotchedFullscreenIphonePortrait() {
-                return /\b(iPhone)\b/.test(navigator.userAgent) && matchMedia('(orientation: portrait)').matches && navigator.standalone && screen.width * devicePixelRatio === 1125 && screen.height * devicePixelRatio === 2436;
+                return /\b(iPhone)\b/.test(navigator.userAgent) && !orientation && navigator.standalone && screen.width * devicePixelRatio === 1125 && screen.height * devicePixelRatio === 2436;
             },
             initializeCanvas() {
                 if (!this.notchMode) {
