@@ -4,8 +4,8 @@
             <div class="bg"></div>
             <menu>
                 <li class="menuItem regenerateOrCancel" @click="regenerateOrCancel()">
-                    <button v-if="!$store.state.loading.playlistGenerating" :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
-                    <button v-if="$store.state.loading.playlistGenerating">Cancel</button>
+                    <button v-if="!$store.getters['tracks/playlistLoaded'] || !$store.state.loading.playlistGenerating" :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
+                    <button v-if="$store.getters['tracks/playlistLoaded'] && $store.state.loading.playlistGenerating">Cancel</button>
                 </li>
                 <li class="menuItem toPage" :class="{active: advancedOpen}" @click="toggledAdvanced()">
                     <button>Advanced</button>
