@@ -61,13 +61,13 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
         prunersLength = pruners.length;
     }
     let totalLoaders = prunersLength + 1;
-    loadPercent(0.1);
+    loadPercent(0.001);
     if (pruners) {
         let i = 0;
         for (let pruner of pruners) {
             let script = encoder.encode(pruner);
             let response = await callBuilder({prunedTrackIds, script}, 'pruneTracks', percent => {
-                loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + (i / totalLoaders))));
+                loadPercent(0.001 + (0.999 * ((percent / totalLoaders) + (i / totalLoaders))));
             });
             if (!prunedTrackIds) {
                 prunedTrackIds = [];
@@ -80,12 +80,12 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
     let script = encoder.encode(builder);
     if (firstTrackBuilder) {
         let response = await callBuilder({firstTrackOnly: true, prunedTrackIds, script: encoder.encode(firstTrackBuilder)}, 'buildPlaylist', () => {
-            loadPercent(0.1 + (0.9 * (((1 / trackCount) / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+            loadPercent(0.001 + (0.999 * (((1 / trackCount) / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
         });
         let firstTrack = response.playlist[0];
         appendDimensions(response.dimensions);
         let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist', percent => {
-            loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+            loadPercent(0.001 + (0.999 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
         });
         appendDimensions(dimensions);
         return {
@@ -95,7 +95,7 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
     }
     else if (firstTrack) {
         let {playlist, dimensions} = await callBuilder({firstTrack, trackCount, prunedTrackIds, script}, 'buildPlaylist', percent => {
-            loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+            loadPercent(0.001 + (0.999 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
         });
         appendDimensions(dimensions);
         return {
@@ -105,7 +105,7 @@ export async function buildPlaylist(trackCount, builder, firstTrackBuilder, firs
     }
     else {
         let {playlist, dimensions} = await callBuilder({trackCount, prunedTrackIds, script}, 'buildPlaylist', percent => {
-            loadPercent(0.1 + (0.9 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
+            loadPercent(0.001 + (0.999 * ((percent / totalLoaders) + ((totalLoaders - 1) / totalLoaders))));
         });
         appendDimensions(dimensions);
         return {
