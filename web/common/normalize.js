@@ -1,9 +1,7 @@
-export async function getTrackTag(track) {
+export function getTrackTag(track) {
     let normalizedName = normalizeString(track.name);
     let normalizedArtist = getPrimaryArtist(track.artists);
-    let tag = `${normalizedName}-${normalizedArtist}`;
-    let hash = await sha256(tag);
-    return toHex(hash);
+    return `${normalizedName} - ${normalizedArtist}`;
 }
 
 function normalizeString(str) {
@@ -15,19 +13,6 @@ function getPrimaryArtist(artists) {
         return "signum";
     }
     return normalizeString(artists[0].name);
-}
-
-async function sha256(message) {
-  let encoder = new TextEncoder();
-  let data = encoder.encode(message);
-  let hash = await crypto.subtle.digest('SHA-256', data);
-  return hash;
-}
-
-function toHex(buf) {
-  let hashArray = Array.from(new Uint8Array(buf));
-  let hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
 }
 
 // See https://github.com/samuelhorwitz/phosphorescence/issues/36
