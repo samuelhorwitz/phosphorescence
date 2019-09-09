@@ -1,6 +1,6 @@
 <template>
     <article :class="{loading: !$store.getters['tracks/playlistLoaded']}">
-        <div class="tableWrapper" ref="tableWrapper" v-show="$store.getters['tracks/playlistLoaded']">
+        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-show="$store.getters['tracks/playlistLoaded']">
             <table>
                 <thead>
                     <tr>
@@ -132,6 +132,12 @@
         border: 7px outset aquamarine;
         box-sizing: border-box;
         height: 100%;
+        transition: transform 0.3s ease-in 0s, opacity 0.3s ease-in 0s;
+    }
+
+    .tableWrapper.loading {
+        transform: scale(0.7);
+        opacity: 0.3;
     }
 
     table {

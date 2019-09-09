@@ -23,7 +23,7 @@ func Tracks(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		tracksURL = fmt.Sprintf("%s/tracks-small.json", phosphorOrigin)
+		tracksURL = fmt.Sprintf("%s/tracks.json", phosphorOrigin)
 	}
 	common.JSON(w, struct {
 		TracksURL string `json:"tracksUrl"`

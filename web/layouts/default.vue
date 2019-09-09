@@ -236,7 +236,6 @@
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
-            this.$store.commit('loading/playlistGenerating');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading track data');
             this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: 60});
             this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
@@ -252,6 +251,7 @@
             this.$store.commit('loading/completeProgress', {id: 'tracks'});
             this.$store.commit('loading/clearMessage', messageId);
             if (!this.$store.getters['tracks/playlistLoaded']) {
+                this.$store.commit('loading/playlistGenerating');
                 let loadingMessage = 'Generating playlist';
                 if (this.$store.state.preferences.seedStyle) {
                     loadingMessage += ` (${this.$store.state.preferences.seedStyle})`;
@@ -276,11 +276,11 @@
                     // TODO add some visual UI indication
                 }
                 this.$store.commit('loading/clearMessage', messageId);
+                this.$store.commit('loading/playlistGenerationComplete');
             } else {
                 this.$store.commit('loading/completeProgress', {id: 'generate'});
             }
             this.$store.commit('loading/resetProgress');
-            this.$store.commit('loading/playlistGenerationComplete');
             this.$store.dispatch('loading/endLoadAfterDelay');
         },
         mounted() {
