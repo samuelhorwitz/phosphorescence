@@ -132,12 +132,13 @@
         border: 7px outset aquamarine;
         box-sizing: border-box;
         height: 100%;
-        transition: transform 0.3s ease-in 0s, opacity 0.3s ease-in 0s;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s, opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s;
     }
 
     .tableWrapper.loading {
         transform: scale(0.7);
         opacity: 0.3;
+        pointer-events: none;
     }
 
     table {
