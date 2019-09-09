@@ -10,10 +10,10 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  *
  * This is contrary to the majority of code in this repository which is licensed
- * under the MIT license with a retained copyright. Only files such as this one
+ * under the Apache 2.0 license with a retained copyright. Only files such as this one
  * which are explicitly licensed differently should be considered licensed under
  * the file-specific license described within. All other files are implicitly
- * licensed under the repository's MIT license.
+ * licensed under the repository's Apache 2.0 license.
  */
 
 // Prune functions are called before tree building and track generation. They
