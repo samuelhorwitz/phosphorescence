@@ -18,26 +18,26 @@
                     <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Next Track</title><path d="M28.54,15.89L1.46,0.25V31.71L28.54,16.08V30h2V2h-2v13.9ZM3.46,28.25V3.72L24.7,16Z"></path></svg>
                 </button></li>
             </menu>
-            <a class="albumImgLink" target="_blank" :href="currentAlbumUrl"><img class="albumImg" :alt="currentTrackImageAltText" :src="currentTrackImage"></a>
+            <a class="albumImgLink" target="_blank" rel="external noopener" :href="currentAlbumUrl"><img class="albumImg" :alt="currentTrackImageAltText" :src="currentTrackImage"></a>
             <div class="trackContainer">
                 <div class="trackData">
                     <div class="marquee">
                         <span class="trackName">
-                            <a target="_blank" :href="currentTrackUrl">{{currentTrackName}}</a>
+                            <a target="_blank" rel="external noopener" :href="currentTrackUrl">{{currentTrackName}}</a>
                         </span>
                         <ol class="artistsNames">
                             <li v-for="artist in currentTrackArtists">
-                                <a target="_blank" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                                <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify">{{artist.name}}</a>
                             </li>
                         </ol>
                         <span class="albumName">
-                            <a target="_blank" :href="currentAlbumUrl">{{currentAlbumName}}</a>
+                            <a target="_blank" rel="external noopener" :href="currentAlbumUrl">{{currentAlbumName}}</a>
                         </span>
                     </div>
                 </div>
             </div>
             <div class="spotifyLogo">
-                <a target="_blank" href="https://spotify.com"><img alt="Spotify" class="spotifyLogoImg" src="/images/spotify_small.png"></a>
+                <a target="_blank" rel="external noopener" href="https://spotify.com"><img alt="Spotify" class="spotifyLogoImg" src="/images/spotify_small.png"></a>
             </div>
         </div>
     </div>

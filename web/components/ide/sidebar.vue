@@ -6,9 +6,9 @@
         </header>
         <section>
             <p>Welcome to the Phosphorescence IDE, Phorland. Here you may edit your own playlist builders.</p>
-            <p>Please check out <a target="_blank" href="/docs/eos/api.html">our documentation</a>. Debugging is done via your browsers native developer tools.</p>
-            <p><em>Please Note:</em> If you save code to our servers, you are relinquishing all rights to that code under the <a target="_blank" href="https://creativecommons.org/share-your-work/public-domain/cc0/">Creative Commons 0</a> public domain dedication.</p>
-            <p>This is so that we do not have to worry about code attribution and contributor management when allowing users to fork your work. If you do not wish to release your work into the public domain, you may <a target="_blank" href="https://github.com/samuelhorwitz/phosphorescence">find us on GitHub</a> and develop from your own instance of the app.</p>
+            <p>Please check out <a target="_blank" rel="help" href="/docs/eos/api.html">our documentation</a>. Debugging is done via your browsers native developer tools.</p>
+            <p><em>Please Note:</em> If you save code to our servers, you are relinquishing all rights to that code under the <a target="_blank" rel="license external noopener" href="https://creativecommons.org/share-your-work/public-domain/cc0/">Creative Commons 0</a> public domain dedication.</p>
+            <p>This is so that we do not have to worry about code attribution and contributor management when allowing users to fork your work. If you do not wish to release your work into the public domain, you may <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">find us on GitHub</a> and develop from your own instance of the app.</p>
             <hr>
             <h3>Save Your Script</h3>
             <h4 v-if="$store.state.ide.scriptData != null && !$store.getters['ide/isScriptOwnedByUser']">This script is not owned by you, it is read-only. Fork it if you wish to make changes.</h4>

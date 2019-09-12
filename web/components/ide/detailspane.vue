@@ -22,11 +22,11 @@
                                 <span v-if="hoverIndex == index"><svg @click="play(index, track)" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title>Play Track</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg></span>
                                 <span>{{index + 1}}</span>
                             </td>
-                            <td><a target="_blank" :href="track.track.external_urls.spotify">{{track.track.name}}</a></td>
+                            <td><a target="_blank" rel="external noopener" :href="track.track.external_urls.spotify">{{track.track.name}}</a></td>
                             <td>
                                 <ol>
                                     <li v-for="artist in track.track.artists">
-                                        <a target="_blank" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                                        <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify">{{artist.name}}</a>
                                     </li>
                                 </ol>
                             </td>
@@ -45,13 +45,13 @@
                         <button class="disclosure" @click="isOpen = true" :disabled="!inspectedTrack">Click To See Details</button>
                         <div v-if="inspectedTrack">
                             <span>
-                                <a target="_blank" :href="inspectedTrack.track.external_urls.spotify">{{inspectedTrack.track.name}}</a> -
+                                <a target="_blank" rel="external noopener" :href="inspectedTrack.track.external_urls.spotify">{{inspectedTrack.track.name}}</a> -
                                 <ol>
                                     <li v-for="artist in inspectedTrack.track.artists">
-                                        <a target="_blank" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                                        <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify">{{artist.name}}</a>
                                     </li>
                                 </ol> -
-                                <a target="_blank" :href="inspectedTrack.track.album.external_urls.spotify">{{inspectedTrack.track.album.name}}</a>
+                                <a target="_blank" rel="external noopener" :href="inspectedTrack.track.album.external_urls.spotify">{{inspectedTrack.track.album.name}}</a>
                             </span>
                             <dl>
                                 <template v-for="(val, dim) in dimensionsList">

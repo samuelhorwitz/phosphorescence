@@ -1,6 +1,6 @@
 <template>
     <aside>
-        <a v-if="currentTrack" target="_blank" :href="currentTrack.track.album.external_urls.spotify" class="art-wrapper-link">
+        <a v-if="currentTrack" target="_blank" rel="external noopener" :href="currentTrack.track.album.external_urls.spotify" class="art-wrapper-link">
             <div class="art-wrapper" :title="currentTrackImageAltText" :style="{'background-image': 'url(' + currentTrackImage + ')'}"></div>
         </a>
     </aside>

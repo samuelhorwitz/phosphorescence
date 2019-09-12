@@ -20,15 +20,15 @@
                 <tbody>
                     <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.track.id)}" @click="seekTrack(index)">
                         <td :title="humanReadableEvocativeness[index]" class="number">{{index + 1}}</td>
-                        <td :title="track.track.name"><a target="_blank" :href="track.track.external_urls.spotify">{{track.track.name}}</a></td>
+                        <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="track.track.external_urls.spotify" @click.stop>{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
                             <ol>
                                 <li class="artist" v-for="artist in track.track.artists">
-                                    <a target="_blank" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                                    <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify" @click.stop>{{artist.name}}</a>
                                 </li>
                             </ol>
                         </td>
-                        <td class="album" :title="track.track.album.name"><a target="_blank" :href="track.track.album.external_urls.spotify">{{track.track.album.name}}</a></td>
+                        <td class="album" :title="track.track.album.name"><a target="_blank" rel="external noopener" :href="track.track.album.external_urls.spotify" @click.stop>{{track.track.album.name}}</a></td>
                     </tr>
                 </tbody>
             </table>

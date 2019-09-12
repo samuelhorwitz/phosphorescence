@@ -2,9 +2,9 @@
     <div class="pageWrapper">
         <article class="authPage">
             <h2 class="pageHeader">Settings</h2>
-            <p>You are logged in as the Spotify user <a target="_blank" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
+            <p>You are logged in as the Spotify user <a target="_blank" rel="external noopener" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
             <p>Currently, all settings are stored locally on the device and automatically updated as they are changed.</p>
-            <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
+            <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" rel="external noopener" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
             <p>You may destroy every active session and log out of every device including this one: <button :disabled="logOutEverywhereClicked" @click="logoutEverywhere">Destroy All Sessions</button></p>
             <p>You may empty your cache on this device: <button :disabled="cacheClearState" @click="destroyCaches">{{clearCacheButtonText}}</button></p>
             <p>You may force a reload of the app in a context where you are unable to reload using your browser (PWA, etc). <button @click="reload">Reload</button></p>
