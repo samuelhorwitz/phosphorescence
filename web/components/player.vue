@@ -29,15 +29,15 @@
                 <div class="trackData" ref="trackData" :class="{stopped: $store.getters['tracks/stopped']}">
                     <span class="trackDetails" :class="{scrollingBanner: isTrackDataScrolling}" ref="trackDetails" v-if="playerReadyAndConnected && !$store.getters['tracks/stopped']">
                         <span class="trackName">
-                            <a target="_blank" :href="currentTrackUrl">{{currentTrackName}}</a>
+                            <a target="_blank" rel="external noopener" :href="currentTrackUrl">{{currentTrackName}}</a>
                         </span>
                         <ol class="artistsNames">
                             <li v-for="artist in currentTrackArtists">
-                                <a target="_blank" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                                <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify">{{artist.name}}</a>
                             </li>
                         </ol>
                         <span class="albumName">
-                            <a target="_blank" :href="currentAlbumUrl">{{currentAlbumName}}</a>
+                            <a target="_blank" rel="external noopener" :href="currentAlbumUrl">{{currentAlbumName}}</a>
                         </span>
                     </span>
                     <span class="nothingPlaying scrollingBanner" v-if="playerReadyAndConnected && $store.getters['tracks/stopped'] && !$store.state.tracks.spotifyAppearsDown">

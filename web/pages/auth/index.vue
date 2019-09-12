@@ -5,9 +5,9 @@
             <p><span class="appname">Phosphorescence</span>
             is a playlist building tool for fans of trance music.
             </p>
-            <p>We are an <a target="_blank" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.
+            <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.
             Spotify provides the music, however we are <em>not</em> affiliated with Spotify in any way.</p>
-            <p><span class="appname">Phosphorescence</span> requires an active <a target="_blank" href="https://www.spotify.com">Spotify</a> account.
+            <p><span class="appname">Phosphorescence</span> requires an active <a rel="external noopener" target="_blank" href="https://www.spotify.com">Spotify</a> account.
             Certain features, such as in-browser streaming, are only available to paid accounts.</p>
             <p>We will not store more information than necessary to provide you with this service, nor will we use or sell your information for advertising or other purposes.</p>
             <p>Please be sure to read our <nuxt-link to="/legal/tos">Terms of Service</nuxt-link> and <nuxt-link to="/legal/privacy">Privacy Policy</nuxt-link>.</p>
