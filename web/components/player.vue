@@ -84,6 +84,7 @@
         margin-left: 2em;
         margin-right: 2em;
         position: relative;
+        min-width: 0;
     }
 
     menu {
