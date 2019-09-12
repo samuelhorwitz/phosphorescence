@@ -309,6 +309,10 @@
             }
         },
         async created() {
+            if (this.$store.state.user.user.product === 'premium') {
+                console.debug('Free Spotify user; disabling web player');
+                return;
+            }
             let playerWrapper = await initializePlayer(this.$store, 'idetracks');
             this.destroyer = playerWrapper.destroyer;
             this.$store.dispatch('idetracks/registerPlayer', playerWrapper.player);

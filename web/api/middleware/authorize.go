@@ -88,6 +88,21 @@ func AuthorizeReadScriptVersion(next http.Handler) http.Handler {
 	})
 }
 
+func AuthorizePaidSpotifyUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sess, ok := r.Context().Value(SessionContextKey).(*session.Session)
+		if !ok {
+			common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
+			return
+		}
+		if sess.SpotifyProduct != "premium" {
+			common.Fail(w, errors.New("User is not a paid Spotify user"), http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func Disable(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("Endpoint disabled"), http.StatusForbidden)

@@ -14,6 +14,7 @@ type user struct {
 	ID      string `json:"id"`
 	Name    string `json:"display_name"`
 	Country string `json:"country"`
+	Product string `json:"product"`
 	Email   string `json:"email"`
 }
 

@@ -18,11 +18,17 @@
                     <li v-if="playerReadyAndConnected"><button @click="next" :class="{disabled: !canSeek || !$store.getters['tracks/canSkipForward']}">
                         <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Next Track</title><path d="M28.54,15.89L1.46,0.25V31.71L28.54,16.08V30h2V2h-2v13.9ZM3.46,28.25V3.72L24.7,16Z"></path></svg>
                     </button></li>
-                    <li class="devicePicker">
+                    <li v-if="premiumUser" class="devicePicker">
                         <button @click="toggleDevicePicker">
                             <span v-if="!activeDevice">Choose a device</span>
                             <span v-if="activeDevice && !hideActiveDevice">{{playingOnText}} <em>{{activeDevice.name}}</em></span>
                             <span v-if="hideActiveDevice">Loading...</span>
+                        </button>
+                    </li>
+                    <li v-if="!premiumUser" class="devicePicker savePlaylist">
+                        <button @click="createPlaylist" :disabled="savePlaylistSuccessful" :class="{success: savePlaylistSuccessful, failure: savePlaylistFailed}">
+                            <div class="deviceIcon phosphorLogo">+</div>
+                            <span>{{savePlaylistButtonText}}</span>
                         </button>
                     </li>
                 </menu>
@@ -206,13 +212,42 @@
         padding-left: 0.5em;
     }
 
-    .devicePicker:hover button {
+    .devicePicker:hover button span {
         color: aqua;
         text-decoration: underline;
     }
 
     .devicePicker em {
         font-style: normal;
+    }
+
+    .devicePicker.savePlaylist button {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .devicePicker.savePlaylist button span {
+        margin-left: 1em;
+    }
+
+    .devicePicker.savePlaylist button.success span,
+    .devicePicker.savePlaylist:hover button.success span {
+        color: limegreen;
+    }
+
+    .devicePicker.savePlaylist button.success .deviceIcon.phosphorLogo {
+        color: limegreen;
+        border: 1px solid limegreen;
+    }
+
+    .devicePicker.savePlaylist button.failure span,
+    .devicePicker.savePlaylist:hover button.failure span {
+        color: indianred;
+    }
+
+    .devicePicker.savePlaylist button.failure .deviceIcon.phosphorLogo {
+        color: indianred;
+        border: 1px solid indianred;
     }
 
     .deviceButton {
@@ -232,6 +267,7 @@
         stroke: white;
     }
 
+    .devicePicker.savePlaylist button .deviceIcon.phosphorLogo,
     .deviceButton .deviceIcon.phosphorLogo {
         color: white;
         font-family: 'Varela';
@@ -493,6 +529,9 @@
                     return 'Failed To Save';
                 }
                 return 'Save Playlist';
+            },
+            premiumUser() {
+                return this.$store.state.user.user.product === 'premium';
             }
         },
         watch: {
@@ -661,6 +700,10 @@
             document.addEventListener('keydown', this.handleKeyPress);
         },
         async created() {
+            if (!this.premiumUser) {
+                console.debug('Free Spotify user; disabling web player');
+                return;
+            }
             this.$store.commit('loading/startLoad');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Initializing Spotify web player');
             this.$store.commit('loading/initializeProgress', {id: 'player', weight: 5});
