@@ -88,7 +88,7 @@ func AuthorizeReadScriptVersion(next http.Handler) http.Handler {
 	})
 }
 
-func AuthorizePaidSpotifyUser(next http.Handler) http.Handler {
+func AuthorizePremiumSpotifyUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, ok := r.Context().Value(SessionContextKey).(*session.Session)
 		if !ok {

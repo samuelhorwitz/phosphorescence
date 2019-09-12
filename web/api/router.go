@@ -144,11 +144,8 @@ func initializeRoutes(cfg *config) http.Handler {
 		r.Use(middleware.Session)
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", phosphor.GetCurrentUser)
+			r.Get("/currently-playing", phosphor.GetCurrentlyPlaying)
 			r.Post("/playlist", phosphor.CreatePlaylist)
-			r.Group(func(r chi.Router) {
-				r.Use(middleware.AuthorizePaidSpotifyUser)
-				r.Get("/currently-playing", phosphor.GetCurrentlyPlaying)
-			})
 		})
 	}
 	r.Route("/user", userRouter)
@@ -162,7 +159,7 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Route("/tracks", trackRouter)
 	deviceRouter := func(r chi.Router) {
 		r.Use(middleware.Session)
-		r.Use(middleware.AuthorizePaidSpotifyUser)
+		r.Use(middleware.AuthorizePremiumSpotifyUser)
 		r.Use(middleware.SpotifyLimiter)
 		r.Get("/", phosphor.ListSpotifyDevices)
 		r.Put("/{deviceID}", phosphor.TransferPlayback)
