@@ -26,6 +26,33 @@ func Create(w http.ResponseWriter, r *http.Request, token *oauth2.Token, permane
 	return nil
 }
 
+func UpdateSessionDetailsFromSpotify(r *http.Request, sess *Session) (*Session, error) {
+	redisConn := common.RedisPool.Get()
+	defer redisConn.Close()
+	fixedSessionKey, err := redisConn.Do("GET", getSessionPointerKey(sess.ID))
+	if err != nil {
+		return sess, fmt.Errorf("Could not get fixed session from session pointer: %s", err)
+	}
+	user, err := getUser(r, sess.SpotifyToken)
+	if err != nil {
+		return sess, fmt.Errorf("Could not get user data from Spotify: %s", err)
+	}
+	_, err = redisConn.Do("HMSET", fixedSessionKey,
+		"spotify_id", user.ID,
+		"spotify_name", user.Name,
+		"spotify_country", user.Country,
+		"spotify_product", user.Product,
+	)
+	if err != nil {
+		return sess, fmt.Errorf("Could not update session: %s", err)
+	}
+	sess.SpotifyID = user.ID
+	sess.SpotifyName = user.Name
+	sess.SpotifyCountry = user.Country
+	sess.SpotifyProduct = user.Product
+	return sess, nil
+}
+
 func createSession(w http.ResponseWriter, r *http.Request, token *oauth2.Token, permanent bool) (_ string, err error) {
 	redisConn := common.RedisPool.Get()
 	defer redisConn.Close()
@@ -44,6 +71,7 @@ func createSession(w http.ResponseWriter, r *http.Request, token *oauth2.Token, 
 		"spotify_id", user.ID,
 		"spotify_name", user.Name,
 		"spotify_country", user.Country,
+		"spotify_product", user.Product,
 		"spotify_access_token", token.AccessToken,
 		"spotify_refresh_token", token.RefreshToken,
 		"spotify_token_expiry", token.Expiry.Unix(),

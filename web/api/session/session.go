@@ -25,6 +25,7 @@ type Session struct {
 	SpotifyID      string `redis:"spotify_id"`
 	SpotifyName    string `redis:"spotify_name"`
 	SpotifyCountry string `redis:"spotify_country"`
+	SpotifyProduct string `redis:"spotify_product"`
 	SpotifyToken   *oauth2.Token
 }
 

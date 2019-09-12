@@ -19,6 +19,7 @@ type User struct {
 	SpotifyID     string `json:"spotifyId"`
 	Name          string `json:"name"`
 	Country       string `json:"country"`
+	Product       string `json:"product"`
 	Authenticated bool   `json:"authenticated"`
 }
 
@@ -28,11 +29,17 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
 	}
+	sess, err := session.UpdateSessionDetailsFromSpotify(r, sess)
+	if err != nil {
+		common.Fail(w, fmt.Errorf("Could not update session details: %s", err), http.StatusInternalServerError)
+		return
+	}
 	common.JSON(w, map[string]interface{}{
 		"user": User{
 			SpotifyID:     sess.SpotifyID,
 			Name:          sess.SpotifyName,
 			Country:       sess.SpotifyCountry,
+			Product:       sess.SpotifyProduct,
 			Authenticated: sess.Authenticated,
 		},
 	})
