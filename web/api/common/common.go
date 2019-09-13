@@ -65,7 +65,15 @@ func JSON(w http.ResponseWriter, data interface{}) {
 }
 
 func Fail(w http.ResponseWriter, err error, status int) {
-	if !isProduction {
+	fail(w, err, status, false)
+}
+
+func FailAndLog(w http.ResponseWriter, err error, status int) {
+	fail(w, err, status, true)
+}
+
+func fail(w http.ResponseWriter, err error, status int, forceLog bool) {
+	if forceLog || !isProduction {
 		log.Printf("Request failed, returning %d: %s", status, err)
 	}
 	w.Header().Set("Content-Type", "application/json")
