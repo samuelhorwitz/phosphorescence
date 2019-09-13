@@ -28,7 +28,8 @@
                     <li v-if="!premiumUser" class="devicePicker savePlaylist">
                         <button @click="createPlaylist" :disabled="savePlaylistSuccessful" :class="{success: savePlaylistSuccessful, failure: savePlaylistFailed}">
                             <div class="deviceIcon phosphorLogo">+</div>
-                            <span>{{savePlaylistButtonText}}</span>
+                            <span v-if="!savedPlaylistUrl">{{savePlaylistButtonText}}</span>
+                            <span v-if="savedPlaylistUrl"><a @click.stop target="_blank" rel="external noopener" :href="savedPlaylistUrl">{{savePlaylistButtonText}}</a></span>
                         </button>
                     </li>
                 </menu>
@@ -230,8 +231,8 @@
         margin-left: 1em;
     }
 
-    .devicePicker.savePlaylist button.success span,
-    .devicePicker.savePlaylist:hover button.success span {
+    .devicePicker.savePlaylist button.success span a,
+    .devicePicker.savePlaylist:hover button.success span a {
         color: limegreen;
     }
 
@@ -451,7 +452,8 @@
                 hideActiveDevice: false,
                 isTrackDataScrolling: false,
                 devices: [],
-                savePlaylistState: null
+                savePlaylistState: null,
+                savedPlaylistId: null
             };
         },
         computed: {
@@ -532,6 +534,12 @@
             },
             premiumUser() {
                 return this.$store.state.user.user.product === 'premium';
+            },
+            savedPlaylistUrl() {
+                if (!this.savedPlaylistId) {
+                    return null;
+                }
+                return 'https://open.spotify.com/playlist/' + this.savedPlaylistId;
             }
         },
         watch: {
@@ -662,6 +670,8 @@
                 });
                 if (savePlaylistResponse.ok) {
                     this.savePlaylistState = 'SUCCESS';
+                    let {playlist} = await savePlaylistResponse.json();
+                    this.savedPlaylistId = playlist;
                 } else {
                     this.savePlaylistState = 'FAILED';
                 }

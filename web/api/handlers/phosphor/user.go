@@ -172,8 +172,8 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 			Description string `json:"description"`
 		}
 		now := time.Now().UTC().Add(time.Duration(requestBody.UTCOffsetMinutes) * time.Minute)
-		createPlaylistBody.Name = requestBody.Tracks[0].Name
-		createPlaylistBody.Description = fmt.Sprintf("Created by Phosphorescence on %s at %s. Visit https://phosphor.me to create more trance playlists!", now.Format("Monday, January _2"), now.Format("3:04 PM"))
+		createPlaylistBody.Name = fmt.Sprintf("phosphor.me | %s", requestBody.Tracks[0].Name)
+		createPlaylistBody.Description = fmt.Sprintf("Created by Phosphorescence on %s at %s. Visit phosphor.me to create more trance playlists!", now.Format("Monday, January _2"), now.Format("3:04 PM"))
 		createPlaylistBodyJSON, err := json.Marshal(createPlaylistBody)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not marshal create playlist request body: %s", err), http.StatusInternalServerError)
