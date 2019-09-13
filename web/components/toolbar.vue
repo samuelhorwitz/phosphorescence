@@ -406,7 +406,6 @@
             logout() {
                 this.$store.dispatch('loading/loadFlash');
                 logout();
-                this.$router.push('/auth');
             },
             flash() {
                 this.$store.dispatch('loading/loadFlash');
