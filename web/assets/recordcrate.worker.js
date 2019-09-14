@@ -1,9 +1,12 @@
 import {loadModel, tensor2d, tidy} from '@tensorflow/tfjs';
 import {getTrackTag} from '~/common/normalize';
-import {encoder, decoder} from '~/common/textencoding';
+import {TextEncoder, TextDecoder} from 'text-encoding-shim';
 import pako from 'pako';
 import SecureMessenger from '~/secure-messenger/secure-messenger';
 import throttle from 'lodash/throttle';
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 const modelsReady = new Promise(async resolve => {
     let aModel = await loadModel('/models/aetherealness/model.json');

@@ -279,13 +279,14 @@
                         this.$store.dispatch('tracks/play', offset);
                     }
                     this.state = complete;
+                    this.$store.commit('loading/completeProgress', {id: 'generate'});
+                    this.$store.commit('loading/resetProgress');
                 } catch (e) {
                     this.state = failed;
+                    this.$store.dispatch('loading/failProgress');
                     await new Promise(res => setTimeout(res, 1000));
                 }
                 this.state = complete;
-                this.$store.commit('loading/completeProgress', {id: 'generate'});
-                this.$store.commit('loading/resetProgress');
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
                 this.track = null;

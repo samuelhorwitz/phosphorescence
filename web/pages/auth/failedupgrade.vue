@@ -19,6 +19,6 @@
 
 <script>
     export default {
-        layout: 'unauthorized'
+        layout: 'empty'
     };
 </script>

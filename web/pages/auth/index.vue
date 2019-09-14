@@ -1,7 +1,6 @@
 <template>
-    <div class="pageWrapper">
-        <article class="authPage">
-            <h2 class="pageHeader">Welcome</h2>
+    <article>
+        <div>
             <p><span class="appname">Phosphorescence</span>
             is a playlist building tool for fans of trance music.
             </p>
@@ -11,30 +10,29 @@
             Certain features, such as in-browser streaming, are only available to paid accounts.</p>
             <p>We will not store more information than necessary to provide you with this service, nor will we use or sell your information for advertising or other purposes.</p>
             <p>Please be sure to read our <nuxt-link to="/legal/tos">Terms of Service</nuxt-link> and <nuxt-link to="/legal/privacy">Privacy Policy</nuxt-link>.</p>
+        </div>
+        <div>
             <label for="rememberMe">
                 <input type="checkbox" id="rememberMe" v-model="rememberMe">
                 Remember Me <em>(do not check if using a public computer)</em>
             </label>
             <button @click="login">Login With Spotify</button>
-        </article>
-    </div>
+        </div>
+    </article>
 </template>
 
 <style scoped>
-    .pageWrapper {
-        margin-left: 2em;
-        margin-right: 2em;
+    article {
+        margin: 1em;
+        font-size: 16px;
+        background-color: teal;
+        padding: 1em;
+        flex: 1;
+        overflow-y: scroll;
+        border: 5px outset magenta;
         display: flex;
-        align-items: flex-start;
-        height: 88%;
-    }
-
-    .authPage {
-        margin: 0px;
-    }
-
-    p {
-        font-family: 'Montserrat';
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     a {
@@ -73,7 +71,7 @@
     import {authorizeUserRedirect} from '~/assets/session';
 
     export default {
-        layout: 'unauthorized',
+        layout: 'empty',
         middleware: 'unauthenticated',
         data() {
             return {

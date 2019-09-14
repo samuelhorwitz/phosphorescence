@@ -25,6 +25,10 @@
         height: 100vh;
     }
 
+    main {
+        display: flex;
+    }
+
     @media only screen and (display-mode: fullscreen) and (orientation: portrait) {
         .mainContainer {
             height: calc(100vh - 70px);
@@ -181,6 +185,8 @@
     import foot from '~/components/foot';
     import loadingBar from '~/components/loading-bar';
 
+    const deviceNotSupportedError = 'Your device may not be supported. Please visit this page with an up-to-date version of the Edge, Chrome, Firefox, Opera or Safari browsers.';
+
     export default {
         components: {
             elastic,
@@ -240,14 +246,22 @@
             this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: 60});
             this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
             let downloadingPhase = true;
-            await initialize(this.$store.state.user.user.country, async (percent, processingBegan) => {
-                if (downloadingPhase && processingBegan) {
-                    this.$store.commit('loading/clearMessage', messageId);
-                    messageId = await this.$store.dispatch('loading/pushMessage', 'Processing track data');
-                    downloadingPhase = false;
-                }
-                this.$store.commit('loading/tickProgress', {id: 'tracks', percent});
-            });
+            try {
+                await initialize(this.$store.state.user.user.country, async (percent, processingBegan) => {
+                    if (downloadingPhase && processingBegan) {
+                        this.$store.commit('loading/clearMessage', messageId);
+                        messageId = await this.$store.dispatch('loading/pushMessage', 'Processing track data');
+                        downloadingPhase = false;
+                    }
+                    this.$store.commit('loading/tickProgress', {id: 'tracks', percent});
+                });
+            }
+            catch (e) {
+                console.error('Track initialization failed', e);
+                this.$store.dispatch('loading/failProgress');
+                this.$nuxt.error({message: deviceNotSupportedError});
+                return;
+            }
             this.$store.commit('loading/completeProgress', {id: 'tracks'});
             this.$store.commit('loading/clearMessage', messageId);
             if (!this.$store.getters['tracks/playlistLoaded']) {
@@ -273,7 +287,9 @@
                 }
                 catch (e) {
                     console.error('Playlist generation failed', e);
-                    // TODO add some visual UI indication
+                    this.$store.dispatch('loading/failProgress');
+                    this.$nuxt.error({message: deviceNotSupportedError});
+                    return;
                 }
                 this.$store.commit('loading/clearMessage', messageId);
                 this.$store.commit('loading/playlistGenerationComplete');
@@ -370,13 +386,13 @@
                         this.$store.commit('loading/tickProgress', {id: 'generate', percent});
                     });
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                    this.$store.commit('loading/completeProgress', {id: 'generate'});
+                    this.$store.commit('loading/resetProgress');
                 }
                 catch (e) {
                     console.error('Playlist generation failed', e);
-                    // TODO add some visual UI indication
+                    this.$store.dispatch('loading/failProgress');
                 }
-                this.$store.commit('loading/completeProgress', {id: 'generate'});
-                this.$store.commit('loading/resetProgress');
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
             }
