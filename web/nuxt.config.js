@@ -69,9 +69,8 @@ module.exports = {
       }
     }
   },
-  loading: {
-    color: 'aqua'
-  },
+  loading: '~/components/loading-bar.vue',
+  loadingIndicator: '~/static/loading.html',
   env: {
     EOS_ORIGIN: process.env.EOS_ORIGIN,
     API_ORIGIN: process.env.API_ORIGIN,
