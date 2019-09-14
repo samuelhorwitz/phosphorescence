@@ -22,6 +22,7 @@
         background-color: teal;
         flex: 1;
         overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
         border: 5px outset magenta;
         max-height: 100%;
         box-sizing: border-box;

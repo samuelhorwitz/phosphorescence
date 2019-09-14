@@ -12,6 +12,7 @@
         padding: 1em;
         flex: 1;
         overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
         border: 5px outset magenta;
     }
 
