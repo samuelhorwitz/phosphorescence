@@ -4,6 +4,7 @@ export const state = () => ({
     descriptions: [],
     progresses: {},
     progressWeights: {},
+    progressFailed: false,
     playlistGenerating: false
 });
 
@@ -54,6 +55,7 @@ export const mutations = {
         state.progresses = {...state.progresses, [id]: 1};
     },
     resetProgress(state) {
+        state.progressFailed = false;
         state.progresses = {};
         state.progressWeights = {};
     },
@@ -62,6 +64,9 @@ export const mutations = {
     },
     playlistGenerationComplete(state) {
         state.playlistGenerating = false;
+    },
+    failProgress(state) {
+        state.progressFailed = true;
     }
 };
 
@@ -83,6 +88,12 @@ export const actions = {
         let id = descriptionId++;
         commit('pushMessage', {id, description});
         return id;
+    },
+    failProgress({commit}) {
+        commit('failProgress');
+        setTimeout(() => {
+            commit('resetProgress');
+        });
     }
 }
 
@@ -92,7 +103,7 @@ export const getters = {
         for (let i in state.progresses) {
             total += state.progresses[i] * state.progressWeights[i];
         }
-        return total;
+        return (state.progressFailed ? -1 : 1) * total;
     }
 }
 

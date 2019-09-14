@@ -69,6 +69,9 @@ module.exports = {
       }
     }
   },
+  router: {
+    middleware: ['facebookurlcleaner']
+  },
   loading: '~/components/loading-bar.vue',
   loadingIndicator: '~/static/loading.html',
   env: {

@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "express": "^4.16.4",
-    "pako": "^1.0.10"
+    "pako": "^1.0.10",
+    "text-encoding-shim": "^1.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.6.0",

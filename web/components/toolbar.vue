@@ -373,13 +373,6 @@
                     return;
                 }
                 this.$store.commit('loading/startLoad');
-                let loadingMessage = 'Regenerating playlist';
-                if (this.$store.state.preferences.seedStyle) {
-                    loadingMessage += ` (${this.$store.state.preferences.seedStyle})`;
-                } else {
-                    loadingMessage += ' (random)';
-                }
-                let messageId = await this.$store.dispatch('loading/pushMessage', loadingMessage);
                 this.$store.commit('loading/resetProgress');
                 this.$store.commit('loading/initializeProgress', {id: 'generate'});
                 this.$store.commit('loading/playlistGenerating');
@@ -392,14 +385,13 @@
                         this.$store.commit('loading/tickProgress', {id: 'generate', percent});
                     });
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
+                    this.$store.commit('loading/completeProgress', {id: 'generate'});
+                    this.$store.commit('loading/resetProgress');
                 }
                 catch (e) {
                     console.error('Playlist generation failed', e);
-                    // TODO add some visual UI indication
+                    this.$store.dispatch('loading/failProgress');
                 }
-                this.$store.commit('loading/completeProgress', {id: 'generate'});
-                this.$store.commit('loading/resetProgress');
-                this.$store.commit('loading/clearMessage', messageId);
                 this.$store.commit('loading/playlistGenerationComplete');
                 this.$store.dispatch('loading/endLoadAfterDelay');
             },

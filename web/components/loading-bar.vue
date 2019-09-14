@@ -1,7 +1,7 @@
 <template>
     <div>
-        <progress v-if="!notchMode" v-show="loadingProgressSticky" :class="{hidden: hide}" max="100" :value="loadingProgressSticky">{{loadingProgressSticky}}%</progress>
-        <canvas v-if="notchMode" v-show="loadingProgressSticky" ref="canvas" :class="{hidden: hide}">{{loadingProgressSticky}}%</canvas>
+        <progress v-if="!notchMode" v-show="loadingProgressSticky" class="loader" :class="{hidden: hide, error: failed}" max="100" :value="loadingProgressSticky">{{loadingProgressSticky}}%</progress>
+        <canvas v-if="notchMode" v-show="loadingProgressSticky" ref="canvas" class="loader" :class="{hidden: hide}">{{loadingProgressSticky}}%</canvas>
     </div>
 </template>
 
@@ -10,32 +10,30 @@
         position: absolute;
     }
 
+    .loader {
+        position: fixed;
+        z-index: 999999;
+        opacity: 1;
+        transition: opacity 0s linear;
+    }
+
+    .loader.hidden {
+        opacity: 0;
+        transition: opacity 1s linear;
+    }
+
     progress {
         width: 100%;
-        position: fixed;
         top: env(safe-area-inset-top, 0px);
         height: 2px;
         appearance: none;
         border: 0px;
         background: none;
         color: cyan;
-        transition: opacity 1s linear;
-        z-index: 999999;
     }
 
-    progress.hidden {
-        opacity: 0;
-    }
-
-    canvas {
-        position: fixed;
-        top: 0px;
-        transition: opacity 1s linear;
-        z-index: 999999;
-    }
-
-    canvas.hidden {
-        opacity: 0;
+    progress.error {
+        color: indianred;
     }
 
     progress::-webkit-progress-bar {
@@ -46,8 +44,20 @@
         background-color: cyan;
     }
 
+    progress.error::-webkit-progress-value {
+        background-color: indianred;
+    }
+
     progress::-moz-progress-bar {
         background-color: cyan;
+    }
+
+    progress.error::-moz-progress-bar {
+        background-color: indianred;
+    }
+
+    canvas {
+        top: 0px;
     }
 </style>
 
@@ -97,9 +107,11 @@
             return {
                 loadingProgressSticky: 0,
                 hide: false,
-                interval: null,
+                smoothLoadInterval: null,
+                finishTimeout: null,
                 notchMode: false,
-                notchStyle: null
+                notchStyle: null,
+                failed: false
             };
         },
         computed: {
@@ -119,11 +131,13 @@
             }
         },
         watch: {
-            loadingProgress(newVal) {
-                if (!newVal) {
+            loadingProgress(newVal, oldVal) {
+                if (!newVal && oldVal >= 0) {
                     this.finish();
                 } else if (newVal > this.loadingProgressSticky) {
                     this.tick(newVal);
+                } else if (newVal < 0) {
+                    this.fail();
                 } else {
                     this.clearSmoothLoadInterval();
                 }
@@ -145,14 +159,17 @@
             },
             finish() {
                 this.clearSmoothLoadInterval();
+                this.clearFinishTimeout();
                 this.loadingProgressSticky = 100;
                 this.hide = true;
-                setTimeout(() => {
+                this.finishTimeout = setTimeout(() => {
                     this.loadingProgressSticky = 0;
                     this.hide = false;
+                    this.failed = false;
                 }, 1000);
             },
             fail() {
+                this.failed = true;
                 this.finish();
             },
             increase(newVal) {
@@ -161,17 +178,21 @@
             tick(newVal) {
                 this.clearSmoothLoadInterval();
                 this.hide = false;
+                this.failed = false;
                 this.loadingProgressSticky = newVal;
-                this.interval = setInterval(() => {
+                this.smoothLoadInterval = setInterval(() => {
                     if (this.loadingProgressSticky >= 95) {
-                        clearInterval(this.interval);
+                        this.clearSmoothLoadInterval();
                         return;
                     }
                     this.loadingProgressSticky += 0.05;
                 }, 10);
             },
             clearSmoothLoadInterval() {
-                this.interval && clearInterval(this.interval);
+                this.smoothLoadInterval && clearInterval(this.smoothLoadInterval);
+            },
+            clearFinishTimeout() {
+                this.finishTimeout && clearTimeout(this.finishTimeout);
             },
             resetNotchMode() {
                 let oldNotchMode = this.notchMode;
@@ -252,7 +273,11 @@
                     } else if (this.notchStyle === 'R') {
                         buildNotchPathIphoneXR(ctx);
                     }
-                    ctx.strokeStyle = 'cyan';
+                    if (this.failed) {
+                        ctx.strokeStyle = 'indianred';
+                    } else {
+                        ctx.strokeStyle = 'cyan';
+                    }
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     ctx.globalCompositeOperation = 'destination-in';

@@ -1,7 +1,10 @@
 import RunnerWorker from 'worker-loader!./runner.worker.js';
 import SecureMessenger from '../secure-messenger/secure-messenger';
-import {encoder, decoder} from '../common/textencoding';
+import {TextEncoder, TextDecoder} from 'text-encoding-shim';
 import pako from 'pako';
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 let additionalTracks = {};
 let tracksReadyResolver;

@@ -1,6 +1,7 @@
-import {encoder} from '~/common/textencoding';
+import {TextEncoder} from 'text-encoding-shim';
 import SecureMessenger from '~/secure-messenger/secure-messenger';
 
+const encoder = new TextEncoder();
 let messenger;
 let terminationPort;
 

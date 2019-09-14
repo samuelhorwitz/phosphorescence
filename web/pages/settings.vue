@@ -1,38 +1,49 @@
 <template>
-    <div class="pageWrapper">
-        <article class="authPage">
-            <h2 class="pageHeader">Settings</h2>
+    <article>
+        <div>
+            <h2>Settings</h2>
             <p>You are logged in as the Spotify user <a target="_blank" rel="external noopener" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
             <p>Currently, all settings are stored locally on the device and automatically updated as they are changed.</p>
             <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" rel="external noopener" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
             <p>You may destroy every active session and log out of every device including this one: <button :disabled="logOutEverywhereClicked" @click="logoutEverywhere">Destroy All Sessions</button></p>
             <p>You may empty your cache on this device: <button :disabled="cacheClearState" @click="destroyCaches">{{clearCacheButtonText}}</button></p>
             <p>You may force a reload of the app in a context where you are unable to reload using your browser (PWA, etc). <button @click="reload">Reload</button></p>
-            <p>In order to use certain advanced features of Phosphorescence, you must authenticate your session. To do this, we will send an email to the address listed on your Spotify account. By clicking the button below, you agree to allow us to send you that single email. We will not save your email or use it for anything else. Once you receive the email, follow the enclosed directions.
-            <button class="large" :disabled="authenticateClicked || alreadyAuthenticated" @click="sendAuthEmail">{{authButtonText}}</button>
-            </p>
-        </article>
-    </div>
+        </div>
+        <p>In order to use certain advanced features of Phosphorescence, you must authenticate your session. To do this, we will send an email to the address listed on your Spotify account. By clicking the button below, you agree to allow us to send you that single email. We will not save your email or use it for anything else. Once you receive the email, follow the enclosed directions.
+        <button class="large" :disabled="authenticateClicked || alreadyAuthenticated" @click="sendAuthEmail">{{authButtonText}}</button>
+        </p>
+    </article>
 </template>
 
 <style scoped>
+    article {
+        margin: 0px 0.5em;
+        font-size: 16px;
+        background-color: teal;
+        flex: 1;
+        overflow-y: scroll;
+        border: 5px outset magenta;
+        max-height: 100%;
+        box-sizing: border-box;
+        padding: 1em;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
     h2 {
+        color: white;
+        font-size: 2em;
+        margin: 0px;
         margin-bottom: 0.3em;
     }
 
-    .pageWrapper {
-        margin-left: 2em;
-        margin-right: 2em;
-        margin-top: 0px;
-        display: flex;
-        align-items: flex-start;
-        height: 100%;
+    a {
+        color: indigo;
     }
 
-    .authPage {
-        overflow-y: auto;
-        height: 88%;
-        margin: 0px;
+    a:hover {
+        color: magenta;
     }
 
     button {
@@ -47,8 +58,8 @@
     button.large {
         border-width: 7px;
         width: 100%;
+        margin: 0px;
         margin-top: 1em;
-        margin-bottom: 1em;
         font-size: 2em;
         padding: 0.5em 0;
     }
