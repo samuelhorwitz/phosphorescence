@@ -114,5 +114,6 @@
         ctx.restore();
     }
     requestAnimationFrame(repaint);
-    document.body.style.backgroundImage = 'none';
+    document.body.classList.add('iosRubberband');
+    document.body.classList.add('ios');
 })();

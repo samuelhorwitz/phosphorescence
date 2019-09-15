@@ -22,11 +22,11 @@
             <div class="bg bg-inverse"></div>
             <ul class="advanced">
                 <li class="advancedMenuItem">
-                    <label for="tracksPerPlaylist">Tracks</label>
+                    <label for="tracksPerPlaylist" class="optional">Tracks</label>
                     <input name="tracksPerPlaylist" type="number" v-model="tracksPerPlaylist">
                 </li>
                 <li class="advancedMenuItem">
-                    <label for="seedStyle">Style</label>
+                    <label for="seedStyle" class="optional">Style</label>
                     <select name="seedStyle" v-model="seedStyle">
                         <option :value="null">Random</option>
                         <option :value="'chillout'">Chillout</option>
@@ -39,7 +39,7 @@
                         <option :value="'trippy'">Trippy</option>
                     </select>
                 </li>
-                <li class="advancedMenuItem">
+                <li class="advancedMenuItem noMargin">
                     <label for="onlyTheHits">Only Hits</label>
                     <input name="onlyTheHits" type="checkbox" v-model="onlyTheHits">
                 </li>
@@ -192,6 +192,10 @@
             font-size: 7.5px;
         }
 
+        .advanced {
+            margin-left: 14vw;
+        }
+
         .menuItem {
             margin-right: 0.5em;
         }
@@ -200,8 +204,17 @@
             font-size: 8px;
         }
 
+        .advancedMenuItem.noMargin {
+            margin-right: -1em;
+        }
+
         .advancedMenuItem label {
             font-size: 5.5px;
+        }
+
+        .advancedMenuItem label.optional {
+            visibility: hidden;
+            width: 0px;
         }
 
         .advancedMenuItem select {
@@ -214,6 +227,10 @@
             font-size: 7px;
         }
 
+        .advanced {
+            margin-left: 14vw;
+        }
+
         .menuItem {
             margin-right: 0.5em;
         }
@@ -222,8 +239,17 @@
             font-size: 8px;
         }
 
+        .advancedMenuItem.noMargin {
+            margin-right: -1em;
+        }
+
         .advancedMenuItem label {
             font-size: 6.5px;
+        }
+
+        .advancedMenuItem label.optional {
+            visibility: hidden;
+            width: 0px;
         }
 
         .advancedMenuItem select {

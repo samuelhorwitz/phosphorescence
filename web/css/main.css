@@ -6,17 +6,37 @@ html, body {
 }
 
 body {
-	background-image: url('/images/bg_small.jpg');
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 16px;
+    font-family: Montserrat;
+    background-color: rgb(40, 27, 61);
+}
+
+body.appHome {
+    overflow: hidden;
+}
+
+body.vividSunrise {
+    background-image: url('/images/bg_small.jpg');
     background-attachment: fixed;
     background-size: cover;
     background-position: center bottom -250px;
     background-color: rgb(40, 27, 61);
     background-repeat: no-repeat;
-    font-family: Montserrat;
-    overflow: hidden;
-    font-size: 16px;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
+}
+
+body.vividSunrise.iosRubberband:not(.scrollable) {
+    background-image: none;
+}
+
+body.iosRubberband.scrollable canvas.bgIosCanvas {
+    display: none;
+}
+
+body.scrollable {
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 @media only screen and (display-mode: fullscreen) {
@@ -34,7 +54,7 @@ body {
         env(safe-area-inset-left, 0px);
 }
 
-.bgIosCanvas {
+canvas.bgIosCanvas {
     position: fixed;
     top: 0px;
     z-index: -100;
@@ -49,7 +69,7 @@ body {
 
 @media only screen and (min-width: 330px) and (max-width: 419px) {
     body {
-        font-size: 5.5px;
+        font-size: 6px;
     }
 }
 
