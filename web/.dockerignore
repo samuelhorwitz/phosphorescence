@@ -33,6 +33,7 @@ jobs/Dockerfile
 jobs/jobs
 icongen/*
 checkmarkgen/*
+misc/*
 ml-data/.git
 ml-data/LICENSE
 ml-data/README.md
