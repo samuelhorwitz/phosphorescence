@@ -12,9 +12,8 @@
                 <button @click="login">Login With Spotify</button>
             </form>
             <div class="boilerplate">
-                <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.
-                Spotify provides the music, however we are <em>not</em> affiliated with Spotify in any way.</p>
-                <p>Please be sure to read our <nuxt-link to="/legal/tos">Terms of Service</nuxt-link> and <nuxt-link to="/legal/privacy">Privacy Policy</nuxt-link>.</p>
+                <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.</p>
+                <p>Spotify provides the music, however we are <em>not</em> affiliated with Spotify in any way.</p>
             </div>
         </div>
     </article>

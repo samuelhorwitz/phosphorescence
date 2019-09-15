@@ -79,6 +79,6 @@
                     class: `${existingClasses} ${missingClasses.join(' ')}`
                 }
             }
-        },
+        }
     };
 </script>
