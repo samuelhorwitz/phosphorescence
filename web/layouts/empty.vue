@@ -22,6 +22,12 @@
         min-height: 84vh;
     }
 
+    @media only screen and (display-mode: fullscreen) {
+        body.ios .mainContainer {
+            min-height: 100vh;
+        }
+    }
+
     main {
         display: flex;
     }

@@ -40,7 +40,7 @@ body.scrollable {
 }
 
 @media only screen and (display-mode: fullscreen) {
-    body {
+    body.appHome {
         height: 100vh;
     }
 }
