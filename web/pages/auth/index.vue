@@ -69,8 +69,7 @@
         border-style: inset;
     }
 
-    button:focus,
-    button:active {
+    button:focus {
         outline: none;
         box-shadow: 5px 5px teal;
     }
@@ -116,8 +115,7 @@
         text-shadow: -1px -1px 0 lightcyan, 1px -1px 0 lightcyan, -1px 1px 0 lightcyan, 1px 1px 0 lightcyan;
     }
 
-    input[type=checkbox]:focus,
-    input[type=checkbox]:active {
+    input[type=checkbox]:focus {
         outline: none;
         box-shadow: 5px 5px teal;
     }
