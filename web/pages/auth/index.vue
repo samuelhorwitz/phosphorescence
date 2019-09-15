@@ -9,7 +9,7 @@
                     <input type="checkbox" id="rememberMe" v-model="rememberMe">
                     <span>Remember Me <em>(do not check if using a public computer)</em></span>
                 </label>
-                <button @click="login">Login With Spotify</button>
+                <button @click="login" autofocus>Login With Spotify</button>
             </form>
             <div class="boilerplate">
                 <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.</p>
@@ -69,8 +69,15 @@
         border-style: inset;
     }
 
+    button:focus,
+    button:active {
+        outline: none;
+        box-shadow: 5px 5px teal;
+    }
+
     h2 {
         margin-top: 0px;
+        margin-bottom: 1em;
         font-size: 2.2em;
     }
 
@@ -82,6 +89,7 @@
     label {
         display: flex;
         align-items: center;
+        cursor: pointer;
     }
 
     input[type=checkbox] {
@@ -92,12 +100,26 @@
         min-width: 5em;
         height: 5em;
         margin: 0px;
-        margin-right: 0.5em;
+        margin-right: 1em;
         border-radius: 0px;
+        cursor: pointer;
     }
 
-    input[type=checkbox]:checked {
-        background-color: magenta;
+    input[type=checkbox]:checked::after {
+        content: '✓';
+        font-family: 'Caveat';
+        font-size: 10em;
+        position: relative;
+        top: -0.5em;
+        left: -0.1em;
+        color: magenta;
+        text-shadow: -1px -1px 0 lightcyan, 1px -1px 0 lightcyan, -1px 1px 0 lightcyan, 1px 1px 0 lightcyan;
+    }
+
+    input[type=checkbox]:focus,
+    input[type=checkbox]:active {
+        outline: none;
+        box-shadow: 5px 5px teal;
     }
 
     .boilerplate {
@@ -111,6 +133,7 @@
 
     export default {
         layout: 'empty',
+        showLogo: false,
         middleware: 'unauthenticated',
         data() {
             return {

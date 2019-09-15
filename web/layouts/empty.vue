@@ -2,8 +2,8 @@
     <div>
         <div class="mainContainer">
             <loadingBar></loadingBar>
-            <logo></logo>
-            <main>
+            <logo v-if="showLogo"></logo>
+            <main :class="{noLogo: !showLogo}">
                 <nuxt/>
             </main>
             <foot></foot>
@@ -32,6 +32,11 @@
         display: flex;
     }
 
+    main.noLogo {
+        flex: 1;
+        align-items: center;
+    }
+
     footer {
         margin-top: auto;
     }
@@ -41,6 +46,12 @@
             align-items: center;
             justify-content: center;
             margin: 1em 0;
+        }
+    }
+
+    @media only screen and (max-width: 500px) {
+        main.noLogo {
+            align-items: flex-start;
         }
     }
 </style>
@@ -55,6 +66,17 @@
             logo,
             foot,
             loadingBar
+        },
+        computed: {
+            showLogo() {
+                let showLogo = this.$route.matched.map((r) => {
+                    return (r.components.default.options ? r.components.default.options.showLogo : r.components.default.showLogo)
+                })[0];
+                if (showLogo === false) {
+                    return false;
+                }
+                return true;
+            }
         },
         created() {
             this.$store.dispatch('loading/endLoadAfterDelay');
