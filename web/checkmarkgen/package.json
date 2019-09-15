@@ -1,0 +1,6 @@
+{
+  "name": "checkmarkgen",
+  "devDependencies": {
+    "text-to-svg": "^3.1.5"
+  }
+}

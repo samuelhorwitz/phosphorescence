@@ -32,6 +32,7 @@ jobs/vendor/*
 jobs/Dockerfile
 jobs/jobs
 icongen/*
+checkmarkgen/*
 ml-data/.git
 ml-data/LICENSE
 ml-data/README.md
