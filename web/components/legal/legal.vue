@@ -1,6 +1,8 @@
 <template>
     <article class="legal">
-        <slot></slot>
+        <div class="container">
+            <slot></slot>
+        </div>
     </article>
 </template>
 
@@ -11,9 +13,13 @@
         background-color: teal;
         padding: 1em;
         flex: 1;
-        overflow-y: scroll;
-        -webkit-overflow-scrolling: touch;
         border: 5px outset magenta;
+        display: flex;
+        justify-content: center;
+    }
+
+    .container {
+        max-width: 40em;
     }
 
     a {

@@ -1,70 +1,109 @@
 <template>
     <article>
-        <div>
-            <p><span class="appname">Phosphorescence</span>
-            is a playlist building tool for fans of trance music.
-            </p>
-            <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.
-            Spotify provides the music, however we are <em>not</em> affiliated with Spotify in any way.</p>
-            <p><span class="appname">Phosphorescence</span> requires an active <a rel="external noopener" target="_blank" href="https://www.spotify.com">Spotify</a> account.
-            Certain features, such as in-browser streaming, are only available to paid accounts.</p>
-            <p>We will not store more information than necessary to provide you with this service, nor will we use or sell your information for advertising or other purposes.</p>
-            <p>Please be sure to read our <nuxt-link to="/legal/tos">Terms of Service</nuxt-link> and <nuxt-link to="/legal/privacy">Privacy Policy</nuxt-link>.</p>
-        </div>
-        <div>
-            <label for="rememberMe">
-                <input type="checkbox" id="rememberMe" v-model="rememberMe">
-                Remember Me <em>(do not check if using a public computer)</em>
-            </label>
-            <button @click="login">Login With Spotify</button>
+        <div class="container">
+            <h2><b class="appname">Phosphorescence</b>
+            builds coherent playlists for <b class="genre">trance</b> and <b class="genre">chill-out</b> listeners.
+            </h2>
+            <form @submit.prevent.stop>
+                <label for="rememberMe">
+                    <input type="checkbox" id="rememberMe" v-model="rememberMe">
+                    <span>Remember Me <em>(do not check if using a public computer)</em></span>
+                </label>
+                <button @click="login">Login With Spotify</button>
+            </form>
+            <div class="boilerplate">
+                <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.
+                Spotify provides the music, however we are <em>not</em> affiliated with Spotify in any way.</p>
+                <p>Please be sure to read our <nuxt-link to="/legal/tos">Terms of Service</nuxt-link> and <nuxt-link to="/legal/privacy">Privacy Policy</nuxt-link>.</p>
+            </div>
         </div>
     </article>
 </template>
 
 <style scoped>
     article {
-        margin: 1em;
+        margin: 0px 1em;
         font-size: 16px;
-        background-color: teal;
         padding: 1em;
         flex: 1;
-        overflow-y: scroll;
-        -webkit-overflow-scrolling: touch;
-        border: 5px outset magenta;
         display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
+        color: white;
+    }
+
+    .container {
+        max-width: 40em;
     }
 
     a {
-        color: indigo;
+        color: cyan;
     }
 
     a:hover {
         color: magenta;
     }
 
-    .appname {
+    b.appname {
         font-variant: small-caps;
         font-weight: bolder;
         font-family: 'Varela';
     }
 
+    b.genre {
+        font-weight: inherit;
+        color: aqua;
+    }
+
     button {
-        border: 7px outset darkgray;
-        background-color: gray;
+        border: 7px outset aqua;
+        background-color: magenta;
         -webkit-appearance: none;
         width: 100%;
         font-size: 2em;
-        color: black;
+        color: white;
         padding: 0.5em 0;
         cursor: pointer;
-        margin-top: 1em;
-        margin-bottom: 1em;
+        margin-top: 0.5em;
     }
 
     button:hover {
         border-style: inset;
+    }
+
+    h2 {
+        margin-top: 0px;
+        font-size: 2.2em;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    label {
+        display: flex;
+        align-items: center;
+    }
+
+    input[type=checkbox] {
+        appearance: none;
+        background-color: white;
+        border: 10px inset aqua;
+        width: 5em;
+        min-width: 5em;
+        height: 5em;
+        margin: 0px;
+        margin-right: 0.5em;
+        border-radius: 0px;
+    }
+
+    input[type=checkbox]:checked {
+        background-color: magenta;
+    }
+
+    .boilerplate {
+        font-size: 0.75em;
+        color: #eee;
     }
 </style>
 

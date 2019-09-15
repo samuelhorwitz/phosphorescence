@@ -199,9 +199,26 @@
         },
         middleware: 'authenticated',
         head() {
+            let existingClasses = document.body.getAttribute('class') || '';
+            let additionalClasses = ['appHome', 'vividSunrise'];
+            if (this.$store.getters['tracks/isPlayerConnected']) {
+                additionalClasses.push('playerConnected');
+            }
+            if (additionalClasses.length === 0) {
+                return {bodyAttrs: {class: existingClasses}};
+            }
+            let missingClasses = [];
+            for (let additionalClass of additionalClasses) {
+                if (!document.body.classList.contains(additionalClass)) {
+                    missingClasses.push(additionalClass);
+                }
+            }
+            if (missingClasses.length === 0) {
+                return {bodyAttrs: {class: existingClasses}};
+            }
             return {
                 bodyAttrs: {
-                    class: this.$store.getters['tracks/isPlayerConnected'] ? 'playerConnected' : ''
+                    class: `${existingClasses} ${missingClasses.join(' ')}`
                 }
             }
         },
