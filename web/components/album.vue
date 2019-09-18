@@ -33,6 +33,8 @@
         background-size: contain;
         background-position: center center;
         height: 100%;
+        width: 60vh;
+        max-height: 60vh;
         box-sizing: border-box;
     }
 
@@ -40,11 +42,6 @@
         height: 100%;
         display: flex;
         align-items: flex-start;
-    }
-
-    .art-wrapper {
-        width: 60vh;
-        max-height: 60vh;
     }
 
     @media only screen and (max-width: 1099px) and (min-height: 450px) {

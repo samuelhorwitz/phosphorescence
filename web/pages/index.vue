@@ -1,6 +1,6 @@
 <template>
     <article :class="{loading: !$store.getters['tracks/playlistLoaded']}">
-        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-show="$store.getters['tracks/playlistLoaded']">
+        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="!showCompass" v-show="$store.getters['tracks/playlistLoaded']">
             <table>
                 <thead>
                     <tr>
@@ -18,7 +18,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.track.id)}" @click="seekTrack(index)">
+                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.track.id)}" @click="seekTrack(index)" tabindex="0" @keydown.enter="seekTrack(index)">
                         <td :title="humanReadableEvocativeness[index]" class="number">{{index + 1}}</td>
                         <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="track.track.external_urls.spotify" @click.stop>{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
@@ -33,6 +33,7 @@
                 </tbody>
             </table>
         </div>
+        <trackCompass class="trackCompass" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="showCompass"></trackCompass>
         <aside class="loading" v-show="!$store.getters['tracks/playlistLoaded']">
             <ul>
                 <li class="loadingMessage" v-for="loadMessage in $store.state.loading.descriptions" :class="{done: loadMessage.done}">
@@ -44,6 +45,13 @@
 </template>
 
 <style scoped>
+    article:not(.loading) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
     article.loading {
         align-items: flex-start;
     }
@@ -135,7 +143,12 @@
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s, opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s;
     }
 
-    .tableWrapper.loading {
+    .trackCompass {
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s, opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s;
+    }
+
+    .tableWrapper.loading,
+    .trackCompass.loading {
         transform: scale(0.7);
         opacity: 0.3;
         pointer-events: none;
@@ -240,7 +253,10 @@
 </style>
 
 <script>
+    import trackCompass from '~/components/track-compass';
+
     export default {
+        components: {trackCompass},
         watch: {
             currentTrack() {
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');
@@ -250,6 +266,9 @@
             }
         },
         computed: {
+            showCompass() {
+                return this.$store.state.preferences.showCompass;
+            },
             currentTrack() {
                 if (this.$store.getters['tracks/isPlayerDisconnected']) {
                     return null;

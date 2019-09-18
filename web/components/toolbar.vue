@@ -23,7 +23,7 @@
             <ul class="advanced">
                 <li class="advancedMenuItem">
                     <label for="tracksPerPlaylist" class="optional">Tracks</label>
-                    <input name="tracksPerPlaylist" type="number" v-model="tracksPerPlaylist">
+                    <input name="tracksPerPlaylist" type="number" v-model="tracksPerPlaylist" @change="tracksPerPlaylist = Math.max(1, Math.min(50, tracksPerPlaylist))">
                 </li>
                 <li class="advancedMenuItem">
                     <label for="seedStyle" class="optional">Style</label>
