@@ -20,7 +20,7 @@
     "build": "nuxt build",
     "start": "node ./server.js",
     "build-monaco": "webpack --config monaco.webpack.config.js --mode=production",
-    "generate-docs": "docco -l parallel -o ./static/docs/ ./eos/api.js ./builders/*.js"
+    "generate-docs": "docco -l parallel -o ./static/docs/ ./eos/api.js ./eos/kdtree.js ./builders/*.js"
   },
   "devDependencies": {
     "@tensorflow/tfjs": "^0.14.2",
