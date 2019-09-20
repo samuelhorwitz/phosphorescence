@@ -113,6 +113,7 @@
         left: -0.1em;
         color: magenta;
         text-shadow: -1px -1px 0 lightcyan, 1px -1px 0 lightcyan, -1px 1px 0 lightcyan, 1px 1px 0 lightcyan;
+        pointer-events: none;
     }
 
     input[type=checkbox]:focus {
