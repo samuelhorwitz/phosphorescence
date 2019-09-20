@@ -29,7 +29,7 @@ const terminationEvent = 'eosTerminateAll';
             loadingInterruptPort = interruptPort;
             return {type: 'acknowledge'};
         } else if (data.type == 'requestTerminationChannel') {
-            return phosphorMessenger.respondWithInterruptListenerPort('terminationChannel', ({type}) => {
+            return phosphorMessenger.respondWithInterruptListenerPort({type: 'terminationChannel'}, ({type}) => {
                 if (type === 'terminateAll') {
                     console.debug('Should dispatch termination event...');
                     dispatchEvent(new Event(terminationEvent));

@@ -11,18 +11,26 @@ export function initialize() {
         iframe.src = process.env.EOS_ORIGIN;
         iframe.sandbox = 'allow-scripts allow-same-origin';
         iframe.style.display = 'none';
-        iframe.addEventListener('load', () => {
-            resolve();
-        });
         messenger = new SecureMessenger(process.env.EOS_ORIGIN);
         let ready = messenger.listen(iframe);
         document.body.appendChild(iframe);
-        await ready;
-        let {type, interruptPort} = await messenger.postMessage({type: 'requestTerminationChannel'});
-        if (type !== 'terminationChannel') {
+        try {
+            await new Promise(async (resolve, reject) => {
+                setTimeout(() => reject('Timed out, probably an ad blocker or other extension'), 1000);
+                await ready;
+                resolve();
+            });
+        } catch (e) {
+            reject(e);
+            return;
+        }
+        let {data, interruptPort} = await messenger.postMessage({type: 'requestTerminationChannel'});
+        if (data.type !== 'terminationChannel') {
             reject('Could not open termination channel');
+            return;
         }
         terminationPort = interruptPort;
+        resolve();
     });
 }
 
