@@ -42,7 +42,6 @@ module.exports = {
     ]
   },
   plugins: [
-    {ssr: false, src: '~plugins/eos.js'},
     {ssr: false, src: '~plugins/monaco.js'},
     {ssr: false, src: '~plugins/ios-rubberband-bg.js'},
     {ssr: false, src: '~plugins/consola.js'}
@@ -70,7 +69,7 @@ module.exports = {
     }
   },
   router: {
-    middleware: ['facebookurlcleaner']
+    middleware: ['facebookurlcleaner', 'eos']
   },
   loading: '~/components/loading-bar.vue',
   loadingIndicator: '~/static/loading.html',

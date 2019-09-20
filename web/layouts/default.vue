@@ -185,7 +185,7 @@
     import foot from '~/components/foot';
     import loadingBar from '~/components/loading-bar';
 
-    const deviceNotSupportedError = 'Your device may not be supported. Please visit this page with an up-to-date version of the Edge, Chrome, Firefox, Opera or Safari browsers.';
+    const deviceNotSupportedError = 'Your device may not be supported, or your ad blocker may be blocking our playlist building engine. Please visit this page with an up-to-date version of the Edge, Chrome, Firefox, Opera or Safari browsers.';
 
     export default {
         components: {
