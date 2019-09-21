@@ -341,7 +341,9 @@
                 if (matchMedia('(display-mode: fullscreen)').matches) {
                     return;
                 }
-                this.$refs.mainContainer.style.height = `${innerHeight}px`;
+                setTimeout(() => {
+                    this.$refs.mainContainer.style.height = `${innerHeight}px`;
+                }, 200);
             },
             handleWindowDragenter(e) {
                 this.dragStarted = true;

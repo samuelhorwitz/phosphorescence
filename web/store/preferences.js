@@ -1,7 +1,8 @@
 export const state = () => ({
     tracksPerPlaylist: 10,
     seedStyle: null,
-    onlyTheHits: false
+    onlyTheHits: true,
+    showCompass: false
 });
 
 export const mutations = {
@@ -16,6 +17,12 @@ export const mutations = {
     updateOnlyTheHits(state, onlyTheHits) {
         localStorage.setItem('onlyTheHits', onlyTheHits);
         state.onlyTheHits = onlyTheHits;
+    },
+    showCompass(state) {
+        state.showCompass = true;
+    },
+    showPlaylist(state) {
+        state.showCompass = false;
     },
     restore(state) {
         let tracksPerPlaylist = localStorage.getItem('tracksPerPlaylist');

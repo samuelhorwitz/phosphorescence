@@ -13,7 +13,7 @@ body {
     background-color: rgb(40, 27, 61);
 }
 
-body.appHome {
+body.appHome:not(.iosRubberband) {
     overflow: hidden;
 }
 

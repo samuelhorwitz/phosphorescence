@@ -22,17 +22,19 @@
     bgCanvas.classList.add('bgIosCanvas');
     let ctx = bgCanvas.getContext('2d');
     function resetCanvasSize() {
-        let width = innerWidth;
-        let height = innerHeight;
-        if (navigator.standalone) {
-            width = outerWidth;
-            height = outerHeight;
-        }
-        bgCanvas.width = width * devicePixelRatio;
-        bgCanvas.height = height * devicePixelRatio;
-        bgCanvas.style.width = `${width}px`;
-        bgCanvas.style.height = `${height}px`;
-        ctx.scale(devicePixelRatio, devicePixelRatio);
+        setTimeout(() => {
+            let width = innerWidth;
+            let height = innerHeight;
+            if (navigator.standalone) {
+                width = outerWidth;
+                height = outerHeight;
+            }
+            bgCanvas.width = width * devicePixelRatio;
+            bgCanvas.height = height * devicePixelRatio;
+            bgCanvas.style.width = `${width}px`;
+            bgCanvas.style.height = `${height}px`;
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+        }, 200);
     }
     resetCanvasSize();
     document.body.appendChild(bgCanvas);
