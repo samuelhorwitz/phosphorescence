@@ -19,6 +19,7 @@ var (
 	mailgunClient       *http.Client
 	playlistImageBase64 string
 	noHTML              *bluemonday.Policy
+	safeHTTPClient      *http.Client
 )
 
 type Config struct {
@@ -32,6 +33,9 @@ func Initialize(cfg *Config) {
 	isProduction = cfg.IsProduction
 	mailgunAPIKey = cfg.MailgunAPIKey
 	mailgunClient = &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	safeHTTPClient = &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	ex, err := os.Executable()

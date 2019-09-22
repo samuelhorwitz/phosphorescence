@@ -172,6 +172,11 @@ func initializeRoutes(cfg *config) http.Handler {
 		r.Get("/tag/{tag}", phosphor.SearchTag)
 		r.Get("/recommendation/{query}", phosphor.RecommendedQuery)
 	})
+	r.Route("/official", func(r chi.Router) {
+		r.Use(middleware.Session)
+		r.Use(middleware.AuthorizeOfficialAccount)
+		r.Get("/playlist/{playlistID}", phosphor.MakeOfficialPlaylist)
+	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "User-agent: *\nDisallow: /\n")
 	})
