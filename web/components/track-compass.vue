@@ -288,6 +288,7 @@
     const pointBoundingRadius = pointBoundingBox / 2;
     const pulseTTL = 1000;
     const maxHarmonicDistance = 7;
+    const dragThreshold = 20;
 
     export default {
         data() {
@@ -303,7 +304,8 @@
                 beatIntervals: [],
                 edges: [],
                 canvasAbsoluteX: null,
-                canvasAbsoluteY: null
+                canvasAbsoluteY: null,
+                ongoingTouch: null
             };
         },
         computed: {
@@ -337,7 +339,7 @@
                 return this.$store.getters['tracks/currentTrack'];
             },
             canvasTitle() {
-                if (this.hoverTrack === null) {
+                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
                     return 'Evocativeness constellation';
                 }
                 let track = this.tracks[this.hoverTrack];
@@ -391,6 +393,10 @@
         mounted() {
             this.$refs.canvas.addEventListener('mousemove', this.handleCanvasMouseMove);
             this.$refs.canvas.addEventListener('mouseleave', this.handleCanvasMouseLeave);
+            this.$refs.canvas.addEventListener('touchstart', this.handleTouchStart, {passive: true});
+            this.$refs.canvas.addEventListener('touchmove', this.handleTouchMove, {passive: true});
+            this.$refs.canvas.addEventListener('touchend', this.handleTouchEnd, {passive: true});
+            this.$refs.canvas.addEventListener('touchcancel', this.handleTouchEnd, {passive: true});
             addEventListener('resize', this.handleResize);
             addEventListener('orientationchange', this.handleResizeAfterTimeout);
             this.handleResize();
@@ -404,6 +410,10 @@
             this.destroyBeatIntervals();
             this.$refs.canvas.removeEventListener('mousemove', this.handleCanvasMouseMove);
             this.$refs.canvas.removeEventListener('mouseleave', this.handleCanvasMouseLeave);
+            this.$refs.canvas.removeEventListener('touchstart', this.handleTouchStart, {passive: true});
+            this.$refs.canvas.removeEventListener('touchmove', this.handleTouchMove, {passive: true});
+            this.$refs.canvas.removeEventListener('touchend', this.handleTouchEnd, {passive: true});
+            this.$refs.canvas.removeEventListener('touchcancel', this.handleTouchEnd, {passive: true});
             removeEventListener('resize', this.handleResize);
             removeEventListener('orientationchange', this.handleResizeAfterTimeout);
             this.destroyCanvas && this.destroyCanvas();
@@ -488,30 +498,30 @@
                 this.detailsTrack = this.tracks[this.hoverTrack];
             },
             handleCanvasDoubleClick() {
-                if (this.hoverTrack === null) {
+                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
                     return;
                 }
                 this.$store.dispatch('tracks/seekTrack', this.hoverTrack);
             },
             moveCursorUp() {
-                if (this.hoverTrack === null) {
+                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
                     this.hoverTrack = 0;
                     return;
                 }
                 if (this.hoverTrack === 0) {
                     return;
                 }
-                this.hoverTrack--;
+                this.hoverTrack = Math.max(0, this.hoverTrack - 1);
             },
             moveCursorDown() {
-                if (this.hoverTrack === null) {
+                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
                     this.hoverTrack = 0;
                     return;
                 }
                 if (this.hoverTrack === this.tracks.length - 1) {
                     return;
                 }
-                this.hoverTrack++;
+                this.hoverTrack = Math.min(this.tracks.length - 1, this.hoverTrack + 1);
             },
             handleEnter() {
                 this.handleCanvasDoubleClick();
@@ -555,6 +565,48 @@
                     }
                 }
                 this.beatIntervals = [];
+            },
+            handleTouchStart({touches}) {
+                if (touches.length > 1 || this.ongoingTouch) {
+                    return;
+                }
+                this.$refs.canvas.focus();
+                this.ongoingTouch = touches[0];
+            },
+            handleTouchMove({touches}) {
+                if (!this.ongoingTouch) {
+                    return;
+                }
+                let newTouch;
+                for (let touch of touches) {
+                    if (touch.identifier === this.ongoingTouch.identifier) {
+                        newTouch = touch;
+                        break;
+                    }
+                }
+                if (!newTouch) {
+                    return;
+                }
+                if (Math.abs(newTouch.screenY - this.ongoingTouch.screenY) > dragThreshold) {
+                    if (newTouch.screenY > this.ongoingTouch.screenY) {
+                        this.moveCursorDown();
+                    } else {
+                        this.moveCursorUp();
+                    }
+                    this.detailsTrack = this.tracks[this.hoverTrack];
+                    this.ongoingTouch = newTouch;
+                }
+            },
+            handleTouchEnd({touches}) {
+                if (!this.ongoingTouch) {
+                    return;
+                }
+                for (let touch of touches) {
+                    if (touch.identifier === this.ongoingTouch.identifier) {
+                        this.ongoingTouch = null;
+                        break;
+                    }
+                }
             }
         }
     };
