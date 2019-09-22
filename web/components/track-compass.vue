@@ -125,6 +125,8 @@
 
     canvas {
         position: absolute;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
     }
 
     .details {
