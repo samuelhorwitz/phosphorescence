@@ -46,7 +46,7 @@ module.exports = {
     {ssr: false, src: '~plugins/ios-rubberband-bg.js'},
     {ssr: false, src: '~plugins/consola.js'}
   ],
-  css: ['~/css/main.css'],
+  css: ['~/css/main.css', '~/css/fontawesome.css'],
   mode: 'spa',
   build: {
     extractCSS: true,

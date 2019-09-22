@@ -1,15 +1,34 @@
 <template>
-    <span :class="{glitch: enable}" :data-text="text">{{text}}</span>
+    <span>
+        <span class="t" v-if="rawText" :class="{glitch: enable}" :data-text="rawGlyph" v-html="rawText" ref="raw"></span>
+        <span class="t" v-if="!rawText" :class="{glitch: enable}" :data-text="text">{{text}}</span>
+    </span>
 </template>
 
 <script>
     export default {
-        props: {text: String, enable: Boolean}
+        props: {text: String, rawText: String, enable: Boolean},
+        data: {
+            rawGlyph: ''
+        },
+        watch: {
+            rawText: {
+                immediate: true,
+                handler() {
+                    this.$nextTick(() => {
+                        if (!this.$refs.raw) {
+                            return;
+                        }
+                        this.rawGlyph = this.$refs.raw.innerText;
+                    });
+                }
+            }
+        }
     };
 </script>
 
 <style scoped>
-    span {
+    span.t {
         color: inherit;
         white-space: nowrap;
     }

@@ -1,8 +1,17 @@
 <template>
     <footer>
         <ol>
-            <li><span @click="flash" @mouseover="legalHover = true" @mouseout="legalHover = false" class="wrapper"><nuxt-link to="/legal" target="_blank"><glitch :text="'[Legal]'" :enable="legalHover"/></nuxt-link></span></li>
-            <li><span @mouseover="githubHover = true" @mouseout="githubHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence"><glitch :text="'[GitHub]'" :enable="githubHover"/></a></span></li>
+            <li><span @click="flash" @mouseover="blogHover = true" @mouseout="blogHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://blog.phosphor.me/"><glitch text="[Blog]" :enable="blogHover"/></a></span></li>
+            <li><span @click="flash" @mouseover="legalHover = true" @mouseout="legalHover = false" class="wrapper"><nuxt-link to="/legal" target="_blank"><glitch text="[Legal]" :enable="legalHover"/></nuxt-link></span></li>
+            <li class="socialWrapper">
+                <ul>
+                    <li class="social" title="Facebook"><span @mouseover="facebookHover = true" @mouseout="facebookHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://facebook.com/phosphorme/"><glitch class="fab" raw-text="&#xf09a;" :enable="facebookHover"/></a></span></li>
+                    <li class="social" title="Twitter"><span @mouseover="twitterHover = true" @mouseout="twitterHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://twitter.com/phosphor_me/"><glitch class="fab" raw-text="&#xf099;" :enable="twitterHover"/></a></span></li>
+                    <li class="social" title="Instagram"><span @mouseover="instagramHover = true" @mouseout="instagramHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://instagram.com/phosphor_me/"><glitch class="fab" raw-text="&#xf16d;" :enable="instagramHover"/></a></span></li>
+                    <li class="social" title="Spotify"><span @mouseover="spotifyHover = true" @mouseout="spotifyHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://open.spotify.com/user/spv1hpk4dj1qwneuxwg4yg0cn"><glitch class="fab" raw-text="&#xf1bc;" :enable="spotifyHover"/></a></span></li>
+                    <li class="social" title="GitHub"><span @mouseover="githubHover = true" @mouseout="githubHover = false" class="wrapper"><a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence"><glitch class="fab" raw-text="&#xf09b;" :enable="githubHover"/></a></span></li>
+                </ul>
+            </li>
             <li class="spotify">
                 <div class="spotifyLogo">
                     <a target="_blank" rel="external noopener" href="https://spotify.com"><span class="spotifyPreCopy">Content made available by</span><img alt="Spotify" class="spotifyLogoImg" src="/images/spotify_small.png"></a>
@@ -54,6 +63,13 @@
         flex: 1;
     }
 
+    ul {
+        margin: 0px;
+        padding: 0px;
+        display: flex;
+        flex-direction: row;
+    }
+
     li {
         display: inline;
         flex: 100;
@@ -62,10 +78,21 @@
         font-size: 1.5em;
     }
 
+    li.social {
+        flex: unset;
+        margin-left: 3ex;
+    }
+
     li.spotify {
         position: relative;
         flex: 0;
         bottom: 0.5em;
+    }
+
+    li.socialWrapper {
+        font-size: 1.25em;
+        margin-left: 1ex;
+        margin-top: 0.25ex;
     }
 
     .wrapper {
@@ -155,6 +182,12 @@
         }
     }
 
+    @media only screen and (max-width: 1299px) {
+        li.social {
+            margin-left: 1ex;
+        }
+    }
+
     @media only screen and (display-mode: fullscreen) and (orientation: portrait) {
         .spotifyLogo {
             bottom: 0px;
@@ -172,7 +205,12 @@
         data() {
             return {
                 legalHover: false,
-                githubHover: false
+                githubHover: false,
+                facebookHover: false,
+                twitterHover: false,
+                instagramHover: false,
+                spotifyHover: false,
+                blogHover: false
             };
         },
         methods: {
