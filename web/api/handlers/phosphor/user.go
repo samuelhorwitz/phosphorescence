@@ -148,7 +148,8 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var requestBody struct {
-		UTCOffsetMinutes int `json:"utcOffsetMinutes"`
+		Image            string `json:"image"`
+		UTCOffsetMinutes int    `json:"utcOffsetMinutes"`
 		Tracks           []struct {
 			Name string `json:"name"`
 			URI  string `json:"uri"`
@@ -238,7 +239,13 @@ func CreatePlaylist(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	{
-		req, err := http.NewRequestWithContext(r.Context(), "PUT", fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/images", createdPlaylist.ID), bytes.NewBuffer([]byte(playlistImageBase64)))
+		var buf *bytes.Buffer
+		if requestBody.Image != "" {
+			buf = bytes.NewBuffer([]byte(requestBody.Image))
+		} else {
+			buf = bytes.NewBuffer([]byte(playlistImageBase64))
+		}
+		req, err := http.NewRequestWithContext(r.Context(), "PUT", fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/images", createdPlaylist.ID), buf)
 		if err != nil {
 			common.Fail(w, fmt.Errorf("Could not build Spotify change image request: %s", err), http.StatusInternalServerError)
 			return
