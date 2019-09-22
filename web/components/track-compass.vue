@@ -598,15 +598,7 @@
                 }
             },
             handleTouchEnd({touches}) {
-                if (!this.ongoingTouch) {
-                    return;
-                }
-                for (let touch of touches) {
-                    if (touch.identifier === this.ongoingTouch.identifier) {
-                        this.ongoingTouch = null;
-                        break;
-                    }
-                }
+                this.ongoingTouch = null;
             }
         }
     };
