@@ -452,6 +452,7 @@
 
 <script>
     import {initializePlayer} from '~/assets/spotify';
+    import {renderOffscreen, saneOffscreenOptions} from '~/assets/constellation';
 
     export default {
         data() {
@@ -671,12 +672,85 @@
                         uri
                     };
                 });
+                let screenshotOptions = saneOffscreenOptions(750, 6, this.tracks);
+                let screenshotCanvas = await renderOffscreen(screenshotOptions, (ctx, size) => {
+                    ctx.save();
+                    let gradient = ctx.createLinearGradient(0, 0, 0, size);
+                    gradient.addColorStop(0, 'rgb(40, 27, 61)');
+                    gradient.addColorStop(1, 'rgb(35, 25, 153)');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, size, size);
+                    ctx.restore();
+                }, async (ctx, size) => {
+                    let p = new Image();
+                    await new Promise(resolve => {
+                        p.onload = resolve;
+                        p.src = '/images/logo-p.png';
+                    });
+                    ctx.save();
+                    ctx.globalAlpha = 0.85;
+                    // tl, tr, bl, br
+                    let quadCounts = [0, 0, 0, 0];
+                    for (let {evocativeness} of this.tracks) {
+                        if (evocativeness.aetherealness < 0.5) {
+                            if (evocativeness.primordialness < 0.5) {
+                                quadCounts[0]++;
+                            } else {
+                                quadCounts[2]++;
+                            }
+                        } else {
+                            if (evocativeness.primordialness < 0.5) {
+                                quadCounts[1]++;
+                            } else {
+                                quadCounts[3]++;
+                            }
+                        }
+                    }
+                    let quad = 0;
+                    let leastPointsQuad = quadCounts[quad];
+                    for (let i = 1; i < quadCounts.length; i++) {
+                        let quadCount = quadCounts[i];
+                        if (quadCount < leastPointsQuad) {
+                            quad = i;
+                            leastPointsQuad = quadCount;
+                        }
+                    }
+                    let x, y;
+                    if (quad === 0) {
+                        x = 0;
+                        y = 0;
+                    } else if (quad === 1) {
+                        x = 400;
+                        y = 0;
+                    } else if (quad === 2) {
+                        x = 0;
+                        y = 400;
+                    } else {
+                        x = 400;
+                        y = 400;
+                    }
+                    ctx.drawImage(p, 0, 0, p.width, p.height, x, y, 375, 375);
+                    ctx.restore();
+                });
+                let constellation;
+                let quality = 0.9;
+                while (quality > 0.5) {
+                    constellation = screenshotCanvas.toDataURL('image/jpeg', quality);
+                    if (constellation.length / 1000 < 256) {
+                        break;
+                    }
+                    quality -= 0.05;
+                }
+                if (constellation) {
+                    constellation = constellation.split(',')[1];
+                }
                 let savePlaylistResponse = await fetch(`${process.env.API_ORIGIN}/users/me/playlist`, {
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({
                         tracks,
-                        utcOffsetMinutes: -(new Date().getTimezoneOffset())
+                        utcOffsetMinutes: -(new Date().getTimezoneOffset()),
+                        image: constellation
                     })
                 });
                 if (savePlaylistResponse.ok) {
