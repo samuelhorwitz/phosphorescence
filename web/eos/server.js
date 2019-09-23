@@ -10,7 +10,7 @@ app.use(function (req, res, next) {
 
 if (process.env.NODE_ENV === 'production') {
     const http = require('http');
-    app.use(express.static('./public'));
+    app.use(express.static('./public', {setHeaders}));
     const server = http.createServer(app).listen('80', '0.0.0.0', () => {
         console.log('Server listening on `' + server.address().address + ':' + server.address().port + '`.');
     });
@@ -23,8 +23,14 @@ else {
     const privateKey  = fs.readFileSync(__dirname + '/eos.localhost.key', 'utf8');
     const certificate = fs.readFileSync(__dirname + '/eos.localhost.crt', 'utf8');
     const credentials = {key: privateKey, cert: certificate};
-    app.use(express.static('./dist'));
+    app.use(express.static('./dist', {setHeaders}));
     const server = https.createServer(credentials, app).listen(port, host, () => {
         console.log('Server listening on `' + server.address().address + ':' + server.address().port + '`.');
     });
+}
+
+function setHeaders(res, path) {
+    if (path.match('worker')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+    }
 }

@@ -39,6 +39,9 @@ module.exports = {
       {href: "/ipadpro3_splash.png", media: "(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
       {href: "/ipadpro2_splash.png", media: "(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)",  rel: "apple-touch-startup-image"},
       {rel: 'manifest', href: '/manifest.json'}
+    ],
+    script: [
+      {src: 'https://www.google.com/recaptcha/api.js?render=6LdfBboUAAAAAFv0977A1dWeer-eTy0IBmynzHcS'}
     ]
   },
   plugins: [
@@ -78,5 +81,10 @@ module.exports = {
     API_ORIGIN: process.env.API_ORIGIN,
     SCRIPTS_ORIGIN: process.env.SCRIPTS_ORIGIN,
     CONSOLA_LEVEL: process.env.NODE_ENV === 'production' ? process.env.CONSOLA_LEVEL : 0
-  }
+  },
+  modules: [
+    ['@nuxtjs/google-analytics', {
+      id: 'UA-148749300-1'
+    }]
+  ]
 };

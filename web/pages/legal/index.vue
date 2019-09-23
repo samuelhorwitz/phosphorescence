@@ -7,6 +7,11 @@
             <li><nuxt-link to="/legal/cookies">Cookie Policy</nuxt-link></li>
             <li><nuxt-link to="/legal/trademarks">Trademark Policy</nuxt-link></li>
         </ul>
+        <p>
+            This site is protected by reCAPTCHA and the Google
+                <a target="_blank" rel="external noopener" href="https://policies.google.com/privacy">Privacy Policy</a> and
+                <a target="_blank" rel="external noopener" href="https://policies.google.com/terms">Terms of Service</a> apply.
+        </p>
     </legal>
 </template>
 

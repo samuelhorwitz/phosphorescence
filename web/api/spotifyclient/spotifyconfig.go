@@ -26,18 +26,9 @@ func Initialize(cfg *Config) {
 	spotifyConfig = &oauth2.Config{
 		ClientID:     cfg.SpotifyClientID,
 		ClientSecret: cfg.SpotifySecret,
-		Scopes: []string{
-			"streaming",
-			"user-read-birthdate",
-			"user-read-email",
-			"user-read-private",
-			"user-read-playback-state",
-			"user-read-recently-played",
-			"playlist-modify-public",
-			"ugc-image-upload",
-		},
-		Endpoint:    spotify.Endpoint,
-		RedirectURL: fmt.Sprintf("%s/spotify/authorize/redirect", cfg.APIOrigin),
+		Scopes:       getUserScopes(),
+		Endpoint:     spotify.Endpoint,
+		RedirectURL:  fmt.Sprintf("%s/spotify/authorize/redirect", cfg.APIOrigin),
 	}
 	baseHTTPTimeout = cfg.BaseHTTPTimeout
 }
@@ -56,6 +47,30 @@ func GetToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, fmt.Errorf("Could not get access token: %s", err)
 	}
 	return newToken, nil
+}
+
+func getUserScopes() []string {
+	return []string{
+		"streaming",
+		"user-read-email",
+		"user-read-private",
+		"user-read-playback-state",
+		"user-read-recently-played",
+		"user-modify-playback-state",
+		"playlist-modify-public",
+	}
+}
+
+// this exists solely for future reference if we need
+// a new token for the Phosphorescence user to create
+// private playlists for itself
+func getPlaylistBackendUserScopes() []string {
+	return []string{
+		"playlist-modify-public",
+		"playlist-read-private",
+		"playlist-modify-private",
+		"ugc-image-upload",
+	}
 }
 
 func newSpotifyHTTPClientContext() context.Context {

@@ -13,8 +13,11 @@
                 <li class="menuItem toPage" @click="flash()">
                     <button><nuxt-link to="/settings">Settings</nuxt-link></button>
                 </li>
-                <li class="menuItem logout" @click="logout()">
+                <li v-if="$store.state.user.user" class="menuItem logout" @click="logout()">
                     <button>Logout</button>
+                </li>
+                <li v-if="!$store.state.user.user" class="menuItem logout">
+                    <button class="login"><nuxt-link to="/auth">Login</nuxt-link></button>
                 </li>
             </menu>
         </div>
@@ -122,6 +125,10 @@
         transform: rotate(-10deg);
         cursor: pointer;
         text-shadow: -1px -1px 0 midnightblue, 1px -1px 0 midnightblue, -1px 1px 0 midnightblue, 1px 1px 0 midnightblue;
+    }
+
+    button.login {
+        text-decoration: underline;
     }
 
     button[disabled] {

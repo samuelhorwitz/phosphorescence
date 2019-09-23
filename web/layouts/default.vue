@@ -1,9 +1,9 @@
 <template>
     <div>
-        <elastic v-if="isIOS" :container="$refs.mainContainer"></elastic>
+        <elastic v-if="isLoggedInUser && isIOS" :container="$refs.mainContainer"></elastic>
         <div class="mainContainer" ref="mainContainer">
             <loadingBar v-if="!isIOS"></loadingBar>
-            <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
+            <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover || isNotLoggedInUserHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
                 {{dropText}}
             </div>
             <logo></logo>
@@ -197,7 +197,7 @@
             foot,
             loadingBar
         },
-        middleware: 'authenticated',
+        middleware: ['authenticated'],
         head() {
             let existingClasses = document.body.getAttribute('class') || '';
             let additionalClasses = ['appHome', 'vividSunrise'];
@@ -228,7 +228,8 @@
                 dragStarted: false,
                 isDropHovering: false,
                 isAlreadyGeneratingHover: false,
-                isBadDropHovering: false
+                isBadDropHovering: false,
+                isNotLoggedInUserHover: false
             };
         },
         computed: {
@@ -236,7 +237,9 @@
                 return /\b(iPhone|iPod)\b/.test(navigator.userAgent);
             },
             dropText() {
-                if (this.isAlreadyGeneratingHover) {
+                if (!this.isLoggedInUser) {
+                    return 'Must log in to drop tracks';
+                } else if (this.isAlreadyGeneratingHover) {
                     return 'Please wait';
                 } else if (this.isBadDropHovering) {
                     return '';
@@ -245,6 +248,9 @@
             },
             playlistGenerating() {
                 return this.$store.state.loading.playlistGenerating;
+            },
+            isLoggedInUser() {
+                return !!this.$store.state.user.user;
             }
         },
         watch: {
@@ -264,7 +270,7 @@
             this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
             let downloadingPhase = true;
             try {
-                await initialize(this.$store.state.user.user.country, async (percent, processingBegan) => {
+                await initialize(this.$store.getters['user/country'], this.isLoggedInUser, async (percent, processingBegan) => {
                     if (downloadingPhase && processingBegan) {
                         this.$store.commit('loading/clearMessage', messageId);
                         messageId = await this.$store.dispatch('loading/pushMessage', 'Processing track data');
@@ -328,6 +334,7 @@
             }
         },
         beforeDestroy() {
+            this.$store.dispatch('loading/resetAll');
             document.body.removeEventListener('dragenter', this.handleWindowDragenter);
             document.body.removeEventListener('dragover', this.handleWindowDragover);
             document.body.removeEventListener('drop', this.handleWindowDrop);
@@ -356,19 +363,26 @@
             },
             handleDragenter(e) {
                 if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {
-                    if (this.$store.state.loading.playlistGenerating) {
+                    if (!this.isLoggedInUser) {
+                        this.isNotLoggedInUserHover = true;
+                    } else if (this.$store.state.loading.playlistGenerating) {
                         this.isAlreadyGeneratingHover = true;
                     } else {
                         this.isDropHovering = true;
                     }
                 } else {
-                    this.isBadDropHovering = true;
+                    if (!this.isLoggedInUser) {
+                        this.isNotLoggedInUserHover = true;
+                    } else {
+                        this.isBadDropHovering = true;
+                    }
                 }
             },
             handleDragleave() {
                 this.isDropHovering = false;
                 this.isAlreadyGeneratingHover = false;
                 this.isBadDropHovering = false;
+                this.isNotLoggedInUserHover = false;
                 this.dragStarted = false;
             },
             async handleDrop(e) {
@@ -379,6 +393,7 @@
                 this.isDropHovering = false;
                 this.isAlreadyGeneratingHover = false;
                 this.isBadDropHovering = false;
+                this.isNotLoggedInUserHover = false;
                 this.dragStarted = false;
                 if (!shouldHandleDrop) {
                     return;
@@ -396,7 +411,7 @@
                 try {
                     let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${trackId}`, {credentials: 'include'});
                     let {track} = await trackResponse.json();
-                    let processedTrack = await processTrack(this.$store.state.user.user.country, track);
+                    let processedTrack = await processTrack(this.$store.getters['user/country'], track);
                     let pruners;
                     if (this.$store.state.preferences.onlyTheHits) {
                         pruners = [builders.hits];

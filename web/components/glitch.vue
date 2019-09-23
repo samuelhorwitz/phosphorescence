@@ -8,8 +8,10 @@
 <script>
     export default {
         props: {text: String, rawText: String, enable: Boolean},
-        data: {
-            rawGlyph: ''
+        data() {
+            return {
+                rawGlyph: ''
+            };
         },
         watch: {
             rawText: {

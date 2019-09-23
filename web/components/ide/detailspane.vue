@@ -428,7 +428,7 @@
             }
         },
         async created() {
-            await initialize(this.$store.state.user.user.country);
+            await initialize(this.$store.getters['user/country'], true);
             this.$store.commit('idetracks/restore');
         },
         mounted() {

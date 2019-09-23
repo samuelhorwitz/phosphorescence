@@ -3,6 +3,11 @@ import SecureMessenger from '../secure-messenger/secure-messenger';
 import {TextEncoder, TextDecoder} from 'text-encoding-shim';
 import pako from 'pako';
 
+// force browser to load worker to prevent situation where a deployment
+// removes the worker bundle but Eos looks for it
+let runner = new RunnerWorker();
+runner.terminate();
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 

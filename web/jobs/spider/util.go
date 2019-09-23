@@ -40,3 +40,18 @@ func checkIfBlacklistedArtist(trackJSON json.RawMessage, artistBlacklist map[str
 	}
 	return artistBlacklist[track.Artists[0].ID], track.Artists[0].Name, nil
 }
+
+func checkIfRemovedFromSpotify(trackJSON json.RawMessage) (bool, string, error) {
+	var track struct {
+		Name             string   `json:"name"`
+		AvailableMarkets []string `json:"available_markets"`
+	}
+	err := json.Unmarshal(trackJSON, &track)
+	if err != nil {
+		return false, "", fmt.Errorf("Could not parse Spotify track: %s", err)
+	}
+	if len(track.AvailableMarkets) == 0 {
+		return false, track.Name, nil
+	}
+	return true, track.Name, nil
+}

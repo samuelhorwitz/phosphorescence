@@ -28,4 +28,7 @@ type config struct {
 	rateLimitPerSecond                   int
 	redisHost                            string
 	mailgunAPIKey                        string
+	phosphorescenceSpotifyID             string
+	phosphorescenceRefreshToken          string
+	recaptchaSecret                      string
 }

@@ -76,7 +76,8 @@ func buildArtistBlacklist(playlists playlists) (map[string]bool, error) {
 
 func buildTracks(playlists playlists, blacklist map[string]bool, artistBlacklist map[string]bool) (map[string]*TrackEnvelope, error) {
 	allTracks := make(map[string]*TrackEnvelope)
-	// Whitelists are seeders with no exclusions applied
+	// Whitelists are seeders with no exclusions applied except for no
+	// longer being available in any region
 	for _, whitelistPlaylist := range playlists.Whitelists {
 		whitelistedTracks, err := getTracksFromPlaylist(whitelistPlaylist)
 		if err != nil {
@@ -86,11 +87,20 @@ func buildTracks(playlists playlists, blacklist map[string]bool, artistBlacklist
 			if id == "" {
 				continue
 			}
+			isRemovedFromSpotify, trackName, err := checkIfRemovedFromSpotify(whitelistedTrack.Track)
+			if err != nil {
+				return nil, fmt.Errorf("Could not check if track is available: %s", err)
+			}
+			if isRemovedFromSpotify {
+				log.Printf(`Skipping track that no longer is available "%s"`, trackName)
+				continue
+			}
 			allTracks[id] = whitelistedTrack
 		}
 	}
 	// Seeders exclude any blacklisted tracks as well as anything that is deemed a
-	// "mix cut" which is basically any track already part of a mixed set.
+	// "mix cut" which is basically any track already part of a mixed set. They
+	// also exclude tracks without any playable region.
 	for _, seedPlaylist := range playlists.Seeders {
 		seedTracks, err := getTracksFromPlaylist(seedPlaylist)
 		if err != nil {
@@ -101,6 +111,14 @@ func buildTracks(playlists playlists, blacklist map[string]bool, artistBlacklist
 				continue
 			}
 			if blacklist[id] {
+				continue
+			}
+			isRemovedFromSpotify, trackName, err := checkIfRemovedFromSpotify(seedTrack.Track)
+			if err != nil {
+				return nil, fmt.Errorf("Could not check if track is available: %s", err)
+			}
+			if isRemovedFromSpotify {
+				log.Printf(`Skipping track that no longer is available "%s"`, trackName)
 				continue
 			}
 			isArtistBlacklisted, artistName, err := checkIfBlacklistedArtist(seedTrack.Track, artistBlacklist)

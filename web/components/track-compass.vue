@@ -526,7 +526,7 @@
                 this.hoverTrack = Math.min(this.tracks.length - 1, this.hoverTrack + 1);
             },
             handleEnter() {
-                this.handleCanvasDoubleClick();
+                this.handleCanvasClick();
             },
             humanReadableArtists(artists) {
                 if (artists.length === 1) {

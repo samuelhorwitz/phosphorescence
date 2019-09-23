@@ -24,11 +24,14 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Use(middleware.CSP(cfg.phosphorOrigin))
 	r.Use(chimiddleware.Timeout(cfg.handlerTimeout))
 	r.Use(chimiddleware.NoCache)
-	r.Use(middleware.IPLimiter)
+	r.Use(chimiddleware.RealIP)
 	r.Route("/spotify", func(r chi.Router) {
 		r.Route("/authorize", func(r chi.Router) {
 			r.Get("/", spotify.Authorize)
 			r.Get("/redirect", spotify.AuthorizeRedirect)
+		})
+		r.Route("/unauthenticated", func(r chi.Router) {
+			r.With(middleware.Captcha("api/tracks", 0.5)).Get("/tracks", spotify.Tracks)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
@@ -145,7 +148,7 @@ func initializeRoutes(cfg *config) http.Handler {
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", phosphor.GetCurrentUser)
 			r.Get("/currently-playing", phosphor.GetCurrentlyPlaying)
-			r.Post("/playlist", phosphor.CreatePlaylist)
+			r.Post("/playlist", phosphor.CreateAndFollowPlaylist)
 		})
 	}
 	r.Route("/user", userRouter)
@@ -172,10 +175,20 @@ func initializeRoutes(cfg *config) http.Handler {
 		r.Get("/tag/{tag}", phosphor.SearchTag)
 		r.Get("/recommendation/{query}", phosphor.RecommendedQuery)
 	})
-	r.Route("/official", func(r chi.Router) {
+	r.Route("/admin", func(r chi.Router) {
 		r.Use(middleware.Session)
-		r.Use(middleware.AuthorizeOfficialAccount)
+		r.Use(middleware.AuthenticatedSession)
+		r.Use(middleware.AuthorizeAdminAccount)
 		r.Get("/playlist/{playlistID}", phosphor.MakeOfficialPlaylist)
+	})
+	r.Route("/playlist", func(r chi.Router) {
+		r.Route("/unauthenticated", func(r chi.Router) {
+			r.With(middleware.Captcha("api/playlist/create", 0.5)).Post("/", phosphor.CreatePrivatePlaylist)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Session)
+			r.Post("/", phosphor.CreatePrivatePlaylist)
+		})
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "User-agent: *\nDisallow: /\n")

@@ -103,15 +103,15 @@ func AuthorizePremiumSpotifyUser(next http.Handler) http.Handler {
 	})
 }
 
-func AuthorizeOfficialAccount(next http.Handler) http.Handler {
+func AuthorizeAdminAccount(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sess, ok := r.Context().Value(SessionContextKey).(*session.Session)
+		sess, ok := r.Context().Value(AuthenticatedSessionContextKey).(*session.Session)
 		if !ok {
-			common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
+			common.Fail(w, errors.New("No authenticated session on request context"), http.StatusUnauthorized)
 			return
 		}
-		if sess.SpotifyID != "spv1hpk4dj1qwneuxwg4yg0cn" {
-			common.Fail(w, errors.New("Not official Phosphorescence account"), http.StatusForbidden)
+		if sess.SpotifyID != "126149108" {
+			common.Fail(w, errors.New("Not admin Phosphorescence account"), http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, r)
