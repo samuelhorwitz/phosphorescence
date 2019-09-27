@@ -38,6 +38,9 @@
                     </li>
                 </menu>
                 <div class="trackData" ref="trackData" :class="{stopped: $store.getters['tracks/stopped']}">
+                    <span v-if="!premiumUser && savedPlaylistUrl" class="openPlaylist">
+                        <a target="_blank" rel="external noopener" :href="savedPlaylistUrl">Open Playlist in Spotify</a>
+                    </span>
                     <span class="trackDetails" :class="{scrollingBanner: isTrackDataScrolling}" ref="trackDetails" v-if="playerReadyAndConnected && !$store.getters['tracks/stopped']">
                         <span class="trackName">
                             <a target="_blank" rel="external noopener" :href="currentTrackUrl">{{currentTrackName}}</a>
@@ -54,7 +57,7 @@
                     <span class="nothingPlaying scrollingBanner" v-if="playerReadyAndConnected && $store.getters['tracks/stopped'] && !$store.state.tracks.spotifyAppearsDown">
                         ... Welcome to Phosphorescence ... Please Click "Play" To Listen ... 💿 💻 ... Hint: You can drag and drop a track from Spotify to seed the playlist builder ...
                     </span>
-                    <span class="nothingPlaying scrollingBanner" v-if="!premiumUser">
+                    <span class="nothingPlaying scrollingBanner" v-if="!premiumUser && !savedPlaylistUrl">
                         ... Welcome to Phosphorescence ... Please Click "Play" To Open Up The Playlist In Spotify ... 💿 💻 ...
                     </span>
                     <span class="nothingPlaying scrollingBanner" v-if="playerReadyAndConnected && $store.getters['tracks/stopped'] && $store.state.tracks.spotifyAppearsDown">
@@ -198,6 +201,11 @@
     .nothingPlaying {
         color: white;
         cursor: pointer;
+    }
+
+    .openPlaylist {
+        display: flex;
+        margin-left: 1ex;
     }
 
     .trackDetails {
@@ -688,6 +696,8 @@
             },
             async createPlaylistAndFollow() {
                 await this.createPlaylist(true);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                this.devicesMenu = false;
             },
             async createPlaylist(shouldFollow) {
                 let tracks = this.tracks.map(track => {
