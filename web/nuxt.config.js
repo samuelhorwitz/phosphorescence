@@ -72,7 +72,7 @@ module.exports = {
     }
   },
   router: {
-    middleware: ['facebookurlcleaner', 'eos']
+    middleware: ['gdpr', 'facebookurlcleaner', 'eos']
   },
   loading: '~/components/loading-bar.vue',
   loadingIndicator: '~/static/loading.html',
@@ -84,7 +84,8 @@ module.exports = {
   },
   modules: [
     ['@nuxtjs/google-analytics', {
-      id: 'UA-148749300-1'
+      id: 'UA-148749300-1',
+      disabled: () => localStorage.getItem('gdpr') !== 'true'
     }]
   ]
 };
