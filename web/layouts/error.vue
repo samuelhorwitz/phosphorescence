@@ -1,9 +1,10 @@
 <template>
     <div class="container">
         <h2 v-if="notFound">Page not found</h2>
-        <nuxt-link v-if="notFound" to="/">Return home</nuxt-link>
+        <nuxt-link v-if="notFound" to="/" class="home">Return home</nuxt-link>
         <h1 v-if="!notFound">An error occurred</h1>
         <p v-if="!notFound">{{error.message}}</p>
+        <p v-if="!$store.state.user.user">It is possible we think you are a robot. If you are not a bot, you can try to refresh, however you may have to <nuxt-link to="/auth">log in</nuxt-link> with your Spotify account rather than browse anonymously.</p>
     </div>
 </template>
 
@@ -26,9 +27,12 @@
 
     a {
         color: aqua;
-        font-size: 1.75em;
-        margin-top: 2em;
         text-decoration: none;
+    }
+
+    a.home {
+        margin-top: 2em;
+        font-size: 1.75em;
     }
 
     a:hover {

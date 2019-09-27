@@ -61,6 +61,11 @@ canvas.bgIosCanvas {
     pointer-events: none;
 }
 
+.grecaptcha-badge {
+    opacity: 0;
+    pointer-events: none;
+}
+
 @media only screen and (max-width: 329px) {
     body {
         font-size: 5px;

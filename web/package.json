@@ -5,6 +5,8 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@nuxtjs/google-analytics": "^2.2.0",
+    "bcp-47": "^1.0.5",
     "express": "^4.16.4",
     "lodash": "^4.17.15",
     "pako": "^1.0.10",

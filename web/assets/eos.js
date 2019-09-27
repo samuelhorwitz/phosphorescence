@@ -6,8 +6,12 @@ let messenger;
 let terminationPort;
 
 export function initialize() {
+    if (document.getElementById('eos')) {
+        return;
+    }
     return new Promise(async (resolve, reject) => {
         let iframe = document.createElement('iframe');
+        iframe.setAttribute('id', 'eos');
         iframe.src = process.env.EOS_ORIGIN;
         iframe.sandbox = 'allow-scripts allow-same-origin';
         iframe.style.display = 'none';

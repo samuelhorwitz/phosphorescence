@@ -34,6 +34,9 @@ export const mutations = {
         }
         state.descriptions = newDescriptions;
     },
+    clearMessages(state) {
+        state.descriptions = [];
+    },
     initializeProgress(state, {id, weight}) {
         if (!weight) {
             weight = 100;
@@ -94,6 +97,11 @@ export const actions = {
         setTimeout(() => {
             commit('resetProgress');
         });
+    },
+    resetAll({commit}) {
+        commit('resetProgress');
+        commit('clearMessages');
+        commit('endLoad');
     }
 }
 

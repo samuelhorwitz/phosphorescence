@@ -72,6 +72,9 @@ func main() {
 		rateLimitPerSecond:                   rateLimit,
 		redisHost:                            os.Getenv("REDIS_HOST"),
 		mailgunAPIKey:                        os.Getenv("MAILGUN_API_KEY"),
+		phosphorescenceSpotifyID:             os.Getenv("PHOSPHORESCENCE_SPOTIFY_ID"),
+		phosphorescenceRefreshToken:          os.Getenv("PHOSPHORESCENCE_REFRESH_TOKEN"),
+		recaptchaSecret:                      os.Getenv("RECAPTCHA_SECRET_KEY"),
 	}
 	migrate(cfg)
 	initialize(cfg)
@@ -90,8 +93,17 @@ func initialize(cfg *config) {
 	log.Println("Common initialized")
 	middleware.Initialize(&middleware.Config{
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
+		PhosphorOrigin:     cfg.phosphorOrigin,
+		RecaptchaSecret:    cfg.recaptchaSecret,
 	})
 	log.Println("Middleware initialized")
+	spotifyclient.Initialize(&spotifyclient.Config{
+		SpotifyClientID: cfg.spotifyClientID,
+		SpotifySecret:   cfg.spotifySecret,
+		APIOrigin:       cfg.apiOrigin,
+		BaseHTTPTimeout: cfg.handlerTimeout,
+	})
+	log.Println("Spotify client initialized")
 	spotify.Initialize(&spotify.Config{
 		IsProduction:   cfg.isProduction,
 		PhosphorOrigin: cfg.phosphorOrigin,
@@ -102,18 +114,13 @@ func initialize(cfg *config) {
 	})
 	log.Println("Spotify handlers initialized")
 	phosphor.Initialize(&phosphor.Config{
-		IsProduction:   cfg.isProduction,
-		PhosphorOrigin: cfg.phosphorOrigin,
-		MailgunAPIKey:  cfg.mailgunAPIKey,
+		IsProduction:                cfg.isProduction,
+		PhosphorOrigin:              cfg.phosphorOrigin,
+		MailgunAPIKey:               cfg.mailgunAPIKey,
+		PhosphorescenceSpotifyID:    cfg.phosphorescenceSpotifyID,
+		PhosphorescenceRefreshToken: cfg.phosphorescenceRefreshToken,
 	})
 	log.Println("Phosphor handlers initialized")
-	spotifyclient.Initialize(&spotifyclient.Config{
-		SpotifyClientID: cfg.spotifyClientID,
-		SpotifySecret:   cfg.spotifySecret,
-		APIOrigin:       cfg.apiOrigin,
-		BaseHTTPTimeout: cfg.handlerTimeout,
-	})
-	log.Println("Spotify client initialized")
 	session.Initialize(&session.Config{
 		CookieDomain: cfg.cookieDomain,
 		IsProduction: cfg.isProduction,

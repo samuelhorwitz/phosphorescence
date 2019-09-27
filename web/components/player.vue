@@ -3,10 +3,10 @@
         <div class="container">
             <div class="wrapper" :class="{deviceMenuVisible: devicesMenu}">
                 <menu>
-                    <li v-if="!this.$store.state.preferences.showCompass"><button @click="showCompass" :class="{disabled: !$store.getters['tracks/playlistLoaded'] || this.$store.state.loading.playlistGenerating}">
+                    <li v-if="!$store.state.preferences.showCompass"><button @click="showCompass" :class="{disabled: !$store.getters['tracks/playlistLoaded'] || $store.state.loading.playlistGenerating}">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Toggle constellation mode</title><g><g><g><path d="M19.542,65.375c-0.145,2.688-4.022,2.688-4.167,0S19.398,62.702,19.542,65.375c0.069,1.282,2.069,1.289,2,0     c-0.125-2.308-1.775-3.959-4.083-4.083c-2.303-0.124-3.969,1.962-4.083,4.083c-0.124,2.304,1.962,3.97,4.083,4.084     c2.303,0.124,3.969-1.963,4.083-4.084C21.611,64.086,19.611,64.093,19.542,65.375z"></path></g></g><g><g><path d="M59.25,78.542c-0.208,3.867-5.792,3.867-6,0C53.042,74.673,59.043,74.693,59.25,78.542c0.069,1.282,2.069,1.289,2,0     c-0.152-2.827-2.173-4.848-5-5c-2.821-0.152-4.86,2.401-5,5c-0.152,2.821,2.401,4.86,5,5c2.821,0.152,4.86-2.401,5-5     C61.319,77.253,59.319,77.26,59.25,78.542z"></path></g></g><g><g><path d="M31.75,9.792c-0.208,3.867-5.792,3.867-6,0C25.542,5.922,31.542,5.943,31.75,9.792c0.069,1.283,2.069,1.29,2,0     c-0.152-2.828-2.172-4.848-5-5c-2.822-0.152-4.86,2.401-5,5c-0.152,2.822,2.401,4.86,5,5c2.822,0.152,4.86-2.401,5-5     C33.819,8.502,31.819,8.509,31.75,9.792z"></path></g></g><g><g><path d="M91.875,50.542c-0.208,3.867-5.792,3.867-6,0C85.667,46.672,91.668,46.693,91.875,50.542c0.069,1.282,2.069,1.289,2,0     c-0.152-2.828-2.173-4.848-5-5c-2.821-0.152-4.86,2.401-5,5c-0.152,2.821,2.401,4.86,5,5c2.821,0.152,4.86-2.401,5-5     C93.944,49.252,91.944,49.259,91.875,50.542z"></path></g></g><g><g><path d="M23.75,39.729c-0.282,5.236-7.843,5.236-8.125,0C15.343,34.49,23.469,34.518,23.75,39.729c0.069,1.283,2.069,1.29,2,0     c-0.185-3.43-2.633-5.878-6.062-6.062c-3.423-0.184-5.893,2.91-6.062,6.062c-0.184,3.423,2.91,5.893,6.062,6.062     c3.423,0.184,5.893-2.91,6.062-6.062C25.819,38.44,23.819,38.447,23.75,39.729z"></path></g></g><g><g><path d="M54.125,52.104c-0.282,5.236-7.843,5.236-8.125,0C45.718,46.865,53.845,46.893,54.125,52.104     c0.069,1.282,2.069,1.289,2,0c-0.185-3.43-2.633-5.878-6.062-6.062c-3.423-0.184-5.893,2.91-6.062,6.062     c-0.184,3.423,2.91,5.893,6.062,6.062c3.423,0.185,5.893-2.91,6.062-6.062C56.194,50.815,54.194,50.822,54.125,52.104z"></path></g></g><g><g><path d="M91.5,86.417c-0.339,6.283-9.411,6.283-9.75,0C81.411,80.131,91.163,80.163,91.5,86.417c0.069,1.282,2.069,1.289,2,0     c-0.21-3.891-2.984-6.665-6.875-6.875c-3.882-0.209-6.683,3.3-6.875,6.875c-0.209,3.882,3.3,6.683,6.875,6.875     c3.882,0.209,6.683-3.3,6.875-6.875C93.569,85.128,91.569,85.135,91.5,86.417z"></path></g></g><g><g><path d="M10.204,83.771c0.091,1.688,0.629,3.03,1.693,4.336c0.506,0.622,1.255,1.078,1.955,1.44     c0.388,0.201,2.579,0.999,1.92,0.296c0.286-0.69,0.572-1.38,0.857-2.07c-1.688,0.091-3.03,0.63-4.335,1.692     c-0.622,0.507-1.078,1.256-1.44,1.956c-0.416,0.802-0.304,1.701-0.602,2.479c0.794,0.107,1.588,0.215,2.382,0.322     c-0.195-3.622-2.782-6.209-6.404-6.404c-0.661-0.035-1.213,0.579-1.213,1.213c0,0.002,0,0.004,0,0.006     c0,0.634,0.552,1.248,1.213,1.213c3.623-0.195,6.208-2.783,6.404-6.405c0.084-1.563-2.342-1.556-2.426,0     c-0.122,2.257-1.721,3.858-3.978,3.979c0.404,0.404,0.809,0.809,1.213,1.213c0-0.002,0-0.004,0-0.006     c-0.404,0.404-0.809,0.809-1.213,1.213c2.256,0.121,3.856,1.723,3.978,3.979c0.076,1.417,1.898,1.588,2.382,0.322     c0.306-0.8,0.184-1.565,0.604-2.376c0.662-1.276,2.069-1.897,3.435-1.971c1.059-0.057,1.602-1.276,0.857-2.07     c-0.53-0.565-1.51-0.411-2.198-0.601c-1.656-0.455-2.574-2.163-2.66-3.757C12.546,82.215,10.12,82.207,10.204,83.771     L10.204,83.771z"></path></g></g><g><g><path d="M85.437,5.854c0.103,2.156,0.8,3.918,2.181,5.572c0.751,0.898,1.826,1.528,2.874,2c0.325,0.146,2.724,0.638,2.481,0.38     c0.235-0.569,0.472-1.138,0.707-1.707c-2.155,0.103-3.917,0.8-5.57,2.181c-0.898,0.75-1.528,1.826-2,2.874     c-0.428,0.949-0.273,2.058-0.63,2.958c0.654,0.088,1.31,0.177,1.964,0.266c-0.22-4.627-3.586-7.992-8.213-8.212     c-0.545-0.026-1,0.475-1,1c0,0.002,0,0.004,0,0.007c0,0.525,0.455,1.026,1,1c4.628-0.22,7.993-3.586,8.213-8.213     c0.062-1.29-1.938-1.284-2,0c-0.167,3.507-2.705,6.046-6.213,6.213c0.333,0.333,0.667,0.667,1,1c0-0.002,0-0.004,0-0.007     c-0.333,0.333-0.667,0.667-1,1c3.507,0.167,6.046,2.706,6.213,6.212c0.057,1.181,1.557,1.294,1.964,0.266     c0.488-1.229,0.318-2.407,1.022-3.652c1.061-1.877,3.191-2.793,5.25-2.891c0.875-0.042,1.318-1.056,0.707-1.707     c-0.712-0.758-2.507-0.522-3.488-0.964c-2.192-0.988-3.353-3.273-3.462-5.574C87.375,4.571,85.375,4.565,85.437,5.854     L85.437,5.854z"></path></g></g><g><g><path d="M50.764,14.604c0.134,2.494,1.917,4.277,4.411,4.411c-0.235-0.098-0.472-0.195-0.707-0.293     c0.005,0.005,0.009,0.01,0.014,0.015c0.235-0.569,0.472-1.138,0.707-1.707c-1.167,0.063-2.091,0.437-2.992,1.172     c-0.42,0.343-0.732,0.853-0.978,1.326c-0.279,0.538-0.203,1.167-0.417,1.679c0.655,0.088,1.31,0.177,1.964,0.266     c-0.135-2.493-1.917-4.277-4.41-4.411c-0.545-0.029-1,0.477-1,1c0,0.001,0,0.002,0,0.003c0,0.523,0.455,1.029,1,1     c2.494-0.134,4.276-1.918,4.41-4.412c0.069-1.29-1.931-1.283-2,0c-0.074,1.368-1.042,2.338-2.41,2.412     c0.333,0.333,0.667,0.667,1,1c0-0.001,0-0.002,0-0.003c-0.333,0.333-0.667,0.667-1,1c1.368,0.074,2.336,1.043,2.41,2.411     c0.064,1.192,1.539,1.279,1.964,0.266c0.206-0.49,0.115-1.007,0.378-1.513c0.401-0.774,1.252-1.15,2.081-1.195     c0.874-0.047,1.319-1.052,0.707-1.707c-0.383-0.411-1.036-0.309-1.533-0.446c-0.997-0.274-1.547-1.316-1.599-2.273     C52.694,13.322,50.694,13.315,50.764,14.604L50.764,14.604z"></path></g></g><g><g><path d="M33.889,78.354c0.134,2.494,1.917,4.276,4.411,4.411c-0.235-0.098-0.472-0.195-0.707-0.293     c0.005,0.005,0.009,0.01,0.014,0.015c0.235-0.569,0.472-1.138,0.707-1.707c-1.167,0.063-2.091,0.437-2.992,1.172     c-0.42,0.343-0.732,0.853-0.978,1.326c-0.279,0.538-0.203,1.167-0.417,1.679c0.655,0.088,1.31,0.178,1.964,0.266     c-0.135-2.493-1.917-4.277-4.41-4.411c-0.545-0.029-1,0.478-1,1c0,0.001,0,0.003,0,0.003c0,0.523,0.455,1.029,1,1     c2.494-0.134,4.276-1.918,4.41-4.411c0.069-1.29-1.931-1.282-2,0c-0.074,1.368-1.042,2.338-2.41,2.411     c0.333,0.334,0.667,0.667,1,1c0,0,0-0.002,0-0.003c-0.333,0.333-0.667,0.667-1,1c1.368,0.073,2.336,1.044,2.41,2.411     c0.064,1.191,1.539,1.279,1.964,0.266c0.206-0.49,0.115-1.007,0.378-1.514c0.401-0.773,1.252-1.15,2.081-1.194     c0.874-0.047,1.319-1.052,0.707-1.707c-0.383-0.411-1.036-0.31-1.533-0.446c-0.997-0.273-1.547-1.316-1.599-2.272     C35.819,77.072,33.819,77.064,33.889,78.354L33.889,78.354z"></path></g></g><g><g><path d="M73.199,31.331c0.086,1.604,0.597,2.883,1.606,4.124c0.489,0.6,1.207,1.035,1.882,1.385     c0.299,0.155,2.368,0.773,1.925,0.319c0.235-0.569,0.472-1.138,0.707-1.707c-1.604,0.086-2.883,0.596-4.123,1.607     c-0.6,0.489-1.034,1.207-1.385,1.882c-0.396,0.767-0.271,1.658-0.572,2.391c0.654,0.088,1.31,0.177,1.964,0.266     c-0.186-3.449-2.648-5.913-6.098-6.099c-0.545-0.029-1,0.477-1,1c0,0.001,0,0.003,0,0.005c0,0.523,0.455,1.029,1,1     c3.45-0.186,5.912-2.649,6.098-6.1c0.069-1.29-1.931-1.283-2,0c-0.125,2.324-1.773,3.975-4.098,4.1c0.333,0.333,0.667,0.667,1,1     c0-0.001,0-0.003,0-0.005c-0.333,0.333-0.667,0.667-1,1c2.323,0.125,3.973,1.776,4.098,4.099     c0.064,1.188,1.544,1.284,1.964,0.266c0.324-0.784,0.195-1.571,0.614-2.38c0.681-1.314,2.131-1.955,3.538-2.031     c0.858-0.046,1.34-1.061,0.707-1.707c-0.504-0.515-1.429-0.362-2.074-0.539c-1.711-0.471-2.664-2.225-2.753-3.875     C75.13,30.048,73.13,30.042,73.199,31.331L73.199,31.331z"></path></g></g><g><g><path d="M26.036,13.109c-1.958,7.208-3.917,14.417-5.875,21.625c-0.338,1.247,1.591,1.775,1.929,0.531     c1.958-7.208,3.917-14.417,5.875-21.625C28.303,12.394,26.374,11.866,26.036,13.109L26.036,13.109z"></path></g></g><g><g><path d="M24.109,42.964c6.917,2.833,13.833,5.667,20.75,8.5c1.194,0.489,1.708-1.446,0.531-1.928     c-6.917-2.833-13.833-5.667-20.75-8.5C23.447,40.547,22.933,42.482,24.109,42.964L24.109,42.964z"></path></g></g><g><g><path d="M55.125,52.625C65,52.25,74.875,51.875,84.75,51.5c1.285-0.049,1.29-2.049,0-2c-9.875,0.375-19.75,0.75-29.625,1.125     C53.84,50.674,53.835,52.674,55.125,52.625L55.125,52.625z"></path></g></g><g><g><path d="M87.875,54.542c-0.542,8.736-1.083,17.472-1.625,26.208c-0.08,1.289,1.921,1.281,2,0     c0.542-8.736,1.083-17.472,1.625-26.208C89.955,53.253,87.954,53.261,87.875,54.542L87.875,54.542z"></path></g></g><g><g><path d="M80.933,83.37c-6.806-1.653-13.611-3.307-20.417-4.959c-1.253-0.305-1.784,1.624-0.531,1.928     c6.806,1.653,13.611,3.307,20.417,4.959C81.654,85.603,82.186,83.674,80.933,83.37L80.933,83.37z"></path></g></g></g></svg>
                     </button></li>
-                    <li v-if="this.$store.state.preferences.showCompass"><button @click="showPlaylist" class="fillMagenta" :class="{disabled: !$store.getters['tracks/playlistLoaded'] || this.$store.state.loading.playlistGenerating}">
+                    <li v-if="$store.state.preferences.showCompass"><button @click="showPlaylist" class="fillMagenta" :class="{disabled: !$store.getters['tracks/playlistLoaded'] || $store.state.loading.playlistGenerating}">
                         <svg xmlns:x="http://ns.adobe.com/Extensibility/1.0/" xmlns:i="http://ns.adobe.com/AdobeIllustrator/10.0/" xmlns:graph="http://ns.adobe.com/Graphs/1.0/" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 100" xml:space="preserve" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Toggle playlist mode</title><g><g><g><path d="M16.6,12.1H5.2c-1.5,0-2.7,1.2-2.7,2.7v11.3c0,1.5,1.2,2.7,2.7,2.7h11.3c1.5,0,2.7-1.2,2.7-2.7V14.9     C19.3,13.4,18.1,12.1,16.6,12.1z"></path><path d="M94.8,12.1H33.3c-1.5,0-2.7,1.2-2.7,2.7v11.3c0,1.5,1.2,2.7,2.7,2.7h61.5c1.5,0,2.7-1.2,2.7-2.7V14.9     C97.5,13.4,96.3,12.1,94.8,12.1z"></path><path d="M16.6,41.6H5.2c-1.5,0-2.7,1.2-2.7,2.7v11.3c0,1.5,1.2,2.7,2.7,2.7h11.3c1.5,0,2.7-1.2,2.7-2.7V44.3     C19.3,42.8,18.1,41.6,16.6,41.6z"></path><path d="M94.8,41.6H33.3c-1.5,0-2.7,1.2-2.7,2.7v11.3c0,1.5,1.2,2.7,2.7,2.7h61.5c1.5,0,2.7-1.2,2.7-2.7V44.3     C97.5,42.8,96.3,41.6,94.8,41.6z"></path><path d="M16.6,71.1H5.2c-1.5,0-2.7,1.2-2.7,2.7v11.3c0,1.5,1.2,2.7,2.7,2.7h11.3c1.5,0,2.7-1.2,2.7-2.7V73.8     C19.3,72.3,18.1,71.1,16.6,71.1z"></path><path d="M94.8,71.1H33.3c-1.5,0-2.7,1.2-2.7,2.7v11.3c0,1.5,1.2,2.7,2.7,2.7h61.5c1.5,0,2.7-1.2,2.7-2.7V73.8     C97.5,72.3,96.3,71.1,94.8,71.1z"></path></g></g></g></svg>
                     </button></li>
                     <li v-if="playerReadyAndConnected"><button @click="play" v-if="$store.getters['tracks/stopped']" :class="{disabled: !$store.getters['tracks/playlistLoaded']}">
@@ -32,10 +32,8 @@
                         </button>
                     </li>
                     <li v-if="!premiumUser" class="devicePicker savePlaylist">
-                        <button @click="createPlaylist" :disabled="savePlaylistSuccessful" :class="{success: savePlaylistSuccessful, failure: savePlaylistFailed}">
-                            <div class="deviceIcon phosphorLogo">+</div>
-                            <span v-if="!savedPlaylistUrl">{{savePlaylistButtonText}}</span>
-                            <span v-if="savedPlaylistUrl"><a @click.stop target="_blank" rel="external noopener" :href="savedPlaylistUrl">{{savePlaylistButtonText}}</a></span>
+                        <button @click="createPlaylistAndPlay" :class="{disabled: savingPlaylist || $store.state.loading.playlistGenerating}">
+                            <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Play Playlist</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
                         </button>
                     </li>
                 </menu>
@@ -56,6 +54,9 @@
                     <span class="nothingPlaying scrollingBanner" v-if="playerReadyAndConnected && $store.getters['tracks/stopped'] && !$store.state.tracks.spotifyAppearsDown">
                         ... Welcome to Phosphorescence ... Please Click "Play" To Listen ... 💿 💻 ... Hint: You can drag and drop a track from Spotify to seed the playlist builder ...
                     </span>
+                    <span class="nothingPlaying scrollingBanner" v-if="!premiumUser">
+                        ... Welcome to Phosphorescence ... Please Click "Play" To Open Up The Playlist In Spotify ... 💿 💻 ...
+                    </span>
                     <span class="nothingPlaying scrollingBanner" v-if="playerReadyAndConnected && $store.getters['tracks/stopped'] && $store.state.tracks.spotifyAppearsDown">
                         ... 😢😢😢 Spotify's Playback API Appears To Be Down Right Now 😢 ...
                     </span>
@@ -73,7 +74,7 @@
                         <div class="deviceName">{{device.name}} <span v-if="device.type == 'Phosphorescence' && device.isPrimary">(This Window)</span></div>
                     </button>
                 </li>
-                <li @click="createPlaylist">
+                <li @click="createPlaylistAndFollow">
                     <button :disabled="savePlaylistSuccessful" class="deviceButton" :class="{success: savePlaylistSuccessful, failure: savePlaylistFailed}">
                         <div class="deviceIcon phosphorLogo">+</div>
                         <div class="deviceName">{{savePlaylistButtonText}}</div>
@@ -453,6 +454,7 @@
 <script>
     import {initializePlayer} from '~/assets/spotify';
     import {renderOffscreen, saneOffscreenOptions} from '~/assets/constellation';
+    import {getCaptchaToken} from '~/assets/captcha';
 
     export default {
         data() {
@@ -465,7 +467,8 @@
                 isTrackDataScrolling: false,
                 devices: [],
                 savePlaylistState: null,
-                savedPlaylistId: null
+                savedPlaylistId: null,
+                savingPlaylist: false
             };
         },
         computed: {
@@ -545,7 +548,7 @@
                 return 'Save Playlist';
             },
             premiumUser() {
-                return this.$store.state.user.user.product === 'premium';
+                return this.$store.state.user.user && this.$store.state.user.user.product === 'premium';
             },
             savedPlaylistUrl() {
                 if (!this.savedPlaylistId) {
@@ -557,6 +560,9 @@
         watch: {
             currentTrackName() {
                 this.checkShouldScroll();
+            },
+            tracks() {
+                this.savedPlaylistId = null;
             }
         },
         methods: {
@@ -661,7 +667,29 @@
                     }
                 });
             },
-            async createPlaylist() {
+            async createPlaylistAndPlay() {
+                if (!this.savedPlaylistId) {
+                    this.$store.commit('loading/startLoad');
+                    this.$store.commit('loading/initializeProgress', {id: 'playlist'});
+                    this.$store.commit('loading/tickProgress', {id: 'playlist', percent: 0.001});
+                    this.savingPlaylist = true;
+                    await this.createPlaylist(false);
+                    this.savingPlaylist = false;
+                    if (this.savedPlaylistId) {
+                        this.$store.commit('loading/completeProgress', {id: 'playlist'});
+                        this.$store.commit('loading/resetProgress');
+                    } else {
+                        this.$store.dispatch('loading/failProgress');
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 250));
+                    this.$store.dispatch('loading/endLoadAfterDelay');
+                }
+                open(this.savedPlaylistUrl, 'spotify-playlist', 'noopener');
+            },
+            async createPlaylistAndFollow() {
+                await this.createPlaylist(true);
+            },
+            async createPlaylist(shouldFollow) {
                 let tracks = this.tracks.map(track => {
                     let uri = track.track.uri;
                     if (track.track.linked_from) {
@@ -744,7 +772,18 @@
                 if (constellation) {
                     constellation = constellation.split(',')[1];
                 }
-                let savePlaylistResponse = await fetch(`${process.env.API_ORIGIN}/users/me/playlist`, {
+                let playlistUrl;
+                if (this.$store.state.user.user) {
+                    if (shouldFollow) {
+                        playlistUrl = `${process.env.API_ORIGIN}/users/me/playlist`;
+                    } else {
+                        playlistUrl = `${process.env.API_ORIGIN}/playlist`;
+                    }
+                } else {
+                    let captcha = await getCaptchaToken('api/playlist/create');
+                    playlistUrl = `${process.env.API_ORIGIN}/playlist/unauthenticated?captcha=${captcha}`;
+                }
+                let savePlaylistResponse = await fetch(playlistUrl, {
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({

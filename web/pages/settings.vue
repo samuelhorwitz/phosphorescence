@@ -2,14 +2,20 @@
     <article>
         <div>
             <h2>Settings</h2>
-            <p>You are logged in as the Spotify user <a target="_blank" rel="external noopener" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
+            <p v-if="$store.state.user.user">You are logged in as the Spotify user <a target="_blank" rel="external noopener" :href="'https://open.spotify.com/user/' + $store.state.user.user.spotifyId">{{$store.state.user.user.name}}</a>.</p>
+            <p v-if="!$store.state.user.user">You are not logged into Spotify.</p>
             <p>Currently, all settings are stored locally on the device and automatically updated as they are changed.</p>
-            <p>You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" rel="external noopener" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
-            <p>You may destroy every active session and log out of every device including this one: <button :disabled="logOutEverywhereClicked" @click="logoutEverywhere">Destroy All Sessions</button></p>
+            <p v-if="$store.state.user.user">You may disconnect your Spotify account from this application at any time by visiting the <a target="_blank" rel="external noopener" href="https://www.spotify.com/us/account/apps/">Spotify user account page</a>.</p>
+            <p v-if="$store.state.user.user">You may destroy every active session and log out of every device including this one: <button :disabled="logOutEverywhereClicked" @click="logoutEverywhere">Destroy All Sessions</button></p>
             <p>You may empty your cache on this device: <button :disabled="cacheClearState" @click="destroyCaches">{{clearCacheButtonText}}</button></p>
             <p>You may force a reload of the app in a context where you are unable to reload using your browser (PWA, etc). <button @click="reload">Reload</button></p>
+            <p v-if="!$store.state.user.user">Change the country which you are registered for Spotify in. This is only needed if you aren't logged in and we attempt to make a best guess based on your browser language and region settings.
+                <select name="country" v-model="country">
+                    <option v-for="countryCode in countryCodes" :value="countryCode.Code">{{countryCode.Name}}</option>
+                </select>
+            </p>
         </div>
-        <p>In order to use certain advanced features of Phosphorescence, you must authenticate your session. To do this, we will send an email to the address listed on your Spotify account. By clicking the button below, you agree to allow us to send you that single email. We will not save your email or use it for anything else. Once you receive the email, follow the enclosed directions.
+        <p v-if="$store.state.user.user">In order to use certain advanced features of Phosphorescence, you must authenticate your session. To do this, we will send an email to the address listed on your Spotify account. By clicking the button below, you agree to allow us to send you that single email. We will not save your email or use it for anything else. Once you receive the email, follow the enclosed directions.
         <button class="large" :disabled="authenticateClicked || alreadyAuthenticated" @click="sendAuthEmail">{{authButtonText}}</button>
         </p>
     </article>
@@ -76,15 +82,18 @@
 </style>
 
 <script>
+    import {countryCodes} from '~/assets/l10n';
+
     export default {
         data() {
             return {
-                alreadyAuthenticated: this.$store.state.user.user.authenticated,
+                alreadyAuthenticated: this.$store.state.user.user && this.$store.state.user.user.authenticated,
                 authenticateClicked: false,
                 logOutEverywhereClicked: false,
                 logOutEverywhereFailed: false,
                 emailSentAddress: "",
-                cacheClearState: null
+                cacheClearState: null,
+                countryCodes
             };
         },
         computed: {
@@ -116,6 +125,15 @@
                     return 'Cache cleared'
                 }
                 return 'Clear Caches';
+            },
+            country: {
+                get() {
+                    return this.$store.getters['user/country'];
+                },
+                set(val) {
+                    this.$store.commit('user/country', val);
+                    location.reload();
+                }
             }
         },
         methods: {

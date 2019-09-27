@@ -2,6 +2,7 @@ import RecordCrateWorker from 'worker-loader!~/assets/recordcrate.worker.js';
 import {sendTrackBlobToEos, sendTrackToEos, buildPlaylist} from '~/assets/eos';
 import _builders from '~/builders/index';
 import SecureMessenger from '~/secure-messenger/secure-messenger';
+import {getCaptchaToken} from '~/assets/captcha';
 import throttle from 'lodash/throttle';
 export const builders = Object.freeze(_builders);
 
@@ -10,12 +11,12 @@ const baseTracksUrl = '/tracks.json';
 const processedTracksUrl = '/processed-tracks.json';
 let initializeCalled = false;
 
-export async function initialize(countryCode, loadingHandler) {
+export async function initialize(countryCode, isLoggedIn, loadingHandler) {
     if (initializeCalled) {
         return;
     }
     initializeCalled = true;
-    let data = await getProcessedTracks(countryCode, loadingHandler);
+    let data = await getProcessedTracks(countryCode, isLoggedIn, loadingHandler);
     await sendTrackBlobToEos(data);
 }
 
@@ -53,7 +54,7 @@ export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTr
     return {playlist, dimensions};
 }
 
-async function getTracks() {
+async function getTracks(isLoggedIn) {
     let cache;
     if ('caches' in window) {
         cache = await caches.open(cacheVersion);
@@ -64,7 +65,13 @@ async function getTracks() {
     } else {
         console.warn('Browser does not support cache');
     }
-    let tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
+    let tracksUrlResponse
+    if (isLoggedIn) {
+        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
+    } else {
+        let captcha = await getCaptchaToken('api/tracks');
+        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/unauthenticated/tracks?captcha=${captcha}`);
+    }
     let {tracksUrl} = await tracksUrlResponse.json();
     let response = await fetch(tracksUrl);
     if (cache && response.ok && response.headers.get('expires')) {
@@ -78,7 +85,7 @@ async function getTracks() {
     return response;
 }
 
-async function getProcessedTracks(countryCode, loadingHandler) {
+async function getProcessedTracks(countryCode, isLoggedIn, loadingHandler) {
     let req = getProcessedTracksRequest(countryCode);
     let cache;
     if ('caches' in window) {
@@ -91,7 +98,7 @@ async function getProcessedTracks(countryCode, loadingHandler) {
     } else {
         console.warn('Browser does not support cache');
     }
-    let tracksResponse = await getTracks();
+    let tracksResponse = await getTracks(isLoggedIn);
     let expires = tracksResponse.headers.get('expires');
     let tracks = await getArrayBufferWithProgress(tracksResponse, percent => {
         loadingHandler(percent * 0.45);

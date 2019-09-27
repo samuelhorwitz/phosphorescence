@@ -139,15 +139,20 @@ function filterTracks(tracks, countryCode) {
     let trackEntries = Object.entries(tracks);
     console.info('Tracks before region pruning:', trackEntries.length);
     let i = 0;
+    let countOfNoMarkets = 0;
     for (let [id, track] of trackEntries) {
         i++;
+        if (track.track.available_markets.length === 0) {
+            countOfNoMarkets++;
+        }
         if (track.track.available_markets.indexOf(countryCode) == -1) {
             delete tracks[id];
         }
         updateLoadingPercent(i / trackEntries.length, 0.3);
     }
-    loadingPercentBase = 0.3;
+    console.info('Tracks with no markets at all (should be 0)', countOfNoMarkets);
     console.info('Tracks after region pruning:', Object.keys(tracks).length);
+    loadingPercentBase = 0.3;
     return tracks;
 }
 

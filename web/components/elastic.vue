@@ -259,7 +259,7 @@
                 try {
                     let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
                     let {track} = await trackResponse.json();
-                    let processedTrack = await processTrack(this.$store.state.user.user.country, track);
+                    let processedTrack = await processTrack(this.$store.getters['user/country'], track);
                     let pruners;
                     if (this.$store.state.preferences.onlyTheHits) {
                         pruners = [builders.hits];
