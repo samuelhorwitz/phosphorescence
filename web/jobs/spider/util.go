@@ -51,7 +51,7 @@ func checkIfRemovedFromSpotify(trackJSON json.RawMessage) (bool, string, error) 
 		return false, "", fmt.Errorf("Could not parse Spotify track: %s", err)
 	}
 	if len(track.AvailableMarkets) == 0 {
-		return false, track.Name, nil
+		return true, track.Name, nil
 	}
-	return true, track.Name, nil
+	return false, track.Name, nil
 }
