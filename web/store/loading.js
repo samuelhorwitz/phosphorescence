@@ -5,7 +5,8 @@ export const state = () => ({
     progresses: {},
     progressWeights: {},
     progressFailed: false,
-    playlistGenerating: false
+    playlistGenerating: false,
+    tracksDownloading: false
 });
 
 export const mutations = {
@@ -67,6 +68,12 @@ export const mutations = {
     },
     playlistGenerationComplete(state) {
         state.playlistGenerating = false;
+    },
+    tracksDownloading(state) {
+        state.tracksDownloading = true;
+    },
+    trackDownloadingComplete(state) {
+        state.tracksDownloading = false;
     },
     failProgress(state) {
         state.progressFailed = true;

@@ -265,6 +265,7 @@
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
             this.$store.commit('tracks/restore');
+            this.$store.commit('loading/tracksDownloading');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading track data');
             this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: 60});
             this.$store.commit('loading/initializeProgress', {id: 'generate', weight: 35});
@@ -285,6 +286,7 @@
                 this.$nuxt.error({message: deviceNotSupportedError});
                 return;
             }
+            this.$store.commit('loading/trackDownloadingComplete');
             this.$store.commit('loading/completeProgress', {id: 'tracks'});
             this.$store.commit('loading/clearMessage', messageId);
             if (!this.$store.getters['tracks/playlistLoaded']) {
