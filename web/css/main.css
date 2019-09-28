@@ -100,6 +100,37 @@ canvas.bgIosCanvas {
 	background: magenta;
 }
 
+#gdpr {
+    position: fixed;
+    bottom: 1ex;
+    right: 1ex;
+    width: 250px;
+    z-index: 999999999;
+    background-color: rgba(0, 128, 128, 0.97);
+    border: 5px outset magenta;
+    padding: 1ex;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+#gdpr p {
+    font-size: 10px;
+    margin: 0px;
+    margin-bottom: 1ex;
+}
+
+#gdpr-consent {
+    appearance: none;
+    background-color: gray;
+    border: 5px outset darkgray;
+    width: 100%;
+    cursor: pointer;
+}
+
+#gdpr-consent:hover {
+    border-style: inset;
+}
+
 /*!
  * Font Awesome Free 5.11.1 by @fontawesome - https://fontawesome.com
  * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)

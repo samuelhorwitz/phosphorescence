@@ -5,9 +5,9 @@
             <div class="inner">
                 <span class="label top" title="Transcendentalness">transcendental</span>
                 <div class="canvasWrapper">
-                    <canvas ref="canvas" :class="{pointer: hoverTrack !== null}" :title="canvasTitle" @click="handleCanvasClick" @dblclick="handleCanvasDoubleClick" tabindex="0" @keydown.arrow-up="moveCursorUp" @keydown.arrow-down="moveCursorDown" @keydown.enter="handleEnter" @blur="detailsTrack = null">
+                    <canvas ref="canvas" :class="{pointer: hoverTrack !== null}" :title="canvasTitle" @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing')" @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing')" tabindex="0" @keydown.arrow-up="moveCursorUp(); $ga.event('constellation', 'key', 'up')" @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')" @keydown.enter="handleEnter(); $ga.event('constellation', 'key', 'enter')" @blur="detailsTrack = null">
                         <ol>
-                            <li v-for="(track, index) in tracks" @click="seekTrack(index)">
+                            <li v-for="(track, index) in tracks" @click="seekTrack(index); $ga.event('constellation-accessible', 'seek-track')">
                                 "{{track.track.name}}" by {{humanReadableArtists(track.track.artists)}} on album "{{track.track.album.name}}" falls on the chthonic-aethereal axis at {{Math.floor(track.evocativeness.aetherealness * 100)}}% and on the transcendental-primordial axis at {{Math.floor(track.evocativeness.primordialness * 100)}}%. The track is in key {{getHarmonics(track)}} and has {{track.features.tempo}} beats per minute.
                             </li>
                         </ol>
@@ -340,8 +340,11 @@
                 }
                 return this.$store.getters['tracks/currentTrack'];
             },
+            trackHovering() {
+                return !(typeof this.hoverTrack == 'undefined' || this.hoverTrack === null);
+            },
             canvasTitle() {
-                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
+                if (!this.trackHovering) {
                     return 'Evocativeness constellation';
                 }
                 let track = this.tracks[this.hoverTrack];
@@ -500,13 +503,13 @@
                 this.detailsTrack = this.tracks[this.hoverTrack];
             },
             handleCanvasDoubleClick() {
-                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
+                if (!this.trackHovering) {
                     return;
                 }
                 this.$store.dispatch('tracks/seekTrack', this.hoverTrack);
             },
             moveCursorUp() {
-                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
+                if (!this.trackHovering) {
                     this.hoverTrack = 0;
                     return;
                 }
@@ -516,7 +519,7 @@
                 this.hoverTrack = Math.max(0, this.hoverTrack - 1);
             },
             moveCursorDown() {
-                if (typeof this.hoverTrack == 'undefined' || this.hoverTrack === null) {
+                if (!this.trackHovering) {
                     this.hoverTrack = 0;
                     return;
                 }
@@ -592,8 +595,10 @@
                 if (Math.abs(newTouch.screenY - this.ongoingTouch.screenY) > dragThreshold) {
                     if (newTouch.screenY > this.ongoingTouch.screenY) {
                         this.moveCursorDown();
+                        this.$ga.event('constellation', 'touch-scroll', 'down');
                     } else {
                         this.moveCursorUp();
+                        this.$ga.event('constellation', 'touch-scroll', 'up');
                     }
                     this.detailsTrack = this.tracks[this.hoverTrack];
                     this.ongoingTouch = newTouch;

@@ -1,7 +1,7 @@
 <template>
     <header class="wrapper" :class="{min: min}">
         <div class="container">
-            <h1 @click="flash">
+            <h1 @click="flash(); $ga.event('logo', 'click')">
                 <nuxt-link :to="to">
                     <glitch :text="text" :enable="$store.state.loading.loading" />
                 </nuxt-link>

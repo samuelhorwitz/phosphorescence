@@ -281,6 +281,7 @@
                 });
             }
             catch (e) {
+                this.$ga.exception(e, true);
                 console.error('Track initialization failed', e);
                 this.$store.dispatch('loading/failProgress');
                 this.$nuxt.error({message: deviceNotSupportedError});
@@ -311,6 +312,7 @@
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
                 }
                 catch (e) {
+                    this.$ga.exception(e, true);
                     console.error('Playlist generation failed', e);
                     this.$store.dispatch('loading/failProgress');
                     this.$nuxt.error({message: deviceNotSupportedError});
@@ -323,6 +325,7 @@
             }
             this.$store.commit('loading/resetProgress');
             this.$store.dispatch('loading/endLoadAfterDelay');
+            this.$ga.time('App Layout', 'load', Math.round(performance.now()));
         },
         mounted() {
             document.body.addEventListener('dragenter', this.handleWindowDragenter);
@@ -426,6 +429,7 @@
                     this.$store.commit('loading/resetProgress');
                 }
                 catch (e) {
+                    this.$ga.exception(e);
                     console.error('Playlist generation failed', e);
                     this.$store.dispatch('loading/failProgress');
                 }
