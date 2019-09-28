@@ -33,25 +33,14 @@ export async function processTrack(countryCode, track) {
     return data.data;
 }
 
-export async function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent) {
+export function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent) {
     if (!builder) {
         builder = builders.randomwalk;
     }
     if (!count) {
         count = 10;
     }
-    let playlist;
-    let dimensions;
-    try {
-        let response = await buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent);
-        playlist = response.playlist;
-        dimensions = response.dimensions;
-    }
-    catch (e) {
-        console.error('Could not build playlist:', e);
-        return {error: e};
-    }
-    return {playlist, dimensions};
+    return buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent);
 }
 
 async function getTracks(isLoggedIn) {

@@ -85,6 +85,9 @@ module.exports = {
   modules: [
     ['@nuxtjs/google-analytics', {
       id: 'UA-148749300-1',
+      autoTracking: {
+        exception: true
+      },
       disabled: () => localStorage.getItem('gdpr') !== 'true'
     }]
   ]

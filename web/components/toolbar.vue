@@ -3,17 +3,19 @@
         <div class="wrapper">
             <div class="bg"></div>
             <menu>
-                <li class="menuItem regenerateOrCancel" @click="regenerateOrCancel()">
-                    <button v-if="!$store.getters['tracks/playlistLoaded'] || !$store.state.loading.playlistGenerating" :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
-                    <button v-if="$store.getters['tracks/playlistLoaded'] && $store.state.loading.playlistGenerating">Cancel</button>
+                <li v-if="!$store.getters['tracks/playlistLoaded'] || !$store.state.loading.playlistGenerating" class="menuItem" @click="regenerate(); $ga.event('toolbar', 'generate', seedStyle ? seedStyle : 'random', tracksPerPlaylist)">
+                    <button :disabled="advancedOpen || $store.state.loading.loading || $nuxt.$route.path !== '/'">Generate New</button>
                 </li>
-                <li class="menuItem toPage" :class="{active: advancedOpen}" @click="toggledAdvanced()">
+                <li v-if="$store.getters['tracks/playlistLoaded'] && $store.state.loading.playlistGenerating" class="menuItem" @click="cancel(); $ga.event('toolbar', 'cancel')">
+                    <button>Cancel</button>
+                </li>
+                <li class="menuItem toPage" :class="{active: advancedOpen}" @click="toggledAdvanced(); $ga.event('toolbar', 'toggle-advanced')">
                     <button>Advanced</button>
                 </li>
                 <li class="menuItem toPage" @click="flash()">
                     <button><nuxt-link to="/settings">Settings</nuxt-link></button>
                 </li>
-                <li v-if="$store.state.user.user" class="menuItem logout" @click="logout()">
+                <li v-if="$store.state.user.user" class="menuItem logout" @click="logout(); $ga.event('toolbar', 'logout')">
                     <button>Logout</button>
                 </li>
                 <li v-if="!$store.state.user.user" class="menuItem logout">
@@ -46,9 +48,11 @@
                     <label for="onlyTheHits">Only Hits</label>
                     <input name="onlyTheHits" type="checkbox" v-model="onlyTheHits">
                 </li>
-                <li class="advancedMenuItem" @click="regenerateOrCancel()">
-                    <button v-if="!$store.state.loading.playlistGenerating" :disabled="$store.state.loading.loading || $nuxt.$route.path !== '/'">Generate!</button>
-                    <button v-if="$store.state.loading.playlistGenerating">Cancel</button>
+                <li v-if="!this.$store.state.loading.playlistGenerating" class="advancedMenuItem" @click="regenerate(); $ga.event('advanced-toolbar', 'generate', seedStyle ? seedStyle : 'random', tracksPerPlaylist)">
+                    <button :disabled="$store.state.loading.loading || $nuxt.$route.path !== '/'">Generate!</button>
+                </li>
+                <li v-if="this.$store.state.loading.playlistGenerating" class="advancedMenuItem" @click="cancel(); $ga.event('advanced-toolbar', 'cancel')">
+                    <button>Cancel</button>
                 </li>
             </ul>
         </aside>
@@ -394,12 +398,8 @@
              }
         },
         methods: {
-            regenerateOrCancel() {
-                if (this.$store.state.loading.playlistGenerating) {
-                    terminatePlaylistBuilding();
-                } else {
-                    this.regenerate();
-                }
+            cancel() {
+                terminatePlaylistBuilding();
             },
             async regenerate() {
                 if (!this.$store.getters['tracks/stopped'] && !confirm('This will destroy the current playlist. Are you sure?')) {
@@ -422,6 +422,7 @@
                     this.$store.commit('loading/resetProgress');
                 }
                 catch (e) {
+                    this.$ga.exception(e);
                     console.error('Playlist generation failed', e);
                     this.$store.dispatch('loading/failProgress');
                 }
