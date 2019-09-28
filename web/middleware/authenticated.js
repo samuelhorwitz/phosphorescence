@@ -32,7 +32,7 @@ export default async function({store, error, $ga}) {
         try {
             await Promise.race([
                 new Promise(resolve => grecaptcha.ready(resolve)),
-                new Promise((_, reject) => setTimeout(() => reject('RECAPTCHA readiness timeout'), 1000))
+                new Promise((_, reject) => setTimeout(() => reject('RECAPTCHA readiness timeout'), 10000))
             ]);
         } catch (e) {
             $ga.exception(e, true);
