@@ -6,7 +6,8 @@ import {getCaptchaToken} from '~/assets/captcha';
 import throttle from 'lodash/throttle';
 export const builders = Object.freeze(_builders);
 
-const cacheVersion = 'v1';
+const cacheVersion = 'v2';
+const cachesToDelete = ['v1']
 const processedTracksUrl = '/processed-tracks.json';
 let initializeCalled = false;
 
@@ -17,6 +18,11 @@ function getBaseTracksUrl(region) {
 export async function initialize(countryCode, isLoggedIn, loadingHandler) {
     if (initializeCalled) {
         return;
+    }
+    if ('caches' in window) {
+        for (let toDelete of cachesToDelete) {
+            await caches.delete(toDelete);
+        }
     }
     initializeCalled = true;
     let data = await getProcessedTracks(countryCode, isLoggedIn, loadingHandler);
