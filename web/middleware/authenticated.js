@@ -28,7 +28,7 @@ export default async function({store, error, $ga}) {
                 store.commit('user/country', regionFromLang);
             }
         }
-        $ga.set('country-guess', store.getters['country']);
+        $ga.set('spotifyRegionGuess', store.getters['user/country']);
         try {
             await Promise.race([
                 new Promise(resolve => grecaptcha.ready(resolve)),
