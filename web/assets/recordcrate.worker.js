@@ -42,13 +42,16 @@ let loadingPercentBase = 0;
 })();
 
 async function handleSendTracks(data) {
-    let tracks = JSON.parse(decoder.decode(data.tracks));
+    let tracksArr = JSON.parse(decoder.decode(data.tracks));
     let countryCode = data.countryCode;
-    tracks = filterTracks(tracks, countryCode);
     console.log('Processing tracks...');
-    tracks = await getEvocativeness(tracks);
+    tracksArr = await getEvocativeness(tracksArr);
     console.log('Tracks processed');
-    let {tags, idsToTags} = buildTags(tracks);
+    let {tags, idsToTags} = buildTags(tracksArr);
+    let tracks = {};
+    for (let track of tracksArr) {
+        tracks[track.id] = track;
+    }
     let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
     let gzipResponseData = pako.gzip(responseData, {level: 9});
     loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
@@ -66,11 +69,10 @@ async function handleSendTrack(data) {
 }
 
 function buildTags(tracks) {
-    let trackEntries = Object.entries(tracks);
     let tags = {};
     let idsToTags = {};
     let i = 0;
-    for (let [id, {track}] of trackEntries) {
+    for (let {id, track} of tracks) {
         i++;
         let tag = getTrackTag(track);
         if (tags[tag]) {
@@ -80,23 +82,22 @@ function buildTags(tracks) {
             tags[tag] = [id];
         }
         idsToTags[id] = tag;
-        updateLoadingPercent(i / trackEntries.length, 0.3);
+        updateLoadingPercent(i / tracks.length, 0.45);
     }
     loadingPercentBase = 0.9;
     return {tags, idsToTags};
 }
 
 async function getEvocativeness(tracks) {
-    let trackEntries = Object.entries(tracks);
     let {aModel, pModel, meanstd} = await modelsReady;
     let i = 0;
-    for (let [id, track] of trackEntries) {
+    for (let track of tracks) {
         i++;
         let {features} = track;
-        tracks[id].evocativeness = predict(features, aModel, pModel, meanstd);
-        updateLoadingPercent(i / trackEntries.length, 0.3);
+        track.evocativeness = predict(features, aModel, pModel, meanstd);
+        updateLoadingPercent(i / tracks.length, 0.45);
     }
-    loadingPercentBase = 0.6;
+    loadingPercentBase = 0.45;
     return tracks;
 }
 
@@ -133,27 +134,6 @@ function predict(a, aModel, pModel, meanstd) {
         let primordialness = pModel.predict(pTensor).dataSync()[0];
         return {aetherealness, primordialness};
     });
-}
-
-function filterTracks(tracks, countryCode) {
-    let trackEntries = Object.entries(tracks);
-    console.info('Tracks before region pruning:', trackEntries.length);
-    let i = 0;
-    let countOfNoMarkets = 0;
-    for (let [id, track] of trackEntries) {
-        i++;
-        if (track.track.available_markets.length === 0) {
-            countOfNoMarkets++;
-        }
-        if (track.track.available_markets.indexOf(countryCode) == -1) {
-            delete tracks[id];
-        }
-        updateLoadingPercent(i / trackEntries.length, 0.3);
-    }
-    console.info('Tracks with no markets at all (should be 0)', countOfNoMarkets);
-    console.info('Tracks after region pruning:', Object.keys(tracks).length);
-    loadingPercentBase = 0.3;
-    return tracks;
 }
 
 function updateLoadingPercent(partialPercent, percentOfTotal) {

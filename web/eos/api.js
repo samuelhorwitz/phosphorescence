@@ -417,8 +417,8 @@ export function injector({getTree, getIdToTagMap, registerDimension}) {
 
     defineAPIFunction('getPointFromTrack', function(trackWrapper) {
         let idsToTags = getIdToTagMap();
-        let {track, features, evocativeness} = trackWrapper;
-        let {id, popularity} = track;
+        let {id, track, features, evocativeness} = trackWrapper;
+        let {popularity} = track;
         let {
             key,
             mode,

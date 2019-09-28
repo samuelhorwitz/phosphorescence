@@ -12,17 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
+	"github.com/samuelhorwitz/phosphorescence/api/models"
 )
-
-type TrackData struct {
-	Track    json.RawMessage `json:"track"`
-	Features json.RawMessage `json:"features"`
-}
 
 var trackListing struct {
 	sync.RWMutex
 	loaded bool
-	tracks map[string]TrackData
+	tracks map[string]*models.SpotifyTrackEnvelope
 }
 
 func Initialize(cfg *Config) {
@@ -49,7 +45,7 @@ func Initialize(cfg *Config) {
 				if !isProduction {
 					log.Println("Config file downloaded, ready to parse")
 				}
-				var newTracks map[string]TrackData
+				var newTracks []*models.SpotifyTrackEnvelope
 				err = json.Unmarshal(tracksJSON, &newTracks)
 				trackListing.Lock()
 				if err != nil {
@@ -62,7 +58,11 @@ func Initialize(cfg *Config) {
 					if !cfg.IsProduction {
 						log.Println("New tracks listing loaded")
 					}
-					trackListing.tracks = newTracks
+					tracksMap := make(map[string]*models.SpotifyTrackEnvelope)
+					for _, track := range newTracks {
+						tracksMap[track.ID] = track
+					}
+					trackListing.tracks = tracksMap
 					trackListing.loaded = true
 				}
 				trackListing.Unlock()
@@ -77,7 +77,7 @@ func Initialize(cfg *Config) {
 	}(s3Session, cfg.IsProduction)
 }
 
-func GetTrack(id string) (TrackData, bool) {
+func GetTrack(id string) (*models.SpotifyTrackEnvelope, bool) {
 	trackListing.RLock()
 	track, ok := trackListing.tracks[id]
 	trackListing.RUnlock()
@@ -87,7 +87,7 @@ func GetTrack(id string) (TrackData, bool) {
 func downloadConfig(s3Service *s3.S3) ([]byte, error) {
 	res, err := s3Service.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String("phosphorescence-tracks"),
-		Key:    aws.String("tracks.json"),
+		Key:    aws.String("tracks.global.json"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Could not load track listing into memory: %s", err)

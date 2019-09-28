@@ -258,7 +258,7 @@
                 this.$store.commit('loading/initializeProgress', {id: 'generate'});
                 try {
                     let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${this.track.id}`, {credentials: 'include'});
-                    let {track} = await trackResponse.json();
+                    let {track, features} = await trackResponse.json();
                     let processedTrack = await processTrack(this.$store.getters['user/country'], track);
                     let pruners;
                     if (this.$store.state.preferences.onlyTheHits) {
@@ -272,7 +272,7 @@
                         let now = new Date().getTime();
                         console.debug(now, this.trackState.fetchedAt, (now - this.trackState.fetchedAt) / 1000, this.trackState.progress, this.trackState.progress / 1000);
                         let offset = Math.max(0, (now - this.trackState.fetchedAt) + this.trackState.progress);
-                        if (offset > track.duration_ms) {
+                        if (offset > features.duration_ms) {
                             this.$store.dispatch('tracks/next');
                             offset = 0;
                         }

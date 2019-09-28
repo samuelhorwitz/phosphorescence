@@ -11,34 +11,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
+	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 )
-
-// This struct is used instead json.RawMessage directly because we
-// want to filter out keys that we don't have on tracks when they
-// are pulled by the job. The job uses playlist track getting filters
-// built into Spotify's endpoint and this struct mimics the result
-// and implicitly discards the extra track data when remarshaled.
-type spotifyTrack struct {
-	AvailableMarkets []string        `json:"available_markets,omitempty"`
-	DurationMS       json.RawMessage `json:"duration_ms"`
-	ExternalURLs     json.RawMessage `json:"external_urls"`
-	ID               json.RawMessage `json:"id"`
-	Name             json.RawMessage `json:"name"`
-	Popularity       json.RawMessage `json:"popularity"`
-	URI              json.RawMessage `json:"uri"`
-	Album            struct {
-		ExternalURLs json.RawMessage `json:"external_urls"`
-		ID           json.RawMessage `json:"id"`
-		Images       json.RawMessage `json:"images"`
-		Name         json.RawMessage `json:"name"`
-		Artists      json.RawMessage `json:"artists"`
-	} `json:"album"`
-	Artists    json.RawMessage `json:"artists"`
-	IsPlayable bool            `json:"is_playable,omitempty"`
-	LinkedFrom json.RawMessage `json:"linked_from,omitempty"`
-}
 
 func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
@@ -74,41 +50,30 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not get audio features for track: %s", err), http.StatusInternalServerError)
 		return
 	}
-	featuresData, err := extractAudioFeatures(audioFeatures)
-	if err != nil {
-		common.Fail(w, fmt.Errorf("No audio features for track: %s", err), http.StatusNotFound)
-		return
-	}
-	common.JSON(w, map[string]interface{}{"track": struct {
-		Track    *spotifyTrack   `json:"track"`
-		Features json.RawMessage `json:"features"`
-	}{
+	// SpotifyTrackEnvelope
+	common.JSON(w, map[string]interface{}{"track": models.SpotifyTrackEnvelope{
+		ID:       trackID,
 		Track:    trackData,
-		Features: featuresData,
+		Features: audioFeatures,
 	}})
 }
 
-func getTrackFromJSON(sess *session.Session, trackID string) (*tracks.TrackData, error) {
+func getTrackFromJSON(sess *session.Session, trackID string) (*models.SpotifyTrackEnvelope, error) {
 	track, ok := tracks.GetTrack(trackID)
 	if !ok {
 		return nil, nil
 	}
-	var trackData spotifyTrack
-	err := json.Unmarshal(track.Track, &trackData)
-	if err != nil {
-		return nil, fmt.Errorf("Could not parse Spotify track: %s", err)
-	}
-	canPlay := checkIfTrackPlayableInRegion(sess.SpotifyCountry, &trackData)
+	canPlay := checkIfTrackPlayableInRegion(sess.SpotifyCountry, track.Track)
 	if !canPlay {
 		if !isProduction {
 			log.Println("Track found in JSON, but not playable in region, will look for linked track")
 		}
 		return nil, nil
 	}
-	return &track, nil
+	return track, nil
 }
 
-func getTrackFromSpotify(r *http.Request, sess *session.Session, trackID string) (*spotifyTrack, error) {
+func getTrackFromSpotify(r *http.Request, sess *session.Session, trackID string) (*models.SpotifyTrack, error) {
 	req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/tracks/%s?market=from_token", trackID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Could not build Spotify track request: %s", err)
@@ -126,16 +91,18 @@ func getTrackFromSpotify(r *http.Request, sess *session.Session, trackID string)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read Spotify track response: %s", err)
 	}
-	var trackData spotifyTrack
+	var trackData models.SpotifyTrack
 	err = json.Unmarshal(body, &trackData)
 	if err != nil {
 		return nil, fmt.Errorf("Could not parse Spotify track response: %s", err)
 	}
+	trackData.AvailableMarkets = nil
+	trackData.Album.Images = findBestImage(trackData.Album.Images)
 	return &trackData, nil
 }
 
-func getAudioFeatures(r *http.Request, sess *session.Session, trackID string) ([]json.RawMessage, error) {
-	req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/audio-features?ids=%s", trackID), nil)
+func getAudioFeatures(r *http.Request, sess *session.Session, trackID string) (*models.SpotifyFeatures, error) {
+	req, err := http.NewRequestWithContext(r.Context(), "GET", fmt.Sprintf("https://api.spotify.com/v1/audio-features/%s", trackID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Could not build Spotify track audio feature request: %s", err)
 	}
@@ -152,32 +119,34 @@ func getAudioFeatures(r *http.Request, sess *session.Session, trackID string) ([
 	if err != nil {
 		return nil, fmt.Errorf("Could not read Spotify track audio feature response: %s", err)
 	}
-	var parsedBody struct {
-		AudioFeatures []json.RawMessage `json:"audio_features"`
-	}
-	err = json.Unmarshal(body, &parsedBody)
+	var spotifyFeatures models.SpotifyFeatures
+	err = json.Unmarshal(body, &spotifyFeatures)
 	if err != nil {
 		return nil, fmt.Errorf("Could not parse Spotify track audio feature response: %s", err)
 	}
-	return parsedBody.AudioFeatures, nil
+	return &spotifyFeatures, nil
 }
 
-func extractAudioFeatures(audioFeatures []json.RawMessage) (json.RawMessage, error) {
-	if len(audioFeatures) == 0 {
-		return nil, errors.New("No Spotify track audio features on response")
-	}
-	featuresData := audioFeatures[0]
-	if string(featuresData) == "null" {
-		return nil, errors.New("Null audio features for track")
-	}
-	return featuresData, nil
-}
-
-func checkIfTrackPlayableInRegion(country string, track *spotifyTrack) bool {
+func checkIfTrackPlayableInRegion(country string, track *models.SpotifyTrack) bool {
 	for _, market := range track.AvailableMarkets {
 		if market == country {
 			return true
 		}
 	}
 	return false
+}
+
+func findBestImage(images []models.SpotifyImage) []models.SpotifyImage {
+	var bestSize int
+	var bestImage models.SpotifyImage
+	for _, img := range images {
+		size := img.Width * img.Height
+		if size > bestSize {
+			bestImage = img
+			bestSize = size
+		}
+	}
+	bestImage.Width = 0
+	bestImage.Height = 0
+	return []models.SpotifyImage{bestImage}
 }

@@ -21,17 +21,17 @@
         <div class="details" :style="{left: detailsOffsetX + 'px', top: detailsOffsetY + 'px'}" ref="details" v-if="detailsTrack">
             <dl>
                 <dt>Track</dt>
-                <dd><a target="_blank" rel="external noopener" :href="detailsTrack.track.external_urls.spotify">{{detailsTrack.track.name}}</a></dd>
+                <dd><a target="_blank" rel="external noopener" :href="detailsTrackUrl">{{detailsTrack.track.name}}</a></dd>
                 <dt>Artists</dt>
                 <dd>
                     <ol class="artists">
-                        <li class="artist" v-for="artist in detailsTrack.track.artists">
-                            <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                        <li class="artist" v-for="artist in detailsTrackArtists">
+                            <a target="_blank" rel="external noopener" :href="artist.url">{{artist.name}}</a>
                         </li>
                     </ol>
                 </dd>
                 <dt>Album</dt>
-                <dd><a target="_blank" rel="external noopener" :href="detailsTrack.track.album.external_urls.spotify">{{detailsTrack.track.album.name}}</a></dd>
+                <dd><a target="_blank" rel="external noopener" :href="detailsTrackAlbumUrl">{{detailsTrack.track.album.name}}</a></dd>
                 <dt>Key</dt>
                 <dd>{{getHarmonics(detailsTrack)}}</dd>
                 <dt>BPM</dt>
@@ -271,6 +271,7 @@
 </style>
 
 <script>
+    import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
     import {initializeCanvas} from '~/assets/constellation';
 
     const A_FLAT = 8, E_FLAT = 3, B_FLAT = 10, F = 5, C = 0, G = 7, D = 2, A = 9, E = 4, B = 11, F_SHARP = 6, D_FLAT = 1;
@@ -361,6 +362,28 @@
                     return 0;
                 }
                 return (this.canvasAbsoluteY + (this.detailsTrack.evocativeness.primordialness * this.innerSize)) - 42;
+            },
+            detailsTrackUrl() {
+                if (!this.detailsTrack) {
+                    return null;
+                }
+                return getSpotifyTrackUrl(this.detailsTrack.id);
+            },
+            detailsTrackAlbumUrl() {
+                if (!this.detailsTrack) {
+                    return null;
+                }
+                return getSpotifyAlbumUrl(this.detailsTrack.track.album.id);
+            },
+            detailsTrackArtists() {
+                if (!this.detailsTrack) {
+                    return null;
+                }
+                let artists = [];
+                for (let artist of this.detailsTrack.track.artists) {
+                    artists.push({...artist, url: getSpotifyArtistUrl(artist)});
+                }
+                return artists;
             }
         },
         watch: {
@@ -384,7 +407,7 @@
                     for (let track of newTracks) {
                         let beat = (1 / (track.features.tempo / 60)) * 1000;
                         this.beatIntervals.push(setInterval(() => {
-                            this.beatPulseConsumer.push({start: Date.now(), x: track.evocativeness.aetherealness, y: track.evocativeness.primordialness, opacity: 1, radiusMultiplier: 1, trackId: track.track.id});
+                            this.beatPulseConsumer.push({start: Date.now(), x: track.evocativeness.aetherealness, y: track.evocativeness.primordialness, opacity: 1, radiusMultiplier: 1, trackId: track.id});
                         }, beat));
                         if (lastTrack) {
                             let diff = this.calculateHarmonicDifference(lastTrack.features, track.features);

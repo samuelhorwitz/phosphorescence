@@ -47,7 +47,7 @@
                         </span>
                         <ol class="artistsNames">
                             <li v-for="artist in currentTrackArtists">
-                                <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify">{{artist.name}}</a>
+                                <a target="_blank" rel="external noopener" :href="artist.url">{{artist.name}}</a>
                             </li>
                         </ol>
                         <span class="albumName">
@@ -460,7 +460,7 @@
 </style>
 
 <script>
-    import {initializePlayer} from '~/assets/spotify';
+    import {initializePlayer, getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackUri} from '~/assets/spotify';
     import {renderOffscreen, saneOffscreenOptions} from '~/assets/constellation';
     import {getCaptchaToken} from '~/assets/captcha';
 
@@ -498,7 +498,7 @@
                 if (!track) {
                     return null;
                 }
-                return track.track.external_urls.spotify;
+                return getSpotifyTrackUrl(track.id);
             },
             currentAlbumName() {
                 let track = this.currentTrack;
@@ -512,14 +512,18 @@
                 if (!track) {
                     return null;
                 }
-                return track.track.album.external_urls.spotify;
+                return getSpotifyAlbumUrl(track.track.album.id);
             },
             currentTrackArtists() {
                 let track = this.currentTrack;
                 if (!track) {
                     return null;
                 }
-                return track.track.artists;
+                let artists = [];
+                for (let artist of track.track.artists) {
+                    artists.push({...artist, url: getSpotifyArtistUrl(artist.id)});
+                }
+                return artists;
             },
             canSeek() {
                 return this.playerReadyAndConnected && !this.$store.state.tracks.neighborSeekLocked;
@@ -701,9 +705,9 @@
             },
             async createPlaylist(shouldFollow) {
                 let tracks = this.tracks.map(track => {
-                    let uri = track.track.uri;
+                    let uri = getSpotifyTrackUri(track.id);
                     if (track.track.linked_from) {
-                        uri = track.track.linked_from.uri;
+                        uri = getSpotifyTrackUri(track.track.linked_from.id);
                     }
                     return {
                         name: track.track.name,

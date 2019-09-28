@@ -67,7 +67,7 @@ async function initializePlayerListeners(store, storePrefix) {
             store.commit(`${storePrefix}/connected`);
             let ourCurrentTrack = store.getters[`${storePrefix}/currentTrack`];
             let trackOkay = true;
-            if (ourCurrentTrack && state.track_window.current_track.id != ourCurrentTrack.track.id) {
+            if (ourCurrentTrack && state.track_window.current_track.id != ourCurrentTrack.id) {
                 let newCursor = store.getters[`${storePrefix}/getPlaylistCursorById`](state.track_window.current_track.id);
                 if (newCursor) {
                     if (newCursor != -1) {
@@ -105,4 +105,20 @@ async function initializePlayerListeners(store, storePrefix) {
         // Connect to the player!
         player.connect();
     });
+}
+
+export function getSpotifyAlbumUrl(id) {
+    return `https://open.spotify.com/album/${id}`;
+}
+
+export function getSpotifyArtistUrl(id) {
+    return `https://open.spotify.com/artist/${id}`;
+}
+
+export function getSpotifyTrackUrl(id) {
+    return `https://open.spotify.com/track/${id}`;
+}
+
+export function getSpotifyTrackUri(id) {
+    return `spotify:track:${id}`;
 }

@@ -131,19 +131,19 @@ function drawTracks(ctx, component) {
     let activeId, hoverId, detailsId;
     for (let track of component.tracks) {
         drawTrack(ctx, component, track.evocativeness.aetherealness, track.evocativeness.primordialness);
-        if (component.currentTrack && component.currentTrack.track.id === track.track.id) {
-            activeId = track.track.id;
+        if (component.currentTrack && component.currentTrack.id === track.id) {
+            activeId = track.id;
             haloX = track.evocativeness.aetherealness;
             haloY = track.evocativeness.primordialness;
         }
-        if (typeof component.hoverTrack != 'undefined' && component.hoverTrack !== null && track.track.id === component.tracks[component.hoverTrack].track.id) {
-            hoverId = track.track.id;
+        if (typeof component.hoverTrack != 'undefined' && component.hoverTrack !== null && track.id === component.tracks[component.hoverTrack].id) {
+            hoverId = track.id;
             hoverHaloX = track.evocativeness.aetherealness;
             hoverHaloY = track.evocativeness.primordialness;
             continue;
         }
-        if (!!component.detailsTrack && track.track.id === component.detailsTrack.track.id) {
-            detailsId = track.track.id;
+        if (!!component.detailsTrack && track.id === component.detailsTrack.id) {
+            detailsId = track.id;
             detailsHaloX = track.evocativeness.aetherealness;
             detailsHaloY = track.evocativeness.primordialness;
         }
