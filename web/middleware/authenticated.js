@@ -16,6 +16,9 @@ export default async function({store, error, $ga}) {
         let {user} = await userResponse.json();
         store.commit('user/user', user);
         console.debug('Logged in user found');
+        if (user.spotifyId === '126149108') {
+            $ga.set('isAdmin', 'true');
+        }
         $ga.set('userId', await digestMessage(user.spotifyId));
     } else {
         store.commit('user/restore');
