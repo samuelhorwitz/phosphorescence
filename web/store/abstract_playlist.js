@@ -1,4 +1,5 @@
 import {getAccessToken} from '~/assets/session';
+import {getSpotifyTrackUri} from '~/assets/spotify';
 
 const STOPPED = 0;
 const PLAYING = 1;
@@ -142,7 +143,7 @@ const getActions = () => Object.assign({
         commit('loading/startLoad', null, {root: true});
         commit('play');
         let body = {
-            uris: state.playlist.map(track => track.track.uri),
+            uris: state.playlist.map(track => getSpotifyTrackUri(track.id)),
             offset: {position: state.currentTrackCursor}
         };
         if (msOffset) {
@@ -261,7 +262,7 @@ const getGetters = () => Object.assign({
     isPlayerDisconnected(state) {
         return state.playerState == NOT_READY || state.playerState == DISCONNECTED;
     },
-    getPlaylistCursorById: state => id => state.playlist ? state.playlist.findIndex(track => track.track.id == id) : null
+    getPlaylistCursorById: state => id => state.playlist ? state.playlist.findIndex(track => track.id == id) : null
 });
 
 function canSkipBackward(state) {
@@ -299,7 +300,7 @@ async function seekToCurrentTrack(state, commit) {
             Authorization: `Bearer ${await getAccessToken()}`
         },
         body: JSON.stringify({
-            uris: state.playlist.map(track => track.track.uri),
+            uris: state.playlist.map(track => getSpotifyTrackUri(track.id)),
             offset: {position: state.currentTrackCursor}
         })
     });

@@ -7,9 +7,12 @@ import throttle from 'lodash/throttle';
 export const builders = Object.freeze(_builders);
 
 const cacheVersion = 'v1';
-const baseTracksUrl = '/tracks.json';
 const processedTracksUrl = '/processed-tracks.json';
 let initializeCalled = false;
+
+function getBaseTracksUrl(region) {
+    return `tracks.${region.toLowerCase()}.json`;
+}
 
 export async function initialize(countryCode, isLoggedIn, loadingHandler) {
     if (initializeCalled) {
@@ -43,7 +46,8 @@ export function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, p
     return buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent);
 }
 
-async function getTracks(isLoggedIn) {
+async function getTracks(isLoggedIn, region) {
+    let baseTracksUrl = getBaseTracksUrl(region);
     let cache;
     if ('caches' in window) {
         cache = await caches.open(cacheVersion);
@@ -56,10 +60,10 @@ async function getTracks(isLoggedIn) {
     }
     let tracksUrlResponse
     if (isLoggedIn) {
-        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
+        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks/${region}`, {credentials: 'include'});
     } else {
         let captcha = await getCaptchaToken('api/tracks');
-        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/unauthenticated/tracks?captcha=${captcha}`);
+        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/unauthenticated/tracks/${region}?captcha=${captcha}`);
     }
     let {tracksUrl} = await tracksUrlResponse.json();
     let response = await fetch(tracksUrl);
@@ -87,7 +91,7 @@ async function getProcessedTracks(countryCode, isLoggedIn, loadingHandler) {
     } else {
         console.warn('Browser does not support cache');
     }
-    let tracksResponse = await getTracks(isLoggedIn);
+    let tracksResponse = await getTracks(isLoggedIn, countryCode);
     let expires = tracksResponse.headers.get('expires');
     let tracks = await getArrayBufferWithProgress(tracksResponse, percent => {
         loadingHandler(percent * 0.45);

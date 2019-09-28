@@ -213,7 +213,7 @@ async function runChecks() {
             }
         }
         else {
-            tree && tree.removeById(firstTrack.track.id);
+            tree && tree.removeById(firstTrack.id);
         }
         loadingInterruptPort.postMessage({type: 'loadPercent', value: 1 / goalTracks});
         tags[getTrackTag(firstTrack.track)] = true;

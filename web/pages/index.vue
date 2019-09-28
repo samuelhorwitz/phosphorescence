@@ -18,17 +18,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.track.id)}" @click="seekTrack(index)" tabindex="0" @keydown.enter="seekTrack(index)">
+                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.id)}" @click="seekTrack(index)" tabindex="0" @keydown.enter="seekTrack(index)">
                         <td :title="humanReadableEvocativeness[index]" class="number">{{index + 1}}</td>
-                        <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="track.track.external_urls.spotify" @click.stop>{{track.track.name}}</a></td>
+                        <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="getSpotifyTrackUrl(track.id)" @click.stop>{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
                             <ol>
                                 <li class="artist" v-for="artist in track.track.artists">
-                                    <a target="_blank" rel="external noopener" :href="artist.external_urls.spotify" @click.stop>{{artist.name}}</a>
+                                    <a target="_blank" rel="external noopener" :href="getSpotifyArtistUrl(artist.id)" @click.stop>{{artist.name}}</a>
                                 </li>
                             </ol>
                         </td>
-                        <td class="album" :title="track.track.album.name"><a target="_blank" rel="external noopener" :href="track.track.album.external_urls.spotify" @click.stop>{{track.track.album.name}}</a></td>
+                        <td class="album" :title="track.track.album.name"><a target="_blank" rel="external noopener" :href="getSpotifyAlbumUrl(track.track.album.id)" @click.stop>{{track.track.album.name}}</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -253,6 +253,7 @@
 </style>
 
 <script>
+    import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
     import trackCompass from '~/components/track-compass';
 
     export default {
@@ -311,11 +312,14 @@
                 if (!this.currentTrack) {
                     return false;
                 }
-                return this.currentTrack.track.id == id;
+                return this.currentTrack.id == id;
             },
             seekTrack(i) {
                 this.$store.dispatch('tracks/seekTrack', i);
-            }
+            },
+            getSpotifyAlbumUrl,
+            getSpotifyArtistUrl,
+            getSpotifyTrackUrl
         }
     };
 </script>

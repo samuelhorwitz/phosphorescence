@@ -31,11 +31,11 @@ func initializeRoutes(cfg *config) http.Handler {
 			r.Get("/redirect", spotify.AuthorizeRedirect)
 		})
 		r.Route("/unauthenticated", func(r chi.Router) {
-			r.With(middleware.Captcha("api/tracks", 0.5)).Get("/tracks", spotify.Tracks)
+			r.With(middleware.Captcha("api/tracks", 0.5)).Get("/tracks/{region}", spotify.Tracks)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
-			r.Get("/tracks", spotify.Tracks)
+			r.Get("/tracks/{region}", spotify.Tracks)
 			r.Get("/token", spotify.Token)
 		})
 	})

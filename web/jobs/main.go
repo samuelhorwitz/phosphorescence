@@ -44,32 +44,31 @@ func main() {
 }
 
 func run(cfg *config) {
-	var trackJSON []byte
+	var tracks map[string][]*spider.TrackEnvelope
+	var allTracks []*spider.TrackEnvelope
 	var err error
 	if cfg.fakeData {
-		trackJSON = []byte(`{"foo":"bar"}`)
+		tracks = map[string][]*spider.TrackEnvelope{"US": []*spider.TrackEnvelope{}}
+		allTracks = []*spider.TrackEnvelope{}
 	} else {
-		tracks, err := spider.GetTracks(&spider.Config{
+		allTracks, tracks, err = spider.GetTracks(&spider.Config{
 			SpotifyClientID: cfg.spotifyClientID,
 			SpotifySecret:   cfg.spotifySecret,
 		})
 		if err != nil {
 			log.Fatalf("Could not get tracks: %s", err)
 		}
-		trackJSON, err = json.Marshal(tracks)
-		if err != nil {
-			log.Fatalf("Could not marshal tracks JSON: %s", err)
-		}
 	}
 	if cfg.outFile != "" {
-		err = dumpTracksJSON(trackJSON, cfg.outFile)
+		err = dumpTracksJSON(tracks, cfg.outFile)
 		if err != nil {
 			log.Fatalf("Could not dump tracks JSON: %s", err)
 		}
+		return
 	}
-	filename := "tracks.json"
+	filename := "tracks.{region}.json"
 	if cfg.testPush {
-		filename = "tracks-test.json"
+		filename = "tracks-test.{region}.json"
 	}
 	err = push.PushTracks(&push.Config{
 		SpacesID:       cfg.spacesID,
@@ -77,14 +76,18 @@ func run(cfg *config) {
 		SpacesEndpoint: cfg.spacesEndpoint,
 		SpacesRegion:   cfg.spacesRegion,
 		Key:            filename,
-	}, trackJSON)
+	}, allTracks, tracks)
 	if err != nil {
 		log.Fatalf("Could not push tracks: %s", err)
 	}
 	log.Println("Success")
 }
 
-func dumpTracksJSON(trackJSON []byte, filename string) error {
+func dumpTracksJSON(tracks interface{}, filename string) error {
+	trackJSON, err := json.Marshal(tracks)
+	if err != nil {
+		log.Fatalf("Could not marshal tracks JSON: %s", err)
+	}
 	wd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("Could not get working directory: %s", err)

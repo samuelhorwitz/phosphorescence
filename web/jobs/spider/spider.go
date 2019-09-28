@@ -1,37 +1,42 @@
 package spider
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 )
 
-func GetTracks(cfg *Config) (map[string]*TrackEnvelope, error) {
+func GetTracks(cfg *Config) ([]*TrackEnvelope, map[string][]*TrackEnvelope, error) {
 	playlists, err := loadPlaylists()
 	if err != nil {
-		return nil, fmt.Errorf("Could not load playlists: %s", err)
+		return nil, nil, fmt.Errorf("Could not load playlists: %s", err)
 	}
 	err = initializeToken(cfg.SpotifyClientID, cfg.SpotifySecret)
 	if err != nil {
-		return nil, fmt.Errorf("Could not initialize token: %s", err)
+		return nil, nil, fmt.Errorf("Could not initialize token: %s", err)
 	}
 	blacklist, err := buildBlacklist(playlists)
 	if err != nil {
-		return nil, fmt.Errorf("Could not build blacklist: %s", err)
+		return nil, nil, fmt.Errorf("Could not build blacklist: %s", err)
 	}
 	artistBlacklist, err := buildArtistBlacklist(playlists)
 	if err != nil {
-		return nil, fmt.Errorf("Could not build artist blacklist: %s", err)
+		return nil, nil, fmt.Errorf("Could not build artist blacklist: %s", err)
 	}
 	allTracks, err := buildTracks(playlists, blacklist, artistBlacklist)
 	if err != nil {
-		return nil, fmt.Errorf("Could not build tracks: %s", err)
+		return nil, nil, fmt.Errorf("Could not build tracks: %s", err)
 	}
 	finalTracks, err := getTrackFeaturesInBatches(allTracks)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get track features: %s", err)
+		return nil, nil, fmt.Errorf("Could not get track features: %s", err)
 	}
-	return finalTracks, nil
+	var tracksArr []*TrackEnvelope
+	for id, trackEnvelope := range finalTracks {
+		trackEnvelope.ID = id
+		tracksArr = append(tracksArr, trackEnvelope)
+	}
+	shardedTracks := regionShard(tracksArr)
+	return tracksArr, shardedTracks, nil
 }
 
 func buildBlacklist(playlists playlists) (map[string]bool, error) {
@@ -56,19 +61,10 @@ func buildArtistBlacklist(playlists playlists) (map[string]bool, error) {
 			return nil, fmt.Errorf("Could not get blacklisted artist trackss: %s", err)
 		}
 		for id, blacklistedArtistTrack := range blacklistedArtistTracks {
-			var track struct {
-				Artists []struct {
-					ID string `json:"id"`
-				} `json:"artists"`
-			}
-			err := json.Unmarshal(blacklistedArtistTrack.Track, &track)
-			if err != nil {
-				return nil, fmt.Errorf("Could not parse Spotify track: %s", err)
-			}
-			if len(track.Artists) == 0 {
+			if len(blacklistedArtistTrack.Track.Artists) == 0 {
 				return nil, fmt.Errorf("Could not get primary artist, no artists on track %s", id)
 			}
-			artistBlacklist[track.Artists[0].ID] = true
+			artistBlacklist[blacklistedArtistTrack.Track.Artists[0].ID] = true
 		}
 	}
 	return artistBlacklist, nil
@@ -87,12 +83,8 @@ func buildTracks(playlists playlists, blacklist map[string]bool, artistBlacklist
 			if id == "" {
 				continue
 			}
-			isRemovedFromSpotify, trackName, err := checkIfRemovedFromSpotify(whitelistedTrack.Track)
-			if err != nil {
-				return nil, fmt.Errorf("Could not check if track is available: %s", err)
-			}
-			if isRemovedFromSpotify {
-				log.Printf(`Skipping track that no longer is available "%s"`, trackName)
+			if isRemovedFromSpotify(whitelistedTrack.Track) {
+				log.Printf(`Skipping track that no longer is available "%s"`, whitelistedTrack.Track.Name)
 				continue
 			}
 			allTracks[id] = whitelistedTrack
@@ -113,28 +105,20 @@ func buildTracks(playlists playlists, blacklist map[string]bool, artistBlacklist
 			if blacklist[id] {
 				continue
 			}
-			isRemovedFromSpotify, trackName, err := checkIfRemovedFromSpotify(seedTrack.Track)
-			if err != nil {
-				return nil, fmt.Errorf("Could not check if track is available: %s", err)
-			}
-			if isRemovedFromSpotify {
-				log.Printf(`Skipping track that no longer is available "%s"`, trackName)
+			if isRemovedFromSpotify(seedTrack.Track) {
+				log.Printf(`Skipping track that no longer is available "%s"`, seedTrack.Track.Name)
 				continue
 			}
-			isArtistBlacklisted, artistName, err := checkIfBlacklistedArtist(seedTrack.Track, artistBlacklist)
+			isArtistBlacklisted, err := isBlacklistedArtist(seedTrack.Track, artistBlacklist)
 			if err != nil {
 				return nil, fmt.Errorf("Could not check if artist is blacklisted: %s", err)
 			}
 			if isArtistBlacklisted {
-				log.Printf(`Skipping blacklisted artist "%s"`, artistName)
+				log.Printf(`Skipping blacklisted artist "%s"`, seedTrack.Track.Artists[0].Name)
 				continue
 			}
-			isMixCut, trackName, err := checkIfMixCut(seedTrack.Track)
-			if err != nil {
-				return nil, fmt.Errorf("Could not check if mix cut: %s", err)
-			}
-			if isMixCut {
-				log.Printf(`Skipping mixed track "%s"`, trackName)
+			if isMixCut(seedTrack.Track) {
+				log.Printf(`Skipping mixed track "%s"`, seedTrack.Track.Name)
 				continue
 			}
 			allTracks[id] = seedTrack

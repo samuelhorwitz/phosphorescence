@@ -31,9 +31,9 @@ self.hooks.prune = function ({tracks, unprunedTracks}) {
     let avgPopularity = totalPopularity / unprunedTracksArr.length;
     let popularTracks = {};
     Object.values(tracks).forEach(trackWrapper => {
-        let {track} = trackWrapper;
+        let {id, track} = trackWrapper;
         if (track.popularity > avgPopularity) {
-            popularTracks[track.id] = trackWrapper;
+            popularTracks[id] = trackWrapper;
         }
     });
     return buildResponse(popularTracks);
