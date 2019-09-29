@@ -2,6 +2,9 @@ import {TextEncoder} from 'text-encoding-shim';
 import {langToRegion} from '~/assets/l10n';
 import bcp47 from 'bcp-47';
 
+const isAdmin = 'dimension2';
+const spotifyRegionGuess = 'dimension3';
+
 async function digestMessage(message) {
     const msgUint8 = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -17,7 +20,7 @@ export default async function({store, error, $ga}) {
         store.commit('user/user', user);
         console.debug('Logged in user found');
         if (user.spotifyId === '126149108') {
-            $ga.set('isAdmin', 'true');
+            $ga.set(isAdmin, 'true');
         }
         $ga.set('userId', await digestMessage(user.spotifyId));
     } else {
@@ -31,7 +34,7 @@ export default async function({store, error, $ga}) {
                 store.commit('user/country', regionFromLang);
             }
         }
-        $ga.set('spotifyRegionGuess', store.getters['user/country']);
+        $ga.set(spotifyRegionGuess, store.getters['user/country']);
         try {
             await Promise.race([
                 new Promise(resolve => grecaptcha.ready(resolve)),
