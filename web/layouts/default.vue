@@ -199,11 +199,13 @@
         },
         middleware: ['authenticated'],
         head() {
-            let existingClasses = document.body.getAttribute('class') || '';
             let additionalClasses = ['appHome', 'vividSunrise'];
             if (this.$store.getters['tracks/isPlayerConnected']) {
                 additionalClasses.push('playerConnected');
+            } else {
+                document.body.classList.remove('playerConnected');
             }
+            let existingClasses = document.body.getAttribute('class') || '';
             if (additionalClasses.length === 0) {
                 return {bodyAttrs: {class: existingClasses}};
             }
