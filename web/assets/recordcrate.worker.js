@@ -65,7 +65,7 @@ async function handleSendTrack(data) {
     track = await getEvocativenessOfSingleTrack(track);
     console.log('Track processed');
     let tag = getTrackTag(track.track);
-    return {type: 'sendProcessedTrack', data: {track: track.track, features: track.features, evocativeness: track.evocativeness, tag}};
+    return {type: 'sendProcessedTrack', data: {id: track.id, track: track.track, features: track.features, evocativeness: track.evocativeness, tag}};
 }
 
 function buildTags(tracks) {
