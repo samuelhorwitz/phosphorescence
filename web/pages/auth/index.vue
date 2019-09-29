@@ -2,6 +2,13 @@
     <article>
         <div class="container">
             <form @submit.prevent.stop>
+                <h2>In order to use <b>Phosphorescence</b> to it's fullest extent, you'll need to login. Some benefits include:</h2>
+                <ul>
+                    <li>Streaming in browser (supported browsers and Premium users only)</li>
+                    <li>Drag-and-drop tracks</li>
+                    <li>Pull-to-create from current track</li>
+                    <li>More to come...</li>
+                </ul>
                 <label for="rememberMe">
                     <input type="checkbox" id="rememberMe" v-model="rememberMe">
                     <span>Remember Me <em>(do not check if using a public computer)</em></span>
@@ -25,6 +32,12 @@
 
     .container {
         max-width: 40em;
+        flex: 1;
+        display: flex;
+    }
+
+    ul {
+        margin-bottom: 7em;
     }
 
     button {
@@ -37,6 +50,7 @@
         padding: 0.5em 0;
         cursor: pointer;
         margin-top: 0.5em;
+        margin-bottom: 5em;
     }
 
     button:hover {
@@ -57,6 +71,7 @@
         display: flex;
         align-items: center;
         cursor: pointer;
+        margin-top: auto;
     }
 
     input[type=checkbox] {
@@ -70,6 +85,19 @@
         margin-right: 1em;
         border-radius: 0px;
         cursor: pointer;
+    }
+
+    b {
+        color: cyan;
+        font-variant: small-caps;
+    }
+
+    ul {
+        font-size: 1.1em;
+    }
+
+    li {
+        margin-bottom: 1ex;
     }
 
     input[type=checkbox]:checked::after {

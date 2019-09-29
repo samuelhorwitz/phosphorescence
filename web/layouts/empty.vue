@@ -30,6 +30,7 @@
 
     main {
         display: flex;
+        flex: 1;
     }
 
     main.noLogo {
