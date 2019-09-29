@@ -47,7 +47,8 @@
         font-size: 0.4em;
         margin: 0px;
         width: 375px;
-        height: 200px;
+        height: 100%;
+        max-height: 200px;
     }
 
     li.loadingMessage {
