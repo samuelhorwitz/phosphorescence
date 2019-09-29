@@ -39,6 +39,10 @@ func PushTracks(cfg *Config, allTracks []*spider.TrackEnvelope, trackRegions map
 	if err != nil {
 		return fmt.Errorf("Could not ensure versioning enabled: %s", err)
 	}
+	err = lifecycle()
+	if err != nil {
+		return fmt.Errorf("Could not ensure versioning lifecycle enabled: %s", err)
+	}
 	log.Printf("Pushing %d global tracks", len(allTracks))
 	key := strings.Replace(cfg.Key, "{region}", "global", 1)
 	globalTrackJSON, err := json.Marshal(allTracks)
@@ -155,6 +159,30 @@ func versioning() error {
 		Bucket: aws.String("phosphorescence-tracks"),
 		VersioningConfiguration: &s3.VersioningConfiguration{
 			Status: aws.String("Enabled"),
+		},
+	})
+	return err
+}
+
+func lifecycle() error {
+	_, err := s3Service.PutBucketLifecycleConfiguration(&s3.PutBucketLifecycleConfigurationInput{
+		Bucket: aws.String("phosphorescence-tracks"),
+		LifecycleConfiguration: &s3.BucketLifecycleConfiguration{
+			Rules: []*s3.LifecycleRule{
+				{
+					ID:     aws.String("Expire Old Track Metadata"),
+					Status: aws.String("Enabled"),
+					AbortIncompleteMultipartUpload: &s3.AbortIncompleteMultipartUpload{
+						DaysAfterInitiation: aws.Int64(7),
+					},
+					Expiration: &s3.LifecycleExpiration{
+						Days: aws.Int64(7),
+					},
+					Filter: &s3.LifecycleRuleFilter{
+						Prefix: aws.String("tracks"),
+					},
+				},
+			},
 		},
 	})
 	return err
