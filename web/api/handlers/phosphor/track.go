@@ -34,12 +34,14 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 		common.JSON(w, map[string]interface{}{"track": track})
 		return
 	}
+	realTrackID := trackID
 	// We don't have that track cached (or it's region locked), so let's reach out to Spotify
 	trackData, err := getTrackFromSpotify(r, sess, trackID)
 	if err != nil {
 		common.Fail(w, fmt.Errorf("Could not get track from Spotify: %s", err), http.StatusInternalServerError)
 		return
 	}
+	realTrackID = trackData.ID
 	if !trackData.IsPlayable {
 		common.Fail(w, fmt.Errorf("Track not playable in region %s", sess.SpotifyCountry), http.StatusNotFound)
 		return
@@ -52,7 +54,7 @@ func GetTrackData(w http.ResponseWriter, r *http.Request) {
 	}
 	// SpotifyTrackEnvelope
 	common.JSON(w, map[string]interface{}{"track": models.SpotifyTrackEnvelope{
-		ID:       trackID,
+		ID:       realTrackID,
 		Track:    trackData,
 		Features: audioFeatures,
 	}})

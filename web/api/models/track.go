@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 type SpotifyTrackEnvelope struct {
 	ID       string           `json:"id"`
 	Track    *SpotifyTrack    `json:"track"`
@@ -7,6 +9,7 @@ type SpotifyTrackEnvelope struct {
 }
 
 type SpotifyTrack struct {
+	ID               string              `json:"id,omitempty"`
 	Album            SpotifyAlbum        `json:"album"`
 	Artists          []SpotifyArtist     `json:"artists"`
 	Name             string              `json:"name"`
@@ -52,4 +55,22 @@ type SpotifyFeatures struct {
 	Tempo               float64 `json:"tempo"`
 	DurationMillseconds int     `json:"duration_ms"`
 	TimeSignature       int     `json:"time_signature"`
+}
+
+func (t SpotifyTrack) MarshalJSON() ([]byte, error) {
+	var tmp struct {
+		Album      SpotifyAlbum        `json:"album"`
+		Artists    []SpotifyArtist     `json:"artists"`
+		Name       string              `json:"name"`
+		Popularity int                 `json:"popularity"`
+		IsPlayable bool                `json:"is_playable,omitempty"`
+		LinkedFrom *SpotifyLinkedTrack `json:"linked_from,omitempty"`
+	}
+	tmp.Album = t.Album
+	tmp.Artists = t.Artists
+	tmp.Name = t.Name
+	tmp.Popularity = t.Popularity
+	tmp.IsPlayable = t.IsPlayable
+	tmp.LinkedFrom = t.LinkedFrom
+	return json.Marshal(&tmp)
 }
