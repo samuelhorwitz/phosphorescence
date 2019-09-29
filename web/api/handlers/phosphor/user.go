@@ -1,6 +1,9 @@
 package phosphor
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,11 +18,12 @@ import (
 )
 
 type User struct {
-	SpotifyID     string `json:"spotifyId"`
-	Name          string `json:"name"`
-	Country       string `json:"country"`
-	Product       string `json:"product"`
-	Authenticated bool   `json:"authenticated"`
+	SpotifyID         string `json:"spotifyId"`
+	Name              string `json:"name"`
+	Country           string `json:"country"`
+	Product           string `json:"product"`
+	Authenticated     bool   `json:"authenticated"`
+	GoogleAnalyticsID string `json:"gaId,omitempty"`
 }
 
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -33,13 +37,17 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		common.Fail(w, fmt.Errorf("Could not update session details: %s", err), http.StatusInternalServerError)
 		return
 	}
+	googleAnalyticsIDSum := hmac.New(sha256.New, googleAnalyticsSecret)
+	googleAnalyticsIDSum.Write([]byte(sess.SpotifyID))
+	googleAnalyticsID := googleAnalyticsIDSum.Sum(nil)
 	common.JSON(w, map[string]interface{}{
 		"user": User{
-			SpotifyID:     sess.SpotifyID,
-			Name:          sess.SpotifyName,
-			Country:       sess.SpotifyCountry,
-			Product:       sess.SpotifyProduct,
-			Authenticated: sess.Authenticated,
+			SpotifyID:         sess.SpotifyID,
+			Name:              sess.SpotifyName,
+			Country:           sess.SpotifyCountry,
+			Product:           sess.SpotifyProduct,
+			Authenticated:     sess.Authenticated,
+			GoogleAnalyticsID: hex.EncodeToString(googleAnalyticsID),
 		},
 	})
 }

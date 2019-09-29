@@ -2,6 +2,7 @@ package phosphor
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -25,6 +26,7 @@ var (
 	safeHTTPClient           *http.Client
 	phosphorescenceSpotifyID string
 	phosphorescenceToken     *oauth2.Token
+	googleAnalyticsSecret    []byte
 )
 
 type Config struct {
@@ -33,6 +35,7 @@ type Config struct {
 	MailgunAPIKey               string
 	PhosphorescenceSpotifyID    string
 	PhosphorescenceRefreshToken string
+	GoogleAnalyticsSecret       string
 }
 
 func Initialize(cfg *Config) {
@@ -64,6 +67,10 @@ func Initialize(cfg *Config) {
 	}
 	if _, err = getPhosphorescenceToken(); err != nil {
 		log.Fatalf("Could not get Phosphorescence user token from refresh token: %s", err)
+		return
+	}
+	if googleAnalyticsSecret, err = hex.DecodeString(cfg.GoogleAnalyticsSecret); err != nil {
+		log.Fatalf("Could not get Google Analytics secret: %s", err)
 		return
 	}
 }

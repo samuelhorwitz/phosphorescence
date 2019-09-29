@@ -1,17 +1,8 @@
-import {TextEncoder} from 'text-encoding-shim';
 import {langToRegion} from '~/assets/l10n';
 import bcp47 from 'bcp-47';
 
 const isAdmin = 'dimension2';
 const spotifyRegionGuess = 'dimension3';
-
-async function digestMessage(message) {
-    const msgUint8 = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-}
 
 export default async function({store, error, $ga}) {
     let userResponse = await fetch(`${process.env.API_ORIGIN}/user/me`, {credentials: 'include'});
@@ -22,7 +13,7 @@ export default async function({store, error, $ga}) {
         if (user.spotifyId === '126149108') {
             $ga.set(isAdmin, 'true');
         }
-        $ga.set('userId', await digestMessage(user.spotifyId));
+        $ga.set('userId', user.gaId);
     } else {
         store.commit('user/restore');
         if (!store.state.user.country) {

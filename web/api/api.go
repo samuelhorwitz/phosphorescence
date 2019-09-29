@@ -75,6 +75,7 @@ func main() {
 		phosphorescenceSpotifyID:             os.Getenv("PHOSPHORESCENCE_SPOTIFY_ID"),
 		phosphorescenceRefreshToken:          os.Getenv("PHOSPHORESCENCE_REFRESH_TOKEN"),
 		recaptchaSecret:                      os.Getenv("RECAPTCHA_SECRET_KEY"),
+		googleAnalyticsSecret:                os.Getenv("GOOGLE_ANALYTICS_SALT"),
 	}
 	migrate(cfg)
 	initialize(cfg)
@@ -119,6 +120,7 @@ func initialize(cfg *config) {
 		MailgunAPIKey:               cfg.mailgunAPIKey,
 		PhosphorescenceSpotifyID:    cfg.phosphorescenceSpotifyID,
 		PhosphorescenceRefreshToken: cfg.phosphorescenceRefreshToken,
+		GoogleAnalyticsSecret:       cfg.googleAnalyticsSecret,
 	})
 	log.Println("Phosphor handlers initialized")
 	session.Initialize(&session.Config{

@@ -31,4 +31,5 @@ type config struct {
 	phosphorescenceSpotifyID             string
 	phosphorescenceRefreshToken          string
 	recaptchaSecret                      string
+	googleAnalyticsSecret                string
 }
