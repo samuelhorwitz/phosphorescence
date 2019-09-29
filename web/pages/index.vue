@@ -34,68 +34,11 @@
             </table>
         </div>
         <trackCompass class="trackCompass" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="showCompass"></trackCompass>
-        <aside class="loading" v-show="!$store.getters['tracks/playlistLoaded']">
-            <ul>
-                <li class="loadingMessage" v-for="loadMessage in $store.state.loading.descriptions" :class="{done: loadMessage.done}">
-                    {{loadMessage.description}}...
-                </li>
-            </ul>
-        </aside>
+        <loadingScreen v-show="!$store.getters['tracks/playlistLoaded']"></loadingScreen>
     </article>
 </template>
 
 <style scoped>
-    article:not(.loading) {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-
-    article.loading {
-        align-items: flex-start;
-    }
-
-    aside.loading {
-        overflow: auto;
-        color: white;
-        padding: 1em;
-        flex: 1;
-        z-index: 10000000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    aside.loading ul {
-        margin: 0px;
-        padding: 0px;
-        flex: 1;
-    }
-
-    li.loadingMessage {
-        display: block;
-        font-size: 3em;
-    }
-
-    li.loadingMessage:not(.done)::before {
-        content: '‣';
-        color: magenta;
-        display: inline-block;
-        width: 1em;
-    }
-
-    li.loadingMessage.done::before {
-        content: '✓';
-        color: cyan;
-        display: inline-block;
-        width: 1em;
-    }
-
-    progress {
-        width: 100%;
-    }
-
     a {
         color: white;
         text-decoration: none;
@@ -107,9 +50,15 @@
 
     article {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
+        flex-direction: column;
         height: 100%;
         margin: 0px 2em;
+        width: 100%;
+    }
+
+    article.loading {
+        margin: 0px;
     }
 
     ol {
@@ -233,10 +182,6 @@
         .tracks {
             align-items: center;
         }
-
-        aside.loading {
-            flex: 1;
-        }
     }
 
     @media only screen and (max-width: 1099px) {
@@ -255,9 +200,10 @@
 <script>
     import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
     import trackCompass from '~/components/track-compass';
+    import loadingScreen from '~/components/loading-screen';
 
     export default {
-        components: {trackCompass},
+        components: {trackCompass, loadingScreen},
         watch: {
             currentTrack() {
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');

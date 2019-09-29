@@ -1,9 +1,6 @@
 <template>
     <article>
         <div class="container">
-            <h2><b class="appname">Phosphorescence</b>
-            builds coherent playlists for <b class="genre">trance</b> and <b class="genre">chill-out</b> listeners.
-            </h2>
             <form @submit.prevent.stop>
                 <label for="rememberMe">
                     <input type="checkbox" id="rememberMe" v-model="rememberMe">
@@ -11,10 +8,6 @@
                 </label>
                 <button @click="login" autofocus>Login With Spotify</button>
             </form>
-            <div class="boilerplate">
-                <p>We are an <a target="_blank" rel="external noopener" href="https://github.com/samuelhorwitz/phosphorescence">open source project</a> and 100% free to use.</p>
-                <p>Spotify provides the music, however we are <em>not</em> affiliated with Spotify in any way.</p>
-            </div>
         </div>
     </article>
 </template>
@@ -32,25 +25,6 @@
 
     .container {
         max-width: 40em;
-    }
-
-    a {
-        color: cyan;
-    }
-
-    a:hover {
-        color: magenta;
-    }
-
-    b.appname {
-        font-variant: small-caps;
-        font-weight: bolder;
-        font-family: 'Varela';
-    }
-
-    b.genre {
-        font-weight: inherit;
-        color: aqua;
     }
 
     button {
@@ -72,12 +46,6 @@
     button:focus {
         outline: none;
         box-shadow: 5px 5px teal;
-    }
-
-    h2 {
-        margin-top: 0px;
-        margin-bottom: 1em;
-        font-size: 2.2em;
     }
 
     form {
@@ -120,11 +88,6 @@
         outline: none;
         box-shadow: 5px 5px teal;
     }
-
-    .boilerplate {
-        font-size: 0.75em;
-        color: #eee;
-    }
 </style>
 
 <script>
@@ -132,7 +95,6 @@
 
     export default {
         layout: 'empty',
-        showLogo: false,
         middleware: 'unauthenticated',
         data() {
             return {
