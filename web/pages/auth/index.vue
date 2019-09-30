@@ -46,7 +46,6 @@
         padding: 0.5em 0;
         cursor: pointer;
         margin-top: 0.5em;
-        margin-bottom: 5em;
     }
 
     button:hover {
