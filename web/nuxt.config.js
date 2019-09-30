@@ -47,7 +47,9 @@ module.exports = {
   plugins: [
     {ssr: false, src: '~plugins/monaco.js'},
     {ssr: false, src: '~plugins/ios-rubberband-bg.js'},
-    {ssr: false, src: '~plugins/consola.js'}
+    {ssr: false, src: '~plugins/consola.js'},
+    {ssr: false, src: '~plugins/facebook.js'},
+    {ssr: false, src: '~plugins/twitter.js'}
   ],
   css: ['~/css/main.css', '~/css/fontawesome.css'],
   mode: 'spa',
