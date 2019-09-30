@@ -36,10 +36,6 @@
         display: flex;
     }
 
-    ul {
-        margin-bottom: 7em;
-    }
-
     button {
         border: 7px outset aqua;
         background-color: magenta;
@@ -71,7 +67,10 @@
         display: flex;
         align-items: center;
         cursor: pointer;
-        margin-top: auto;
+    }
+
+    h2 {
+        margin: 0px;
     }
 
     input[type=checkbox] {
