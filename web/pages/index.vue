@@ -1,6 +1,6 @@
 <template>
     <article :class="{loading: !$store.getters['tracks/playlistLoaded']}">
-        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="!showCompass" v-show="$store.getters['tracks/playlistLoaded']">
+        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="$store.getters['tracks/playlistLoaded'] && !showCompass">
             <table>
                 <thead>
                     <tr>
@@ -33,8 +33,8 @@
                 </tbody>
             </table>
         </div>
-        <trackCompass class="trackCompass" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="showCompass"></trackCompass>
-        <loadingScreen v-show="!$store.getters['tracks/playlistLoaded']"></loadingScreen>
+        <trackCompass class="trackCompass" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="$store.getters['tracks/playlistLoaded'] && showCompass"></trackCompass>
+        <loadingScreen v-if="!$store.getters['tracks/playlistLoaded']"></loadingScreen>
     </article>
 </template>
 
@@ -209,6 +209,17 @@
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');
                 if (playingEl) {
                     this.$refs.tableWrapper.scrollTop = playingEl.offsetTop;
+                }
+            },
+            // This is purely to fix a weird rendering bug in Desktop Safari
+            // MacOS 10.14.6, Safari 13.0.1
+            showCompass(newVal, oldVal) {
+                if (oldVal && !newVal) {
+                    setTimeout(() => {
+                        this.$refs.tableWrapper.style.display = 'none';
+                        this.$refs.tableWrapper.offsetHeight;
+                        this.$refs.tableWrapper.style.display = '';
+                    }, 10);
                 }
             }
         },
