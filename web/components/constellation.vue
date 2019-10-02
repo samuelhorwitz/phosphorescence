@@ -1,7 +1,24 @@
 <template>
     <section ref="container">
         <div class="canvasWrapper">
-            <canvas ref="canvas" :class="{pointer: hoverTrack !== null}" :title="canvasTitle" @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing')" @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing')" tabindex="0" @keydown.arrow-up="moveCursorUp(); $ga.event('constellation', 'key', 'up')" @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')" @keydown.enter="handleEnter(); $ga.event('constellation', 'key', 'enter')" @keydown.esc="handleEscape(); $ga.event('constellation', 'key', 'escape')" @blur="handleBlur">
+            <canvas
+                ref="canvas"
+                :class="{pointer: hoverTrack !== null}"
+                :title="canvasTitle"
+                @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing')"
+                @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing')"
+                tabindex="0"
+                @keydown.arrow-up="moveCursorUp(); $ga.event('constellation', 'key', 'up')"
+                @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')"
+                @keydown.enter="handleEnter(); $ga.event('constellation', 'key', 'enter')"
+                @keydown.esc="handleEscape(); $ga.event('constellation', 'key', 'escape')"
+                @blur="handleBlur"
+                @mousemove="handleCanvasMouseMove"
+                @mouseleave="handleCanvasMouseLeave"
+                @touchstart.passive="handleTouchStart"
+                @touchmove.prevent="handleTouchMove"
+                @touchend.passive="handleTouchEnd"
+                @touchcancel.passive="handleTouchEnd">
                 <ol>
                     <li v-for="(track, index) in tracks" @click="seekTrack(index); $ga.event('constellation-accessible', 'seek-track')">
                         "{{track.track.name}}" by {{humanReadableArtists(track.track.artists)}} on album "{{track.track.album.name}}" falls on the chthonic-aethereal axis at {{Math.floor(track.evocativeness.aetherealness * 100)}}% and on the transcendental-primordial axis at {{Math.floor(track.evocativeness.primordialness * 100)}}%. The track is in key {{getHarmonics(track)}} and has {{track.features.tempo}} beats per minute.
@@ -234,7 +251,7 @@
         }
 
         .details {
-            margin-top: 1em;
+            margin-top: 1ex;
         }
     }
 
@@ -264,7 +281,7 @@
     const fps = 60;
     const maxSize = 500;
     const minSize = 50;
-    const segmentBreaks = [[600, 14], [500, 12], [400, 10], [300, 8], [150, 6], [0, 4]];
+    const segmentBreaks = [[600, 14], [500, 12], [400, 10], [250, 8], [150, 6], [0, 4]];
     const outerSizeDifference = 50;
     const padding = outerSizeDifference / 2;
     const pointBoundingBox = 30;
@@ -401,12 +418,6 @@
             }
         },
         mounted() {
-            this.$refs.canvas.addEventListener('mousemove', this.handleCanvasMouseMove);
-            this.$refs.canvas.addEventListener('mouseleave', this.handleCanvasMouseLeave);
-            this.$refs.canvas.addEventListener('touchstart', this.handleTouchStart, {passive: true});
-            this.$refs.canvas.addEventListener('touchmove', this.handleTouchMove, {passive: true});
-            this.$refs.canvas.addEventListener('touchend', this.handleTouchEnd, {passive: true});
-            this.$refs.canvas.addEventListener('touchcancel', this.handleTouchEnd, {passive: true});
             addEventListener('resize', this.handleResize);
             addEventListener('orientationchange', this.handleResizeAfterTick);
             mainViewportEventBus.$on('resize', this.handleResizeAfterTick);
@@ -419,12 +430,6 @@
         beforeDestroy() {
             clearInterval(this.haloInterval);
             this.destroyBeatIntervals();
-            this.$refs.canvas.removeEventListener('mousemove', this.handleCanvasMouseMove);
-            this.$refs.canvas.removeEventListener('mouseleave', this.handleCanvasMouseLeave);
-            this.$refs.canvas.removeEventListener('touchstart', this.handleTouchStart, {passive: true});
-            this.$refs.canvas.removeEventListener('touchmove', this.handleTouchMove, {passive: true});
-            this.$refs.canvas.removeEventListener('touchend', this.handleTouchEnd, {passive: true});
-            this.$refs.canvas.removeEventListener('touchcancel', this.handleTouchEnd, {passive: true});
             removeEventListener('resize', this.handleResize);
             removeEventListener('orientationchange', this.handleResizeAfterTick);
             mainViewportEventBus.$off('resize', this.handleResizeAfterTick);
