@@ -1,6 +1,6 @@
 <template>
     <article :class="{loading: !$store.getters['tracks/playlistLoaded']}">
-        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="$store.getters['tracks/playlistLoaded'] && !showCompass">
+        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="$store.getters['tracks/playlistLoaded'] && !showConstellation">
             <table>
                 <thead>
                     <tr>
@@ -33,7 +33,7 @@
                 </tbody>
             </table>
         </div>
-        <trackCompass class="trackCompass" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="$store.getters['tracks/playlistLoaded'] && showCompass"></trackCompass>
+        <constellation class="constellation" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="$store.getters['tracks/playlistLoaded'] && showConstellation"></constellation>
         <loadingScreen v-if="!$store.getters['tracks/playlistLoaded']"></loadingScreen>
     </article>
 </template>
@@ -92,12 +92,12 @@
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s, opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s;
     }
 
-    .trackCompass {
+    .constellation {
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s, opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0s;
     }
 
     .tableWrapper.loading,
-    .trackCompass.loading {
+    .constellation.loading {
         transform: scale(0.7);
         opacity: 0.3;
         pointer-events: none;
@@ -199,11 +199,11 @@
 
 <script>
     import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
-    import trackCompass from '~/components/track-compass';
+    import constellation from '~/components/constellation';
     import loadingScreen from '~/components/loading-screen';
 
     export default {
-        components: {trackCompass, loadingScreen},
+        components: {constellation, loadingScreen},
         watch: {
             currentTrack() {
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');
@@ -213,7 +213,7 @@
             },
             // This is purely to fix a weird rendering bug in Desktop Safari
             // MacOS 10.14.6, Safari 13.0.1
-            showCompass(newVal, oldVal) {
+            showConstellation(newVal, oldVal) {
                 if (oldVal && !newVal) {
                     setTimeout(() => {
                         this.$refs.tableWrapper.style.display = 'none';
@@ -224,8 +224,8 @@
             }
         },
         computed: {
-            showCompass() {
-                return this.$store.state.preferences.showCompass;
+            showConstellation() {
+                return this.$store.state.preferences.showConstellation;
             },
             currentTrack() {
                 if (this.$store.getters['tracks/isPlayerDisconnected']) {
