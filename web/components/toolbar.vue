@@ -364,6 +364,7 @@
     import {logout} from '~/assets/session';
     import {builders, loadNewPlaylist} from '~/assets/recordcrate';
     import {terminatePlaylistBuilding} from '~/assets/eos';
+    import mainViewportEventBus from '~/assets/mainviewport';
 
     export default {
         data() {
@@ -439,6 +440,7 @@
             toggledAdvanced() {
                 this.flash();
                 this.advancedOpen = !this.advancedOpen;
+                mainViewportEventBus.$emit('resize');
             }
         }
     };

@@ -1,22 +1,21 @@
 <template>
-    <section>
-        <div class="container" ref="container">
-            <span class="label vertical left" title="Chthonicness">chthonic</span>
-            <div class="inner">
-                <span class="label top" title="Transcendentalness">transcendental</span>
-                <div class="canvasWrapper">
-                    <canvas ref="canvas" :class="{pointer: hoverTrack !== null}" :title="canvasTitle" @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing')" @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing')" tabindex="0" @keydown.arrow-up="moveCursorUp(); $ga.event('constellation', 'key', 'up')" @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')" @keydown.enter="handleEnter(); $ga.event('constellation', 'key', 'enter')" @blur="detailsTrack = null">
-                        <ol>
-                            <li v-for="(track, index) in tracks" @click="seekTrack(index); $ga.event('constellation-accessible', 'seek-track')">
-                                "{{track.track.name}}" by {{humanReadableArtists(track.track.artists)}} on album "{{track.track.album.name}}" falls on the chthonic-aethereal axis at {{Math.floor(track.evocativeness.aetherealness * 100)}}% and on the transcendental-primordial axis at {{Math.floor(track.evocativeness.primordialness * 100)}}%. The track is in key {{getHarmonics(track)}} and has {{track.features.tempo}} beats per minute.
-                            </li>
-                        </ol>
-                    </canvas>
-                    <div class="dummy" ref="dummy"></div>
+    <section ref="container">
+        <div class="canvasWrapper">
+            <canvas ref="canvas" :class="{pointer: hoverTrack !== null}" :title="canvasTitle" @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing')" @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing')" tabindex="0" @keydown.arrow-up="moveCursorUp(); $ga.event('constellation', 'key', 'up')" @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')" @keydown.enter="handleEnter(); $ga.event('constellation', 'key', 'enter')" @keydown.esc="handleEscape(); $ga.event('constellation', 'key', 'escape')" @blur="handleBlur">
+                <ol>
+                    <li v-for="(track, index) in tracks" @click="seekTrack(index); $ga.event('constellation-accessible', 'seek-track')">
+                        "{{track.track.name}}" by {{humanReadableArtists(track.track.artists)}} on album "{{track.track.album.name}}" falls on the chthonic-aethereal axis at {{Math.floor(track.evocativeness.aetherealness * 100)}}% and on the transcendental-primordial axis at {{Math.floor(track.evocativeness.primordialness * 100)}}%. The track is in key {{getHarmonics(track)}} and has {{track.features.tempo}} beats per minute.
+                    </li>
+                </ol>
+            </canvas>
+            <div class="hover" :class="{show: showAxisLabels}">
+                <span class="label vertical left" title="Chthonicness">chthonic</span>
+                <div class="hoverInner">
+                    <span class="label top" title="Transcendentalness">transcendental</span>
+                    <span class="label bottom" title="Primordialness">primordial</span>
                 </div>
-                <span class="label bottom" title="Primordialness">primordial</span>
+                <span class="label vertical right" title="Aetherealness">aethereal</span>
             </div>
-            <span class="label vertical right" title="Aetherealness">aethereal</span>
         </div>
         <div class="details" :style="{left: detailsOffsetX + 'px', top: detailsOffsetY + 'px'}" ref="details" v-if="detailsTrack">
             <dl>
@@ -51,24 +50,9 @@
         height: 100%;
     }
 
-    .container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: rgb(40, 27, 61, 0.7);
-        border: 2px solid aqua;
-        height: 100%;
-        box-sizing: border-box;
-        width: 65vh;
-        max-height: 65vh;
-        margin-bottom: 1em;
-    }
-
-    .inner {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        height: 100%;
+    canvas {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
     }
 
     canvas.pointer {
@@ -77,6 +61,37 @@
 
     canvas:focus {
         outline: none;
+    }
+
+    .canvasWrapper {
+        background-color: rgb(40, 27, 61, 0.7);
+        border: 2px solid aqua;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .hover {
+        display: flex;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle, rgba(255,255,255,0) 51%, rgba(0,0,28,1) 100%);
+        pointer-events: none;
+        transition: opacity 0.3s ease-in 0s;
+        opacity: 0;
+    }
+
+    .hover.show {
+        opacity: 1;
+    }
+
+    .hoverInner {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        justify-content: space-between;
     }
 
     .label {
@@ -106,27 +121,6 @@
     .label.bottom {
         margin-top: -0.4em;
         margin-bottom: 0.1em;
-    }
-
-    .canvasWrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-    }
-
-    .dummy {
-        flex: 1;
-        box-sizing: border-box;
-        touch-action: none;
-        height: 100%;
-    }
-
-    canvas {
-        position: absolute;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
     }
 
     .details {
@@ -229,33 +223,18 @@
         }
     }
 
-    @media only screen and (max-width: 1099px) {
-        .container {
-            width: 58vh;
-            max-height: 58vh;
-        }
-    }
-
     @media only screen and (max-width: 599px) {
         section {
             justify-content: flex-start;
             flex-direction: column;
         }
 
-        .container {
-            width: 45vh;
-            max-height: 45vh;
-        }
-
         dl {
             white-space: normal;
         }
-    }
 
-    @media only screen and (max-width: 414px) {
-        .container {
-            width: 40vh;
-            max-height: 40vh;
+        .details {
+            margin-top: 1em;
         }
     }
 
@@ -273,6 +252,7 @@
 <script>
     import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
     import {initializeCanvas} from '~/assets/constellation';
+    import mainViewportEventBus from '~/assets/mainviewport';
 
     const A_FLAT = 8, E_FLAT = 3, B_FLAT = 10, F = 5, C = 0, G = 7, D = 2, A = 9, E = 4, B = 11, F_SHARP = 6, D_FLAT = 1;
     const key = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
@@ -284,7 +264,7 @@
     const fps = 60;
     const maxSize = 500;
     const minSize = 50;
-    const segmentBreaks = [[400, 10], [350, 8], [150, 6], [0, 4]];
+    const segmentBreaks = [[600, 14], [500, 12], [400, 10], [300, 8], [150, 6], [0, 4]];
     const outerSizeDifference = 50;
     const padding = outerSizeDifference / 2;
     const pointBoundingBox = 30;
@@ -292,6 +272,7 @@
     const pulseTTL = 1000;
     const maxHarmonicDistance = 7;
     const dragThreshold = 20;
+    const canvasMargin = 50;
 
     export default {
         data() {
@@ -308,7 +289,8 @@
                 edges: [],
                 canvasAbsoluteX: null,
                 canvasAbsoluteY: null,
-                ongoingTouch: null
+                ongoingTouch: null,
+                showAxisLabels: false
             };
         },
         computed: {
@@ -426,7 +408,8 @@
             this.$refs.canvas.addEventListener('touchend', this.handleTouchEnd, {passive: true});
             this.$refs.canvas.addEventListener('touchcancel', this.handleTouchEnd, {passive: true});
             addEventListener('resize', this.handleResize);
-            addEventListener('orientationchange', this.handleResizeAfterTimeout);
+            addEventListener('orientationchange', this.handleResizeAfterTick);
+            mainViewportEventBus.$on('resize', this.handleResizeAfterTick);
             this.handleResize();
             this.$nextTick(this.resetCanvasBounds);
         },
@@ -443,7 +426,8 @@
             this.$refs.canvas.removeEventListener('touchend', this.handleTouchEnd, {passive: true});
             this.$refs.canvas.removeEventListener('touchcancel', this.handleTouchEnd, {passive: true});
             removeEventListener('resize', this.handleResize);
-            removeEventListener('orientationchange', this.handleResizeAfterTimeout);
+            removeEventListener('orientationchange', this.handleResizeAfterTick);
+            mainViewportEventBus.$off('resize', this.handleResizeAfterTick);
             this.destroyCanvas && this.destroyCanvas();
         },
         methods: {
@@ -523,7 +507,13 @@
                 this.hoverTrack = null;
             },
             handleCanvasClick() {
+                let oldDetailsTrack = this.detailsTrack;
                 this.detailsTrack = this.tracks[this.hoverTrack];
+                if (this.detailsTrack || (oldDetailsTrack && !this.detailsTrack)) {
+                    this.showAxisLabels = false;
+                } else {
+                    this.showAxisLabels = !this.showAxisLabels;
+                }
             },
             handleCanvasDoubleClick() {
                 if (!this.trackHovering) {
@@ -554,6 +544,13 @@
             handleEnter() {
                 this.handleCanvasClick();
             },
+            handleEscape() {
+                this.$refs.canvas.blur();
+            },
+            handleBlur() {
+                this.detailsTrack = null;
+                this.showAxisLabels = false;
+            },
             humanReadableArtists(artists) {
                 if (artists.length === 1) {
                     return `artist "${artists[0].name}"`;
@@ -567,18 +564,13 @@
             getHarmonics(track) {
                 return `${key[track.features.key]} ${mode[track.features.mode]}`;
             },
-            handleResizeAfterTimeout() {
-                setTimeout(this.handleResize, 200);
+            handleResizeAfterTick() {
+                this.$nextTick(this.handleResize);
+                setTimeout(this.resetCanvasBounds, 200);
             },
             handleResize() {
-                let dummy = this.$refs.dummy;
-                let size = Math.min(dummy.offsetWidth, dummy.offsetHeight) - outerSizeDifference;
-                this.innerSize = Math.min(maxSize, Math.max(minSize, size));
-                if (this.$refs.container.offsetHeight >= 300 && this.$refs.container.offsetWidth >= 300) {
-                    this.$refs.container.style.fontSize = `${Math.max(8, Math.floor((size / maxSize) * 16))}px`;
-                } else {
-                    this.$refs.container.style.fontSize = '0px';
-                }
+                this.innerSize = Math.min(this.$refs.container.parentNode.clientWidth - canvasMargin - (outerSizeDifference / 2), this.$refs.container.parentNode.clientHeight - canvasMargin - (outerSizeDifference / 2));
+                this.$refs.container.style.fontSize = `${Math.max(8, Math.floor((this.innerSize / maxSize) * 16))}px`;
                 this.resetCanvasBounds();
             },
             resetCanvasBounds() {
