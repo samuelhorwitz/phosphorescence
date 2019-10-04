@@ -264,7 +264,12 @@
                     if (this.$store.state.preferences.onlyTheHits) {
                         pruners = [builders.hits];
                     }
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners, percent => {
+                    let {playlist} = await loadNewPlaylist({
+                        count: this.$store.state.preferences.tracksPerPlaylist,
+                        builder: builders.randomwalk, 
+                        firstTrack: processedTrack,
+                        pruners
+                    }, percent => {
                         this.$store.commit('loading/tickProgress', {id: 'generate', percent});
                     });
                     this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));

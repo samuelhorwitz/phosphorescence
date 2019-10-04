@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /editor
+Disallow: /auth/failed
+Disallow: /auth/failedupgrade

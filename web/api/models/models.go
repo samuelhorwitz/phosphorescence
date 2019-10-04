@@ -2,7 +2,12 @@ package models
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"encoding/hex"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -16,9 +21,12 @@ import (
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 var (
-	s3Service  *s3.S3
-	s3Uploader *s3manager.Uploader
-	postgresDB *sql.DB
+	s3Service             *s3.S3
+	s3Uploader            *s3manager.Uploader
+	postgresDB            *sql.DB
+	playlistImageBase64   string
+	isProduction          bool
+	googleAnalyticsSecret []byte
 )
 
 type Config struct {
@@ -31,9 +39,27 @@ type Config struct {
 	PostgresMaxOpen          int
 	PostgresMaxIdle          int
 	PostgreMaxLifetime       int
+	GoogleAnalyticsSecret    string
 }
 
 func Initialize(cfg *Config) {
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatalf("Could not get executable path: %s", err)
+		return
+	}
+	exPath := filepath.Dir(ex)
+	playlistImage, err := ioutil.ReadFile(filepath.Join(exPath, "assets", "playlist_small.jpg"))
+	if err != nil {
+		log.Fatalf("Could not open playlist image: %s", err)
+		return
+	}
+	playlistImageBase64 = base64.StdEncoding.EncodeToString(playlistImage)
+	isProduction = cfg.IsProduction
+	if googleAnalyticsSecret, err = hex.DecodeString(cfg.GoogleAnalyticsSecret); err != nil {
+		log.Fatalf("Could not get Google Analytics secret: %s", err)
+		return
+	}
 	s3Session, err := common.InitializeS3(&common.AWSConfig{
 		Config: &aws.Config{
 			Endpoint: aws.String(cfg.SpacesScriptsEndpoint),

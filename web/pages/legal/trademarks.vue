@@ -173,6 +173,43 @@
 
     export default {
         layout: 'empty',
-        components: {legal}
+        components: {legal},
+        head() {
+            return {
+                title: 'Trademark Policy | Phosphorescence',
+                meta: [
+                    {
+                        hid: 'og:type',
+                        name: 'og:type',
+                        content: 'article'
+                    },
+                    {
+                        hid: 'og:site_name',
+                        name: 'og:site_name',
+                        content: 'Phosphorescence'
+                    },
+                    {
+                        hid: 'og:image',
+                        name: 'og:image',
+                        content: 'https://phosphor.me/og.png'
+                    },
+                    {
+                        hid: 'og:description',
+                        name: 'og:description',
+                        content: 'Phosphorescence trademark policy'
+                    },
+                    {
+                        hid: 'og:url',
+                        name: 'og:url',
+                        content: 'https://phosphor.me/legal/trademarks'
+                    },
+                    {
+                        hid: 'og:title',
+                        name: 'og:title',
+                        content: 'Trademark Policy'
+                    }
+                ]
+            };
+        }
     };
 </script>

@@ -27,6 +27,7 @@ type config struct {
 	handlerTimeout                       time.Duration
 	rateLimitPerSecond                   int
 	redisHost                            string
+	redisCacheHost                       string
 	mailgunAPIKey                        string
 	phosphorescenceSpotifyID             string
 	phosphorescenceRefreshToken          string

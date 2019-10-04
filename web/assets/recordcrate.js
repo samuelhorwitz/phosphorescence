@@ -29,11 +29,11 @@ export async function initialize(countryCode, isLoggedIn, loadingHandler) {
     await sendTrackBlobToEos(data);
 }
 
-export async function processTrack(countryCode, track) {
+export async function processTrack(track) {
     let recordCrateWorker = new RecordCrateWorker();
     let messenger = new SecureMessenger(location.origin);
     await messenger.listen(recordCrateWorker);
-    let {data} = await messenger.postMessage({type: 'sendTrack', track, countryCode});
+    let {data} = await messenger.postMessage({type: 'sendTrack', track});
     if (data.type === 'sendProcessedTrack') {
         await sendTrackToEos(data.data);
     }
@@ -42,14 +42,27 @@ export async function processTrack(countryCode, track) {
     return data.data;
 }
 
-export function loadNewPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent) {
+export async function processTracks(tracks) {
+    let recordCrateWorker = new RecordCrateWorker();
+    let messenger = new SecureMessenger(location.origin);
+    await messenger.listen(recordCrateWorker);
+    let {data} = await messenger.postMessage({type: 'sendTracks', tracks, raw: true});
+    if (data.type !== 'sendProcessedTracks') {
+        throw new Error('Invalid response from track processing', data.type);
+    }
+    messenger.close();
+    recordCrateWorker.terminate();
+    return data.data;
+}
+
+export function loadNewPlaylist({count, builder, firstTrackBuilder, firstTrack, replacementTracks, pruners}, loadPercent) {
     if (!builder) {
         builder = builders.randomwalk;
     }
     if (!count) {
         count = 10;
     }
-    return buildPlaylist(count, builder, firstTrackBuilder, firstTrack, pruners, loadPercent);
+    return buildPlaylist({count, builder, firstTrackBuilder, firstTrack, replacementTracks, pruners}, loadPercent);
 }
 
 async function getTracks(isLoggedIn, region) {
@@ -66,7 +79,7 @@ async function getTracks(isLoggedIn, region) {
     }
     let tracksUrlResponse
     if (isLoggedIn) {
-        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks/${region}`, {credentials: 'include'});
+        tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
     } else {
         let captcha = await getCaptchaToken('api/tracks');
         tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/unauthenticated/tracks/${region}?captcha=${captcha}`);
@@ -110,7 +123,7 @@ async function getProcessedTracks(countryCode, isLoggedIn, loadingHandler) {
             loadingHandler(0.45 + (value * 0.45), true);
         }
     });
-    let {data} = await messenger.postMessage({type: 'sendTracks', tracks, countryCode});
+    let {data} = await messenger.postMessage({type: 'sendTracks', tracks});
     let gzipData;
     if (data.type === 'sendProcessedTracks') {
         gzipData = data.gzipData;

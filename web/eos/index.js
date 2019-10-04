@@ -49,10 +49,17 @@ const terminationEvent = 'eosTerminateAll';
     });
 })();
 
+function getTracksUrl(replacementTracks) {
+    if (replacementTracks) {
+        return URL.createObjectURL(new Blob([JSON.stringify(replacementTracks)], {type: 'application/json'}))
+    }
+    return tracksReady;
+}
+
 async function handleBuildPlaylist(loadingInterruptPort, data) {
     let response = await buildRunner(loadingInterruptPort)({
         type: 'buildPlaylist',
-        tracksUrl: await tracksReady,
+        tracksUrl: await getTracksUrl(data.replacementTracks),
         additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
         prunedTrackIds: data.prunedTrackIds,
         trackCount: data.trackCount,
@@ -69,7 +76,7 @@ async function handleBuildPlaylist(loadingInterruptPort, data) {
 async function handlePruneTracks(loadingInterruptPort, data) {
     let response = await buildRunner(loadingInterruptPort)({
         type: 'pruneTracks',
-        tracksUrl: await tracksReady,
+        tracksUrl: await getTracksUrl(data.replacementTracks),
         additionalTracksUrl: URL.createObjectURL(new Blob([JSON.stringify(additionalTracks)], {type: 'application/json'})),
         prunedTrackIds: data.prunedTrackIds,
         script: encoder.encode(`(function(){${decoder.decode(data.script)}})()`)

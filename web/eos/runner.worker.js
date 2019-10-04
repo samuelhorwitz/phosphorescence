@@ -224,7 +224,8 @@ async function runChecks() {
                 return self.hooks.getNextTrack(JSON.parse(JSON.stringify({playlist, tags, goalTracks, points, tracks: prunedTracks, previousTrack})), tree);
             }, prunedTracks);
             if (!nextTrack) {
-                throw new Error(`Builder was unable to get track ${i + 2}`);
+                console.warn(`Builder was unable to get track ${i + 2}`);
+                break;
             }
             tags[getTrackTag(nextTrack.track)] = true;
             playlist.push(nextTrack);

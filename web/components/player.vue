@@ -43,15 +43,15 @@
                     </span>
                     <span class="trackDetails" :class="{scrollingBanner: isTrackDataScrolling}" ref="trackDetails" v-if="playerReadyAndConnected && !$store.getters['tracks/stopped']">
                         <span class="trackName">
-                            <a target="_blank" rel="external noopener" :href="currentTrackUrl">{{currentTrackName}}</a>
+                            <a target="_blank" rel="external noopener" :href="currentTrackUrl" v-spotify-uri:track="currentTrack.id" v-spotify-uri-title="getSpotifyTrackDragTitle(currentTrack)">{{currentTrackName}}</a>
                         </span>
                         <ol class="artistsNames">
                             <li v-for="artist in currentTrackArtists">
-                                <a target="_blank" rel="external noopener" :href="artist.url">{{artist.name}}</a>
+                                <a target="_blank" rel="external noopener" :href="artist.url" v-spotify-uri:artist="artist.id" v-spotify-uri-title="artist.name">{{artist.name}}</a>
                             </li>
                         </ol>
                         <span class="albumName">
-                            <a target="_blank" rel="external noopener" :href="currentAlbumUrl">{{currentAlbumName}}</a>
+                            <a target="_blank" rel="external noopener" :href="currentAlbumUrl" v-spotify-uri:album="currentTrack.track.album.id" v-spotify-uri-title="getSpotifyAlbumDragTitle(currentTrack.track.album)">{{currentAlbumName}}</a>
                         </span>
                     </span>
                     <span class="nothingPlaying scrollingBanner" v-if="playerReadyAndConnected && $store.getters['tracks/stopped'] && !$store.state.tracks.spotifyAppearsDown">
@@ -440,7 +440,7 @@
 </style>
 
 <script>
-    import {initializePlayer, getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackUri} from '~/assets/spotify';
+    import {initializePlayer, getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackUri, getSpotifyTrackDragTitle, getSpotifyAlbumDragTitle} from '~/assets/spotify';
     import {renderOffscreen, saneOffscreenOptions} from '~/assets/constellation';
     import {getCaptchaToken} from '~/assets/captcha';
 
@@ -827,7 +827,9 @@
             },
             showPlaylist() {
                 this.$store.commit('preferences/showPlaylist');
-            }
+            },
+            getSpotifyTrackDragTitle,
+            getSpotifyAlbumDragTitle
         },
         mounted() {
             addEventListener('resize', this.checkShouldScroll);

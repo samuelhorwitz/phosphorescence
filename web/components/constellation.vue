@@ -12,13 +12,15 @@
                 @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')"
                 @keydown.enter="handleEnter(); $ga.event('constellation', 'key', 'enter')"
                 @keydown.esc="handleEscape(); $ga.event('constellation', 'key', 'escape')"
-                @blur="handleBlur"
+                @focusout="handleBlur"
                 @mousemove="handleCanvasMouseMove"
                 @mouseleave="handleCanvasMouseLeave"
                 @touchstart.passive="handleTouchStart"
                 @touchmove.prevent="handleTouchMove"
                 @touchend.passive="handleTouchEnd"
-                @touchcancel.passive="handleTouchEnd">
+                @touchcancel.passive="handleTouchEnd"
+                v-spotify-uri:track="canvasSpotifyDragTrack"
+                v-spotify-uri-title="canvasSpotifyDragTrackTitle">
                 <ol>
                     <li v-for="(track, index) in tracks" @click="seekTrack(index); $ga.event('constellation-accessible', 'seek-track')">
                         "{{track.track.name}}" by {{humanReadableArtists(track.track.artists)}} on album "{{track.track.album.name}}" falls on the chthonic-aethereal axis at {{Math.floor(track.evocativeness.aetherealness * 100)}}% and on the transcendental-primordial axis at {{Math.floor(track.evocativeness.primordialness * 100)}}%. The track is in key {{getHarmonics(track)}} and has {{track.features.tempo}} beats per minute.
@@ -37,17 +39,17 @@
         <div class="details" :style="{left: detailsOffsetX + 'px', top: detailsOffsetY + 'px'}" ref="details" v-if="detailsTrack">
             <dl>
                 <dt>Track</dt>
-                <dd><a target="_blank" rel="external noopener" :href="detailsTrackUrl">{{detailsTrack.track.name}}</a></dd>
+                <dd><a target="_blank" rel="external noopener" :href="detailsTrackUrl" v-spotify-uri:track="detailsTrack.track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(detailsTrack)">{{detailsTrack.track.name}}</a></dd>
                 <dt>Artists</dt>
                 <dd>
                     <ol class="artists">
                         <li class="artist" v-for="artist in detailsTrackArtists">
-                            <a target="_blank" rel="external noopener" :href="artist.url">{{artist.name}}</a>
+                            <a target="_blank" rel="external noopener" :href="artist.url" v-spotify-uri:artist="artist.id" v-spotify-uri-title="artist.name">{{artist.name}}</a>
                         </li>
                     </ol>
                 </dd>
                 <dt>Album</dt>
-                <dd><a target="_blank" rel="external noopener" :href="detailsTrackAlbumUrl">{{detailsTrack.track.album.name}}</a></dd>
+                <dd><a target="_blank" rel="external noopener" :href="detailsTrackAlbumUrl" v-spotify-uri:album="detailsTrack.track.album.id" v-spotify-uri-title="getSpotifyAlbumDragTitle(detailsTrack.track.album)">{{detailsTrack.track.album.name}}</a></dd>
                 <dt>Key</dt>
                 <dd>{{getHarmonics(detailsTrack)}}</dd>
                 <dt>BPM</dt>
@@ -94,7 +96,7 @@
         left: 0px;
         width: 100%;
         height: 100%;
-        background-image: radial-gradient(circle, rgba(255,255,255,0) 51%, rgba(0,0,28,1) 100%);
+        background-image: radial-gradient(circle, rgba(0, 0, 0 ,0) 51%, rgba(0, 0, 28, 1) 100%);
         pointer-events: none;
         transition: opacity 0.3s ease-in 0s;
         opacity: 0;
@@ -267,7 +269,7 @@
 </style>
 
 <script>
-    import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
+    import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackDragTitle, getSpotifyAlbumDragTitle} from '~/assets/spotify';
     import {initializeCanvas} from '~/assets/constellation';
     import mainViewportEventBus from '~/assets/mainviewport';
 
@@ -298,11 +300,11 @@
                 detailsTrack: null,
                 innerSize: null,
                 destroyCanvas: null,
+                markConstellationAsDirty: null,
                 haloInterval: null,
                 haloRotation: 0,
                 beatPulses: [],
-                beatPulseConsumer: [],
-                beatIntervals: [],
+                lastBeat: {},
                 edges: [],
                 canvasAbsoluteX: null,
                 canvasAbsoluteY: null,
@@ -350,6 +352,18 @@
                 let track = this.tracks[this.hoverTrack];
                 return `${track.track.name} - ${track.track.artists.map(artist => artist.name).join(', ')} - ${track.track.album.name} (${this.getHarmonics(track)}, ${track.features.tempo} BPM)`;
             },
+            canvasSpotifyDragTrack() {
+                if (!this.trackHovering) {
+                    return this.tracks.map(track => track.id);
+                }
+                return this.tracks[this.hoverTrack].id;
+            },
+            canvasSpotifyDragTrackTitle() {
+                if (!this.trackHovering) {
+                    return `${this.tracks.length} track${this.tracks.length == 1 ? '' : 's'}`;
+                }
+                return getSpotifyTrackDragTitle(this.tracks[this.hoverTrack]);
+            },
             detailsOffsetX() {
                 if (!this.detailsTrack || !this.innerSize) {
                     return 0;
@@ -391,23 +405,20 @@
                 if (!newVal) {
                     return;
                 }
-                this.destroyCanvas = initializeCanvas(this.$refs.canvas, this, fps);
+                let {destroyer, redrawConstellation} = initializeCanvas(this.$refs.canvas, this, fps);
+                this.destroyCanvas = destroyer;
+                this.markConstellationAsDirty = redrawConstellation;
             },
             tracks: {
                 immediate: true,
                 handler(newTracks) {
-                    this.destroyBeatIntervals();
+                    this.markConstellationAsDirty && this.markConstellationAsDirty();
                     this.beatPulses = [];
-                    this.beatPulseConsumer = [];
                     this.edges = [];
                     this.detailsTrack = null;
                     this.hoverTrack = null;
                     let lastTrack;
                     for (let track of newTracks) {
-                        let beat = (1 / (track.features.tempo / 60)) * 1000;
-                        this.beatIntervals.push(setInterval(() => {
-                            this.beatPulseConsumer.push({start: Date.now(), x: track.evocativeness.aetherealness, y: track.evocativeness.primordialness, opacity: 1, radiusMultiplier: 1, trackId: track.id});
-                        }, beat));
                         if (lastTrack) {
                             let diff = this.calculateHarmonicDifference(lastTrack.features, track.features);
                             this.edges.push(Math.min(5, Math.max(3, 5 * (1 - (diff / (maxHarmonicDistance + 1))))));
@@ -429,7 +440,6 @@
         },
         beforeDestroy() {
             clearInterval(this.haloInterval);
-            this.destroyBeatIntervals();
             removeEventListener('resize', this.handleResize);
             removeEventListener('orientationchange', this.handleResizeAfterTick);
             mainViewportEventBus.$off('resize', this.handleResizeAfterTick);
@@ -444,20 +454,28 @@
                 this.haloRotation++;
             },
             updatePulseHalos() {
-                let now = Date.now();
                 let newBeatPulses = [];
                 for (let beatPulse of this.beatPulses) {
-                    if (beatPulse.start + pulseTTL > now) {
-                        let percentDone = (now - beatPulse.start) / pulseTTL;
-                        beatPulse.opacity = 1 - percentDone;
-                        beatPulse.radiusMultiplier = 1 + percentDone;
+                    if (beatPulse.start + beatPulse.ttl > performance.now()) {
                         newBeatPulses.push(beatPulse);
                     }
                 }
-                for (let beatPulse of this.beatPulseConsumer) {
-                    newBeatPulses.push(beatPulse);
+                for (let track of this.tracks) {
+                    let lastBeat = this.lastBeat[track.id];
+                    let start = performance.now();
+                    if (lastBeat) {
+                        let beat = (1 / (track.features.tempo / 60)) * 1000;
+                        let timeSince = start - lastBeat.start;
+                        if (timeSince < beat) {
+                            continue;
+                        }
+                        let diff = timeSince - beat;
+                        start -= diff;
+                    }
+                    let beat = {start, x: track.evocativeness.aetherealness, y: track.evocativeness.primordialness, ttl: pulseTTL, trackId: track.id};
+                    newBeatPulses.push(beat);
+                    this.lastBeat[track.id] = beat;
                 }
-                this.beatPulseConsumer = [];
                 this.beatPulses = newBeatPulses;
             },
             calculateHarmonicDifference(a, b) {
@@ -550,9 +568,13 @@
                 this.handleCanvasClick();
             },
             handleEscape() {
-                this.$refs.canvas.blur();
+                this.$refs.container.blur();
             },
-            handleBlur() {
+            handleBlur(e) {
+                if (this.$refs.container.contains(e.relatedTarget)) {
+                    e.preventDefault();
+                    return;
+                }
                 this.detailsTrack = null;
                 this.showAxisLabels = false;
             },
@@ -582,14 +604,6 @@
                 let {x, y} = this.$refs.canvas.getBoundingClientRect();
                 this.canvasAbsoluteX = x;
                 this.canvasAbsoluteY = y;
-            },
-            destroyBeatIntervals() {
-                if (this.beatIntervals) {
-                    for (let beatInterval of this.beatIntervals) {
-                        clearInterval(beatInterval);
-                    }
-                }
-                this.beatIntervals = [];
             },
             handleTouchStart({touches}) {
                 if (touches.length > 1 || this.ongoingTouch) {
@@ -626,7 +640,9 @@
             },
             handleTouchEnd({touches}) {
                 this.ongoingTouch = null;
-            }
+            },
+            getSpotifyTrackDragTitle,
+            getSpotifyAlbumDragTitle
         }
     };
 </script>

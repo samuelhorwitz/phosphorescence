@@ -15,6 +15,8 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+const simpleErrorPayload = `{"error":true}`
+
 var PhosphorUUIDV5Namespace = uuid.NewV5(uuid.NamespaceDNS, "phosphor.me")
 
 var (
@@ -50,54 +52,45 @@ func Initialize(cfg *Config) {
 	}
 }
 
-func JSONRaw(w http.ResponseWriter, body []byte) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(body)
-}
-
 func JSON(w http.ResponseWriter, data interface{}) {
 	jsonResponse, err := json.Marshal(data)
 	if err != nil {
 		Fail(w, fmt.Errorf("Could not marshal JSON response: %s", err), http.StatusInternalServerError)
 		return
 	}
-	JSONRaw(w, jsonResponse)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 }
 
 func Fail(w http.ResponseWriter, err error, status int) {
-	fail(w, err, status, false)
+	fail(w, err, status, false, simpleErrorPayload)
 }
 
-func FailAndLog(w http.ResponseWriter, err error, status int) {
-	fail(w, err, status, true)
-}
-
-func fail(w http.ResponseWriter, err error, status int, forceLog bool) {
-	if forceLog || !isProduction {
-		log.Printf("Request failed, returning %d: %s", status, err)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, `{"error":true}`, status)
-}
-
-func FailWithRawJSON(w http.ResponseWriter, err error, body []byte, status int) {
-	if !isProduction {
-		log.Printf("Request failed, returning %d: %s", status, err)
-	}
-	var parsedBody map[string]interface{}
-	err = json.Unmarshal(body, &parsedBody)
-	if err != nil {
-		Fail(w, fmt.Errorf("Could not unmarshal JSON: %s", err), http.StatusInternalServerError)
-		return
-	}
-	parsedBody["error"] = true
-	jsonResponse, err := json.Marshal(parsedBody)
+func FailWithJSON(w http.ResponseWriter, err error, data interface{}, status int) {
+	jsonResponse, err := json.Marshal(struct {
+		Error bool        `json:"error"`
+		Data  interface{} `json:"data"`
+	}{
+		Error: true,
+		Data:  data,
+	})
 	if err != nil {
 		Fail(w, fmt.Errorf("Could not marshal JSON response: %s", err), http.StatusInternalServerError)
 		return
 	}
+	fail(w, err, status, false, string(jsonResponse))
+}
+
+func FailAndLog(w http.ResponseWriter, err error, status int) {
+	fail(w, err, status, true, simpleErrorPayload)
+}
+
+func fail(w http.ResponseWriter, err error, status int, forceLog bool, payload string) {
+	if forceLog || !isProduction {
+		log.Printf("Request failed, returning %d: %s", status, err)
+	}
 	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, string(jsonResponse), status)
+	http.Error(w, payload, status)
 }
 
 func TryToRollback(tx *sql.Tx, err error) error {
@@ -118,10 +111,18 @@ func ParseScriptVersion(versionStr string) time.Time {
 	return version
 }
 
-func ExponentialBackoff(baseDuration time.Duration, fn func() bool) {
-	count := 0
-	for !fn() {
-		count++
-		time.Sleep(baseDuration * time.Duration(math.Pow(2.0, float64(rand.Intn(count+1)))-1))
+func ExponentialBackoff(baseDuration time.Duration, timeout time.Duration, fn func() bool) {
+	done := make(chan struct{})
+	go func() {
+		count := 0
+		for !fn() {
+			count++
+			time.Sleep(baseDuration * time.Duration(math.Pow(2.0, float64(rand.Intn(count+1)))-1))
+		}
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(timeout):
 	}
 }

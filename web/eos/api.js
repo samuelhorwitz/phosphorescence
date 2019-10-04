@@ -223,14 +223,14 @@ export function injector({getTree, getIdToTagMap, registerDimension}) {
     // into a standard point for you. If you are using your own custom point
     // style you cannot use this function.
     defineAPIFunction('getNearestNeighborsByTrack', function(k, track) {
-        return getTree().nearest(Math.floor(k), getPointFromTrack(track));
+        return getTree().nearest(Math.max(1, Math.floor(k)), getPointFromTrack(track));
     });
 
     // Get _k_ nearest neighbors relative to a raw point. This function is used
     // mainly when getting the first track where there is no prior track you are
     // using as comparison, or when you have defined your own point shape.
     defineAPIFunction('getNearestNeighbors', function(k, point) {
-        return getTree().nearest(Math.floor(k), point);
+        return getTree().nearest(Math.max(1, Math.floor(k)), point);
     });
 
     // This simply returns a completely random value from the tree.

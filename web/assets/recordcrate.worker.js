@@ -42,8 +42,12 @@ let loadingPercentBase = 0;
 })();
 
 async function handleSendTracks(data) {
-    let tracksArr = JSON.parse(decoder.decode(data.tracks));
-    let countryCode = data.countryCode;
+    let tracksArr;
+    if (data.raw) {
+        tracksArr = data.tracks;
+    } else {
+        tracksArr = JSON.parse(decoder.decode(data.tracks));
+    }
     console.log('Processing tracks...');
     tracksArr = await getEvocativeness(tracksArr);
     console.log('Tracks processed');
@@ -52,15 +56,18 @@ async function handleSendTracks(data) {
     for (let track of tracksArr) {
         tracks[track.id] = track;
     }
+    if (data.raw) {
+        loadingInterruptPort && loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
+        return {type: 'sendProcessedTracks', data: {tracks, tags, idsToTags}};
+    }
     let responseData = encoder.encode(JSON.stringify({tracks, tags, idsToTags}));
     let gzipResponseData = pako.gzip(responseData, {level: 9});
-    loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
+    loadingInterruptPort && loadingInterruptPort.postMessage({type: 'loadPercent', value: 1});
     return {type: 'sendProcessedTracks', gzipData: gzipResponseData.buffer};
 }
 
 async function handleSendTrack(data) {
     let track = data.track;
-    let countryCode = data.countryCode;
     console.log('Processing track...');
     track = await getEvocativenessOfSingleTrack(track);
     console.log('Track processed');
@@ -137,5 +144,5 @@ function predict(a, aModel, pModel, meanstd) {
 }
 
 function updateLoadingPercent(partialPercent, percentOfTotal) {
-    throttledLoadingMessage({type: 'loadPercent', value: loadingPercentBase + (partialPercent * percentOfTotal)});
+    throttledLoadingMessage && throttledLoadingMessage({type: 'loadPercent', value: loadingPercentBase + (partialPercent * percentOfTotal)});
 }

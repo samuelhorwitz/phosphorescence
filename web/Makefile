@@ -38,10 +38,15 @@ push-api:
 
 deploy:
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml apply -f k8s.yaml
-	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods --all
+	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l name=phosphor
+	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l name=eos
+	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l name=api
 
 postgres-local:
 	docker run --rm --name phosphor-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=phosphor -d -p 5432:5432 -v ${PWD}/pgdata:/var/lib/postgresql/data samuelhorwitz/postgres-perl:11.5
 
 redis-local:
 	docker run -d -p 6379:6379 --name phosphor-redis redis
+
+redis-cache-local:
+	docker run -d -p 6389:6379 --name phosphor-cache redis
