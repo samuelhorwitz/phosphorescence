@@ -3,7 +3,9 @@ import {getAccessToken} from '~/assets/session';
 export async function initializePlayer(store, storePrefix) {
     let script, player;
     await new Promise((resolve, reject) => {
+        console.debug('Waiting for Spotify SDK readiness')
         window.onSpotifyWebPlaybackSDKReady = async () => {
+            console.debug('Spotify SDK is ready')
             let deviceId;
             try {
                 let res = await initializePlayerListeners(store, storePrefix);
@@ -53,7 +55,9 @@ async function initializePlayerListeners(store, storePrefix) {
         player.addListener('account_error', async ({ message }) => {
             reject({message});
         });
-        player.addListener('playback_error', ({ message }) => { reject(message); });
+        player.addListener('playback_error', ({ message }) => {
+            reject({message});
+        });
 
         // Playback status updates
         player.addListener('player_state_changed', state => {
@@ -104,6 +108,10 @@ async function initializePlayerListeners(store, storePrefix) {
 
         // Connect to the player!
         player.connect();
+        console.debug('Connecting to Spotify SDK...');
+        setTimeout(() => {
+            reject({message: 'Timed out while waiting for Spotify SDK to connect'});
+        }, 5000)
     });
 }
 
