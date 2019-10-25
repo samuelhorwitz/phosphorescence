@@ -95,6 +95,9 @@
                     return '';
                 }
                 return 'Drop!';
+            },
+            isLoggedInUser() {
+                return !!this.$store.state.user.user;
             }
         },
         mounted() {
