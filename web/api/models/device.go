@@ -29,14 +29,12 @@ type SpotifyDevice struct {
 }
 
 type Playback struct {
-	IsPlaying        bool          `json:"isPlaying"`
-	Progress         int           `json:"progress"`
-	FetchedAtSpotify int           `json:"fetchedAtSpotify"`
-	FetchedAt        int64         `json:"fetchedAt"`
-	Track            PlaybackTrack `json:"track"`
+	IsPlaying        bool         `json:"isPlaying"`
+	Progress         int          `json:"progress"`
+	FetchedAtSpotify int          `json:"fetchedAtSpotify"`
+	FetchedAt        int64        `json:"fetchedAt"`
+	Track            SpotifyTrack `json:"track"`
 }
-
-type PlaybackTrack json.RawMessage
 
 type PlayState int
 
@@ -47,6 +45,7 @@ const (
 )
 
 var ErrCurrentlyPlayingNotTrack = errors.New("Spotify currently playing is not a track")
+var ErrLocalTrack = errors.New("Spotify currently playing is a local track")
 
 func GetDevices(ctx context.Context, sess *session.Session) (SpotifyDevices, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.spotify.com/v1/me/player/devices", nil)
@@ -152,11 +151,11 @@ func GetCurrentPlayback(ctx context.Context, sess *session.Session) (Playback, e
 		return Playback{}, fmt.Errorf("Could not read Spotify currently playing response: %s", err)
 	}
 	var parsedBody struct {
-		IsPlaying            bool            `json:"is_playing"`
-		Track                json.RawMessage `json:"item"`
-		CurrentlyPlayingType string          `json:"currently_playing_type"`
-		Timestamp            int             `json:"timestamp"`
-		ProgressMilliseconds int             `json:"progress_ms"`
+		IsPlaying            bool         `json:"is_playing"`
+		Track                SpotifyTrack `json:"item"`
+		CurrentlyPlayingType string       `json:"currently_playing_type"`
+		Timestamp            int          `json:"timestamp"`
+		ProgressMilliseconds int          `json:"progress_ms"`
 	}
 	err = json.Unmarshal(body, &parsedBody)
 	if err != nil {
@@ -165,11 +164,14 @@ func GetCurrentPlayback(ctx context.Context, sess *session.Session) (Playback, e
 	if parsedBody.CurrentlyPlayingType != "track" {
 		return Playback{}, ErrCurrentlyPlayingNotTrack
 	}
+	if parsedBody.Track.IsLocal {
+		return Playback{}, ErrLocalTrack
+	}
 	return Playback{
 		IsPlaying:        parsedBody.IsPlaying,
 		Progress:         parsedBody.ProgressMilliseconds,
 		FetchedAtSpotify: parsedBody.Timestamp,
 		FetchedAt:        fetchedAt.UnixNano() / int64(time.Millisecond),
-		Track:            PlaybackTrack(parsedBody.Track),
+		Track:            parsedBody.Track,
 	}, nil
 }

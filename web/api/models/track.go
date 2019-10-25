@@ -30,6 +30,7 @@ type SpotifyTrack struct {
 	AvailableMarkets []string            `json:"available_markets,omitempty"`
 	IsPlayable       bool                `json:"is_playable"`
 	LinkedFrom       *SpotifyLinkedTrack `json:"linked_from,omitempty"`
+	IsLocal          bool                `json:"is_local,omitempty"`
 }
 
 type SpotifyLinkedTrack struct {

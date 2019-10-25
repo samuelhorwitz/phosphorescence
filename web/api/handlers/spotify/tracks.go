@@ -16,11 +16,11 @@ import (
 )
 
 func TracksUnauthenticated(w http.ResponseWriter, r *http.Request) {
-	tracks(w, r, strings.ToLower(chi.URLParam(r, "region")))
+	tracks(w, r, chi.URLParam(r, "region"))
 }
 
 func Tracks(w http.ResponseWriter, r *http.Request) {
-	sess, ok := r.Context().Value(middleware.AuthenticatedSessionContextKey).(*session.Session)
+	sess, ok := r.Context().Value(middleware.SessionContextKey).(*session.Session)
 	if !ok {
 		common.Fail(w, errors.New("No session on request context"), http.StatusUnauthorized)
 		return
@@ -29,6 +29,7 @@ func Tracks(w http.ResponseWriter, r *http.Request) {
 }
 
 func tracks(w http.ResponseWriter, r *http.Request, region string) {
+	region = strings.ToLower(region)
 	s3Req, _ := s3Service.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String("phosphorescence-tracks"),
 		Key:    aws.String(fmt.Sprintf("tracks.%s.json", region)),

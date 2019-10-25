@@ -27,6 +27,10 @@ func GetTracksUnauthenticated(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTracks(w http.ResponseWriter, r *http.Request, region, trackIDsStr string) {
+	if trackIDsStr == "" {
+		common.Fail(w, errors.New("No track IDs specified"), http.StatusBadRequest)
+		return
+	}
 	trackIDs := strings.Split(trackIDsStr, ",")
 	tracks, err := models.GetTracks(r.Context(), region, trackIDs)
 	if err != nil {
