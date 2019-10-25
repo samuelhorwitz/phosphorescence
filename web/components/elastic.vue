@@ -27,7 +27,7 @@
 
     aside {
         position: fixed;
-        top: 0px;
+        top: env(safe-area-inset-top, 0px);
         height: 0px;
         width: 100%;
         display: flex;
