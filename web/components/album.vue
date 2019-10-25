@@ -1,6 +1,6 @@
 <template>
     <aside>
-        <a v-if="currentTrack" target="_blank" rel="external noopener" :href="currentAlbumUrl" class="art-wrapper-link">
+        <a v-if="currentTrack" target="_blank" rel="external noopener" :href="currentAlbumUrl" class="art-wrapper-link" v-spotify-uri:album="currentTrack.track.album.id" v-spotify-uri-title="getSpotifyAlbumDragTitle(currentTrack.track.album)">
             <div class="art-wrapper" :title="currentTrackImageAltText" :style="{'background-image': 'url(' + currentTrackImage + ')'}"></div>
         </a>
     </aside>
@@ -126,7 +126,7 @@
 </style>
 
 <script>
-    import {getSpotifyAlbumUrl} from '~/assets/spotify';
+    import {getSpotifyAlbumUrl, getSpotifyAlbumDragTitle} from '~/assets/spotify';
 
     export default {
         watch: {
@@ -158,6 +158,9 @@
             currentAlbumUrl() {
                 return getSpotifyAlbumUrl(this.currentTrack.track.album.id);
             }
+        },
+        methods: {
+            getSpotifyAlbumDragTitle
         }
     };
 </script>

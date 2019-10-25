@@ -57,6 +57,43 @@
 
     export default {
         layout: 'empty',
-        components: {legal}
+        components: {legal},
+        head() {
+            return {
+                title: 'Terms of Service | Phosphorescence',
+                meta: [
+                    {
+                        hid: 'og:type',
+                        name: 'og:type',
+                        content: 'article'
+                    },
+                    {
+                        hid: 'og:site_name',
+                        name: 'og:site_name',
+                        content: 'Phosphorescence'
+                    },
+                    {
+                        hid: 'og:image',
+                        name: 'og:image',
+                        content: 'https://phosphor.me/og.png'
+                    },
+                    {
+                        hid: 'og:description',
+                        name: 'og:description',
+                        content: 'Terms of service for users'
+                    },
+                    {
+                        hid: 'og:url',
+                        name: 'og:url',
+                        content: 'https://phosphor.me/legal/tos'
+                    },
+                    {
+                        hid: 'og:title',
+                        name: 'og:title',
+                        content: 'Terms of Service'
+                    }
+                ]
+            };
+        }
     };
 </script>

@@ -200,15 +200,9 @@ func getTrackFeatures(tracks map[string]*TrackEnvelope) (map[string]*TrackEnvelo
 }
 
 func findBestImage(images []image) []image {
-	var bestSize int
-	var bestImage image
-	for _, img := range images {
-		size := img.Width * img.Height
-		if size > bestSize {
-			bestImage = img
-			bestSize = size
-		}
-	}
+	// from the docs: "The cover art for the album in various sizes, widest first."
+	// https://developer.spotify.com/documentation/web-api/reference/object-model/#album-object-simplified
+	bestImage := images[0]
 	bestImage.Width = 0
 	bestImage.Height = 0
 	return []image{bestImage}

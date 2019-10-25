@@ -2,7 +2,7 @@ export function initializeCanvas(canvasEl, component, fps) {
     let canvas = canvasEl;
     let ctx = canvas.getContext('2d');
     resizeCanvas(canvas, ctx, component);
-    return beginLoop(ctx, component, fps);
+    return beginLoop(ctx, drawGridOffscreen(component), component, fps);
 }
 
 export async function renderOffscreen(component, bgFn, fgFn) {
@@ -16,7 +16,7 @@ export async function renderOffscreen(component, bgFn, fgFn) {
     ctx.save();
     ctx.translate(padding, padding);
     drawGrid(ctx, component);
-    drawTracks(ctx, component);
+    drawConstellation(ctx, component, getStarCanvas());
     ctx.restore();
     fgFn && await fgFn(ctx, outerSize);
     return canvas;
@@ -40,6 +40,15 @@ export function saneOffscreenOptions(innerSize, gridSegments, tracks) {
     }
 }
 
+function getStarCanvas() {
+    let offscreenStarCanvas = document.createElement('canvas');
+    let offscreenStarCtx = offscreenStarCanvas.getContext('2d');
+    let starSize = 100;
+    resizeStarCanvas(offscreenStarCanvas, offscreenStarCtx, starSize);
+    drawStarOffscreen(offscreenStarCtx, starSize);
+    return {canvas: offscreenStarCanvas, size: starSize};
+}
+
 function resizeCanvas(canvas, ctx, component, ratio = devicePixelRatio) {
     let outerSize = component.outerSize;
     canvas.width = outerSize * ratio;
@@ -49,28 +58,86 @@ function resizeCanvas(canvas, ctx, component, ratio = devicePixelRatio) {
     ctx.scale(ratio, ratio);
 }
 
-function beginLoop(ctx, component, fps) {
+function resizeStarCanvas(canvas, ctx, size, ratio = devicePixelRatio) {
+    canvas.width = size * ratio;
+    canvas.height = size * ratio;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    ctx.scale(ratio, ratio);
+}
+
+function beginLoop(ctx, grid, component, fps) {
     let keepLooping = true;
+    let redrawConstellation = true;
+    let constellation;
     (async () => {
         while (keepLooping) {
             requestAnimationFrame(() => {
+                if (redrawConstellation) {
+                    constellation = drawConstellationOffscreen(component);
+                    redrawConstellation = false;
+                }
                 let outerSize = component.outerSize;
                 let innerSize = component.innerSize;
                 let padding = (outerSize - innerSize) / 2;
                 ctx.clearRect(0, 0, outerSize, outerSize);
                 ctx.save();
+                ctx.drawImage(grid, 0, 0, component.outerSize, component.outerSize);
+                ctx.globalCompositeOperation = 'screen';
+                ctx.drawImage(constellation, 0, 0, component.outerSize, component.outerSize);
                 ctx.translate(padding, padding);
-                drawGrid(ctx, component);
-                drawTracks(ctx, component);
+                drawInteractive(ctx, component);
                 ctx.restore();
             });
             await new Promise(resolve => setTimeout(resolve, 1000 / fps));
         }
     })();
-    return () => {
-        keepLooping = false;
-        ctx.clearRect(0, 0, component.outerSize, component.outerSize);
+    return {
+        destroyer() {
+            keepLooping = false;
+            ctx.clearRect(0, 0, component.outerSize, component.outerSize);
+        },
+        redrawConstellation() {
+            redrawConstellation = true;
+        }
     };
+}
+
+function drawStarOffscreen(ctx, size) {
+    ctx.moveTo(size / 2, size / 2);
+    ctx.arc(size / 2, size / 2, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'lightcyan';
+    ctx.shadowColor = 'cyan';
+    ctx.lineWidth = 6;
+    ctx.shadowBlur = 30;
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fill();
+    ctx.stroke();
+}
+
+function drawGridOffscreen(component) {
+    let canvas = document.createElement('canvas');
+    let ctx = canvas.getContext('2d');
+    resizeCanvas(canvas, ctx, component);
+    let outerSize = component.outerSize;
+    let innerSize = component.innerSize;
+    let padding = (outerSize - innerSize) / 2;
+    ctx.translate(padding, padding);
+    drawGrid(ctx, component);
+    return canvas;
+}
+
+function drawConstellationOffscreen(component) {
+    let canvas = document.createElement('canvas');
+    let ctx = canvas.getContext('2d');
+    resizeCanvas(canvas, ctx, component);
+    let outerSize = component.outerSize;
+    let innerSize = component.innerSize;
+    let padding = (outerSize - innerSize) / 2;
+    ctx.translate(padding, padding);
+    drawConstellation(ctx, component, getStarCanvas());
+    return canvas;
 }
 
 function drawGrid(ctx, component) {
@@ -90,8 +157,6 @@ function drawGrid(ctx, component) {
     ctx.lineTo(innerSize, innerSize);
     ctx.lineTo(0, innerSize);
     ctx.closePath();
-    ctx.stroke();
-    ctx.beginPath();
     for (let i = 0; i < totalGridlines; i++) {
         if (i === centerGridlineIndex) {
             // we draw the middle ones separately
@@ -118,81 +183,82 @@ function drawGrid(ctx, component) {
     ctx.restore();
 }
 
-function drawTracks(ctx, component) {
-    for (let i = 0; i < component.tracks.length - 1; i++) {
-        let track = component.tracks[i];
-        let nextTrack = component.tracks[i+1];
-        drawConnector(ctx, component, component.edges[i], track.evocativeness.aetherealness, track.evocativeness.primordialness,
-            nextTrack.evocativeness.aetherealness, nextTrack.evocativeness.primordialness);
+function drawConstellation(ctx, component, star) {
+    drawConnectors(ctx, cb => {
+        for (let i = 0; i < component.tracks.length - 1; i++) {
+            let track = component.tracks[i];
+            let nextTrack = component.tracks[i+1];
+            drawConnector(cb, component.innerSize, component.edges[i], track.evocativeness.aetherealness, track.evocativeness.primordialness, nextTrack.evocativeness.aetherealness, nextTrack.evocativeness.primordialness);
+        }
+    });
+    drawTracks(ctx, ctx => {
+        for (let track of component.tracks) {
+            drawTrack(ctx, star, component.innerSize, track.evocativeness.aetherealness, track.evocativeness.primordialness);
+        }
+    });
+}
+
+function drawInteractive(ctx, component) {
+    drawBeatPulses(ctx, component);
+    drawActiveHalo(ctx, component);
+    drawHoverHalo(ctx, component);
+    drawDetailsHalo(ctx, component);
+}
+
+function drawConnectors(ctx, draw) {
+    ctx.save();
+    ctx.beginPath();
+    let bucket = {};
+    draw((edge, fn) => {
+        if (!bucket[edge]) {
+            bucket[edge] = [];
+        }
+        bucket[edge].push(fn);
+    });
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = 'lightcyan';
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = 'cyan';
+    for (let [edge, fns] of Object.entries(bucket)) {
+        ctx.lineWidth = parseInt(edge, 10);
+        for (let fn of fns) {
+            fn(ctx);
+        }
+        ctx.stroke();
     }
-    let haloX, haloY;
-    let hoverHaloX, hoverHaloY;
-    let detailsHaloX, detailsHaloY;
+    ctx.restore();
+}
+
+function drawConnector(cb, innerSize, edge, x1, y1, x2, y2) {
+    cb(edge, ctx => {
+        ctx.moveTo(x1 * innerSize, y1 * innerSize);
+        ctx.lineTo(x2 * innerSize, y2 * innerSize);
+    });
+}
+
+function drawTracks(ctx, draw) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    draw(ctx);
+    ctx.restore();
+}
+
+function drawTrack(ctx, {canvas, size}, innerSize, x, y) {
+    ctx.drawImage(canvas, (x * innerSize) - (size / 2), (y * innerSize) - (size / 2), size, size);
+}
+
+function drawBeatPulses(ctx, component) {
     let activeId, hoverId, detailsId;
-    for (let track of component.tracks) {
-        drawTrack(ctx, component, track.evocativeness.aetherealness, track.evocativeness.primordialness);
-        if (component.currentTrack && component.currentTrack.id === track.id) {
-            activeId = track.id;
-            haloX = track.evocativeness.aetherealness;
-            haloY = track.evocativeness.primordialness;
-        }
-        if (typeof component.hoverTrack != 'undefined' && component.hoverTrack !== null && track.id === component.tracks[component.hoverTrack].id) {
-            hoverId = track.id;
-            hoverHaloX = track.evocativeness.aetherealness;
-            hoverHaloY = track.evocativeness.primordialness;
-            continue;
-        }
-        if (!!component.detailsTrack && track.id === component.detailsTrack.id) {
-            detailsId = track.id;
-            detailsHaloX = track.evocativeness.aetherealness;
-            detailsHaloY = track.evocativeness.primordialness;
-        }
+    if (component.currentTrack) {
+        activeId = component.currentTrack.id;
     }
-    drawBeatPulses(ctx, component, activeId, hoverId, detailsId, component.beatPulses);
-    if (haloX && haloY) {
-        drawActiveHalo(ctx, component, haloX, haloY);
+    if (typeof component.hoverTrack != 'undefined' && component.hoverTrack !== null) {
+        hoverId = component.tracks[component.hoverTrack].id;
     }
-    if (hoverHaloX && hoverHaloY) {
-        drawHoverHalo(ctx, component, hoverHaloX, hoverHaloY);
+    if (component.detailsTrack) {
+        detailsId = component.detailsTrack.id;
     }
-    if (detailsHaloX && detailsHaloY) {
-        drawHoverHalo(ctx, component, detailsHaloX, detailsHaloY);
-    }
-}
-
-function drawConnector(ctx, component, edge, x1, y1, x2, y2) {
-    let innerSize = component.innerSize;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x1 * innerSize, y1 * innerSize);
-    ctx.lineTo(x2 * innerSize, y2 * innerSize);
-    ctx.globalCompositeOperation = 'screen';
-    ctx.strokeStyle = 'lightcyan';
-    ctx.lineWidth = edge;
-    ctx.shadowBlur = 30;
-    ctx.shadowColor = 'cyan';
-    ctx.stroke();
-    ctx.restore();
-}
-
-function drawTrack(ctx, component, x, y) {
-    let innerSize = component.innerSize;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x * innerSize, y * innerSize, 6, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.fillStyle = 'white';
-    ctx.strokeStyle = 'lightcyan';
-    ctx.shadowColor = 'cyan';
-    ctx.lineWidth = 6;
-    ctx.shadowBlur = 30;
-    ctx.globalCompositeOperation = 'screen';
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-}
-
-function drawBeatPulses(ctx, component, activeId, hoverId, detailsId, beatPulses) {
+    let beatPulses = component.beatPulses;
     if (!beatPulses) {
         return;
     }
@@ -206,16 +272,27 @@ function drawBeatPulses(ctx, component, activeId, hoverId, detailsId, beatPulses
         if (beatPulse.trackId !== activeId && beatPulse.trackId !== hoverId && beatPulse.trackId !== detailsId) {
             continue;
         }
+        let percentDone = (performance.now() - beatPulse.start) / beatPulse.ttl;
+        if (percentDone > 1) {
+            continue;
+        }
+        let opacity = 1 - percentDone;
+        let radiusMultiplier = 1 + percentDone;
         ctx.beginPath();
-        ctx.arc(beatPulse.x * innerSize, beatPulse.y * innerSize, 6 * beatPulse.radiusMultiplier * beatPulse.radiusMultiplier * beatPulse.radiusMultiplier, 0, 2 * Math.PI);
+        ctx.arc(beatPulse.x * innerSize, beatPulse.y * innerSize, 6 * radiusMultiplier * radiusMultiplier * radiusMultiplier, 0, 2 * Math.PI);
         ctx.closePath();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${beatPulse.opacity * 0.5})`;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.5})`;
         ctx.stroke();
     }
     ctx.restore();
 }
 
-function drawActiveHalo(ctx, component, x, y) {
+function drawActiveHalo(ctx, component) {
+    if (!component.currentTrack) {
+        return;
+    }
+    let x = component.currentTrack.evocativeness.aetherealness;
+    let y = component.currentTrack.evocativeness.primordialness;
     let innerSize = component.innerSize;
     ctx.save();
     ctx.translate(x * innerSize, y * innerSize);
@@ -232,7 +309,26 @@ function drawActiveHalo(ctx, component, x, y) {
     ctx.restore();
 }
 
-function drawHoverHalo(ctx, component, x, y) {
+function drawHoverHalo(ctx, component) {
+    if (typeof component.hoverTrack == 'undefined' || component.hoverTrack == null) {
+        return;
+    }
+    let hoverTrack = component.tracks[component.hoverTrack];
+    let x = hoverTrack.evocativeness.aetherealness;
+    let y = hoverTrack.evocativeness.primordialness;
+    drawHoverDetailsHalo(ctx, component, x, y);
+}
+
+function drawDetailsHalo(ctx, component) {
+    if (!component.detailsTrack) {
+        return;
+    }
+    let x = component.detailsTrack.evocativeness.aetherealness;
+    let y = component.detailsTrack.evocativeness.primordialness;
+    drawHoverDetailsHalo(ctx, component, x, y);
+}
+
+function drawHoverDetailsHalo(ctx, component, x, y) {
     let innerSize = component.innerSize;
     ctx.save();
     ctx.translate(x * innerSize, y * innerSize);

@@ -31,11 +31,11 @@ func initializeRoutes(cfg *config) http.Handler {
 			r.Get("/redirect", spotify.AuthorizeRedirect)
 		})
 		r.Route("/unauthenticated", func(r chi.Router) {
-			r.With(middleware.Captcha("api/tracks", 0.5)).Get("/tracks/{region}", spotify.Tracks)
+			r.With(middleware.Captcha("api/tracks", 0.5)).Get("/tracks/{region}", spotify.TracksUnauthenticated)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
-			r.Get("/tracks/{region}", spotify.Tracks)
+			r.Get("/tracks", spotify.Tracks)
 			r.Get("/token", spotify.Token)
 		})
 	})
@@ -154,9 +154,14 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Route("/user", userRouter)
 	r.Route("/users", userRouter)
 	trackRouter := func(r chi.Router) {
-		r.Use(middleware.Session)
-		r.Use(middleware.SpotifyLimiter)
-		r.Get("/{trackID}", phosphor.GetTrackData)
+		r.Route("/unauthenticated", func(r chi.Router) {
+			r.With(middleware.Captcha("api/track", 0.5)).Get("/{region}/{trackIDs}", phosphor.GetTracksUnauthenticated)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Session)
+			r.Use(middleware.SpotifyLimiter)
+			r.Get("/{trackIDs}", phosphor.GetTracks)
+		})
 	}
 	r.Route("/track", trackRouter)
 	r.Route("/tracks", trackRouter)
@@ -179,15 +184,28 @@ func initializeRoutes(cfg *config) http.Handler {
 		r.Use(middleware.Session)
 		r.Use(middleware.AuthenticatedSession)
 		r.Use(middleware.AuthorizeAdminAccount)
-		r.Get("/playlist/{playlistID}", phosphor.MakeOfficialPlaylist)
+		r.Get("/playlist/{playlistID}", phosphor.MakePlaylistOfficial)
 	})
 	r.Route("/playlist", func(r chi.Router) {
 		r.Route("/unauthenticated", func(r chi.Router) {
+			r.With(middleware.Captcha("api/playlist", 0.5)).Get("/{region}/{playlistID}", phosphor.GetPlaylistUnauthenticated)
 			r.With(middleware.Captcha("api/playlist/create", 0.5)).Post("/", phosphor.CreatePrivatePlaylist)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
+			r.Use(middleware.SpotifyLimiter)
+			r.Get("/{playlistID}", phosphor.GetPlaylist)
 			r.Post("/", phosphor.CreatePrivatePlaylist)
+		})
+	})
+	r.Route("/album", func(r chi.Router) {
+		r.Route("/unauthenticated", func(r chi.Router) {
+			r.With(middleware.Captcha("api/album", 0.5)).Get("/{region}/{albumID}", phosphor.GetAlbumUnauthenticated)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Session)
+			r.Use(middleware.SpotifyLimiter)
+			r.Get("/{albumID}", phosphor.GetAlbum)
 		})
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

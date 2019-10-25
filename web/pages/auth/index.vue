@@ -5,8 +5,6 @@
                 <h2>In order to use <b>Phosphorescence</b> to it's fullest extent, you'll need to login. Some benefits include:</h2>
                 <ul>
                     <li>Streaming in browser (supported browsers and Premium users only)</li>
-                    <li>Drag-and-drop tracks</li>
-                    <li>Pull-to-create from current track</li>
                     <li>More to come...</li>
                 </ul>
                 <label for="rememberMe">
@@ -135,6 +133,43 @@
                 this.$store.dispatch('loading/loadFlash');
                 authorizeUserRedirect(this.rememberMe);
             }
+        },
+        head() {
+            return {
+                title: 'Login | Phosphorescence',
+                meta: [
+                    {
+                        hid: 'og:type',
+                        name: 'og:type',
+                        content: 'website'
+                    },
+                    {
+                        hid: 'og:site_name',
+                        name: 'og:site_name',
+                        content: 'Phosphorescence'
+                    },
+                    {
+                        hid: 'og:image',
+                        name: 'og:image',
+                        content: 'https://phosphor.me/og.png'
+                    },
+                    {
+                        hid: 'og:description',
+                        name: 'og:description',
+                        content: 'Build trance and chill-out playlists for Spotify'
+                    },
+                    {
+                        hid: 'og:url',
+                        name: 'og:url',
+                        content: 'https://phosphor.me/auth'
+                    },
+                    {
+                        hid: 'og:title',
+                        name: 'og:title',
+                        content: 'Login'
+                    }
+                ]
+            };
         }
     };
 </script>

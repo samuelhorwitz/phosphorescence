@@ -46,8 +46,16 @@ self.hooks.getFirstTrack = function() {
 // are close-by in evocativeness as well as non-jarring in tempo and harmonic
 // changes. Prior to picking a random track, we also make sure to clear out all
 // tracks that may not be exact duplicates but are likely remixes or different
-// releases of an already chosen track.
+// releases of an already chosen track. We keep expanding our potential pool if
+// we cannot find a match.
 self.hooks.getNextTrack = function({tags, previousTrack}) {
-    let neighbors = getNearestNeighborsByTrack(treeSize() * 0.005, previousTrack);
-    return buildResponse(pickRandom(cullTracksWithAlreadySeenTags(neighbors, tags)));
+    let chosen;
+    for (let poolSize = treeSize() * 0.005; poolSize <= treeSize() && !chosen; poolSize *= 2) {
+        let neighbors = getNearestNeighborsByTrack(poolSize, previousTrack);
+        let remainingNeighbors = cullTracksWithAlreadySeenTags(neighbors, tags);
+        if (remainingNeighbors.length) {
+            chosen = pickRandom(remainingNeighbors);
+        }
+    }
+    return buildResponse(chosen);
 };

@@ -1,11 +1,39 @@
 package models
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/satori/go.uuid"
+
+	"github.com/samuelhorwitz/phosphorescence/api/session"
 )
+
+type User struct {
+	SpotifyID         string `json:"spotifyId"`
+	Name              string `json:"name"`
+	Country           string `json:"country"`
+	Product           string `json:"product"`
+	Authenticated     bool   `json:"authenticated"`
+	GoogleAnalyticsID string `json:"gaId,omitempty"`
+}
+
+func GetUser(sess *session.Session) User {
+	googleAnalyticsIDSum := hmac.New(sha256.New, googleAnalyticsSecret)
+	googleAnalyticsIDSum.Write([]byte(sess.SpotifyID))
+	googleAnalyticsID := googleAnalyticsIDSum.Sum(nil)
+	return User{
+		SpotifyID:         sess.SpotifyID,
+		Name:              sess.SpotifyName,
+		Country:           sess.SpotifyCountry,
+		Product:           sess.SpotifyProduct,
+		Authenticated:     sess.Authenticated,
+		GoogleAnalyticsID: hex.EncodeToString(googleAnalyticsID),
+	}
+}
 
 func mapSpotifyIDToOurID(tx *sql.Tx, spotifyUserID string) (uuid.UUID, error) {
 	var userID uuid.UUID

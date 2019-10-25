@@ -18,17 +18,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.id)}" @click="seekTrack(index)" tabindex="0" @keydown.enter="seekTrack(index)">
+                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.id)}" @click="seekTrack(index)" tabindex="0" @keydown.enter="seekTrack(index)" v-spotify-uri:track="track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(track)">
                         <td :title="humanReadableEvocativeness[index]" class="number">{{index + 1}}</td>
-                        <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="getSpotifyTrackUrl(track.id)" @click.stop>{{track.track.name}}</a></td>
+                        <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="getSpotifyTrackUrl(track.id)" @click.stop v-spotify-uri:track="track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(track)">{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
                             <ol>
                                 <li class="artist" v-for="artist in track.track.artists">
-                                    <a target="_blank" rel="external noopener" :href="getSpotifyArtistUrl(artist.id)" @click.stop>{{artist.name}}</a>
+                                    <a target="_blank" rel="external noopener" :href="getSpotifyArtistUrl(artist.id)" @click.stop v-spotify-uri:artist="artist.id" v-spotify-uri-title="artist.name">{{artist.name}}</a>
                                 </li>
                             </ol>
                         </td>
-                        <td class="album" :title="track.track.album.name"><a target="_blank" rel="external noopener" :href="getSpotifyAlbumUrl(track.track.album.id)" @click.stop>{{track.track.album.name}}</a></td>
+                        <td class="album" :title="track.track.album.name"><a target="_blank" rel="external noopener" :href="getSpotifyAlbumUrl(track.track.album.id)" @click.stop v-spotify-uri:album="track.track.album.id" v-spotify-uri-title="getSpotifyAlbumDragTitle(track.track.album)">{{track.track.album.name}}</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -198,7 +198,7 @@
 </style>
 
 <script>
-    import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl} from '~/assets/spotify';
+    import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackDragTitle, getSpotifyAlbumDragTitle} from '~/assets/spotify';
     import constellation from '~/components/constellation';
     import loadingScreen from '~/components/loading-screen';
 
@@ -276,7 +276,46 @@
             },
             getSpotifyAlbumUrl,
             getSpotifyArtistUrl,
-            getSpotifyTrackUrl
+            getSpotifyTrackUrl,
+            getSpotifyTrackDragTitle,
+            getSpotifyAlbumDragTitle
+        },
+        head() {
+            return {
+                title: 'Phosphorescence | Build trance and chill-out playlists for Spotify',
+                meta: [
+                    {
+                        hid: 'og:type',
+                        name: 'og:type',
+                        content: 'website'
+                    },
+                    {
+                        hid: 'og:site_name',
+                        name: 'og:site_name',
+                        content: 'Phosphorescence'
+                    },
+                    {
+                        hid: 'og:image',
+                        name: 'og:image',
+                        content: 'https://phosphor.me/og.png'
+                    },
+                    {
+                        hid: 'og:description',
+                        name: 'og:description',
+                        content: 'Build trance and chill-out playlists for Spotify'
+                    },
+                    {
+                        hid: 'og:url',
+                        name: 'og:url',
+                        content: 'https://phosphor.me'
+                    },
+                    {
+                        hid: 'og:title',
+                        name: 'og:title',
+                        content: 'Phosphorescence'
+                    }
+                ]
+            };
         }
     };
 </script>

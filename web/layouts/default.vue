@@ -3,9 +3,7 @@
         <elastic v-if="isLoggedInUser && isIOS" :container="$refs.mainContainer"></elastic>
         <div class="mainContainer" ref="mainContainer">
             <loadingBar v-if="!isIOS"></loadingBar>
-            <div class="dropzone" :class="{dropzoneReady: dragStarted, dropHoverActive: isDropHovering, dropHoverBlockActive: isAlreadyGeneratingHover || isNotLoggedInUserHover, invalidDragObject: isBadDropHovering}" @dragenter="handleDragenter" @dragleave="handleDragleave" @drop="handleDrop">
-                {{dropText}}
-            </div>
+            <dropzone></dropzone>
             <logo></logo>
             <toolbar></toolbar>
             <main :class="{playlistLoaded: $store.getters['tracks/playlistLoaded']}">
@@ -47,48 +45,6 @@
 
     body:not(.playerConnected) .mainContainer {
         grid-template-rows: min-content min-content minmax(100px, 1fr) min-content;
-    }
-
-    .dropzone {
-        display: none;
-        z-index: 1000000000;
-        color: white;
-        font-family: 'Caveat';
-        font-size: 5em;
-        outline: none;
-        cursor: pointer;
-        text-shadow: -1px -1px 0 midnightblue, 1px -1px 0 midnightblue, -1px 1px 0 midnightblue, 1px 1px 0 midnightblue;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-    }
-
-    .dropzone * {
-        pointer-events: none;
-    }
-
-    .dropzone.dropzoneReady {
-        display: flex;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-    }
-
-    .dropzone.dropHoverActive {
-        background-color: rgba(255, 0, 255, 0.75);
-        border: 20px dashed aqua;
-        cursor: grabbing;
-    }
-
-    .dropzone.dropHoverBlockActive {
-        background-color: rgba(255, 0, 0, 0.75);
-        border: 20px dashed red;
-        cursor: no-drop;
-    }
-
-    .dropzone.invalidDragObject {
-        cursor: no-drop;
-        color: transparent;
     }
 
     body.playerConnected main.playlistLoaded {
@@ -176,7 +132,7 @@
 </style>
 
 <script>
-    import {initialize, builders, loadNewPlaylist, processTrack} from '~/assets/recordcrate';
+    import {initialize, builders, loadNewPlaylist} from '~/assets/recordcrate';
     import elastic from '~/components/elastic';
     import logo from '~/components/logo';
     import toolbar from '~/components/toolbar';
@@ -184,6 +140,7 @@
     import player from '~/components/player';
     import foot from '~/components/foot';
     import loadingBar from '~/components/loading-bar';
+    import dropzone from '~/components/dropzone';
 
     const deviceNotSupportedError = 'Your device may not be supported, or your ad blocker may be blocking our playlist building engine. Please visit this page with an up-to-date version of the Edge, Chrome, Firefox, Opera or Safari browsers.';
 
@@ -195,7 +152,8 @@
             album,
             player,
             foot,
-            loadingBar
+            loadingBar,
+            dropzone
         },
         middleware: ['authenticated'],
         head() {
@@ -226,27 +184,12 @@
         },
         data() {
             return {
-                destroyResizeListener: false,
-                dragStarted: false,
-                isDropHovering: false,
-                isAlreadyGeneratingHover: false,
-                isBadDropHovering: false,
-                isNotLoggedInUserHover: false
+                destroyResizeListener: false
             };
         },
         computed: {
             isIOS() {
                 return /\b(iPhone|iPod)\b/.test(navigator.userAgent);
-            },
-            dropText() {
-                if (!this.isLoggedInUser) {
-                    return 'Must log in to drop tracks';
-                } else if (this.isAlreadyGeneratingHover) {
-                    return 'Please wait';
-                } else if (this.isBadDropHovering) {
-                    return '';
-                }
-                return 'Drop your track!';
             },
             playlistGenerating() {
                 return this.$store.state.loading.playlistGenerating;
@@ -306,7 +249,12 @@
                     pruners = [builders.hits];
                 }
                 try {
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, builders[this.$store.state.preferences.seedStyle], null, pruners, percent => {
+                    let {playlist} = await loadNewPlaylist({
+                        count: this.$store.state.preferences.tracksPerPlaylist,
+                        builder: builders.randomwalk,
+                        firstTrackBuilder: builders[this.$store.state.preferences.seedStyle],
+                        pruners
+                    }, percent => {
                         this.$store.commit('loading/tickProgress', {id: 'generate', percent});
                     });
                     this.$store.commit('loading/completeProgress', {id: 'generate'});
@@ -330,9 +278,6 @@
             this.$ga.time('App Layout', 'load', Math.round(performance.now()));
         },
         mounted() {
-            document.body.addEventListener('dragenter', this.handleWindowDragenter);
-            document.body.addEventListener('dragover', this.handleWindowDragover);
-            document.body.addEventListener('drop', this.handleWindowDrop);
             if (/\b(iPhone|iPod)\b/.test(navigator.userAgent)) {
                 document.body.addEventListener('resize', this.handleResize);
                 window.addEventListener('orientationchange', this.handleResize);
@@ -342,9 +287,6 @@
         },
         beforeDestroy() {
             this.$store.dispatch('loading/resetAll');
-            document.body.removeEventListener('dragenter', this.handleWindowDragenter);
-            document.body.removeEventListener('dragover', this.handleWindowDragover);
-            document.body.removeEventListener('drop', this.handleWindowDrop);
             if (this.destroyResizeListener) {
                 document.body.removeEventListener('resize', this.handleResize);
                 window.removeEventListener('orientationchange', this.handleResize);
@@ -358,85 +300,6 @@
                 setTimeout(() => {
                     this.$refs.mainContainer.style.height = `${innerHeight}px`;
                 }, 200);
-            },
-            handleWindowDragenter(e) {
-                this.dragStarted = true;
-            },
-            handleWindowDragover(e) {
-                e.preventDefault();
-            },
-            handleWindowDrop(e) {
-                e.preventDefault();
-            },
-            handleDragenter(e) {
-                if (e.dataTransfer.types.includes('text/x-spotify-tracks')) {
-                    if (!this.isLoggedInUser) {
-                        this.isNotLoggedInUserHover = true;
-                    } else if (this.$store.state.loading.playlistGenerating) {
-                        this.isAlreadyGeneratingHover = true;
-                    } else {
-                        this.isDropHovering = true;
-                    }
-                } else {
-                    if (!this.isLoggedInUser) {
-                        this.isNotLoggedInUserHover = true;
-                    } else {
-                        this.isBadDropHovering = true;
-                    }
-                }
-            },
-            handleDragleave() {
-                this.isDropHovering = false;
-                this.isAlreadyGeneratingHover = false;
-                this.isBadDropHovering = false;
-                this.isNotLoggedInUserHover = false;
-                this.dragStarted = false;
-            },
-            async handleDrop(e) {
-                let shouldHandleDrop = false;
-                if (this.isDropHovering) {
-                    shouldHandleDrop = true;
-                }
-                this.isDropHovering = false;
-                this.isAlreadyGeneratingHover = false;
-                this.isBadDropHovering = false;
-                this.isNotLoggedInUserHover = false;
-                this.dragStarted = false;
-                if (!shouldHandleDrop) {
-                    return;
-                }
-                this.$store.commit('loading/startLoad');
-                this.$store.commit('loading/playlistGenerating');
-                e.preventDefault();
-                let url = e.dataTransfer.getData('text/x-spotify-tracks');
-                if (!url) {
-                    return;
-                }
-                let trackParts = url.split('/');
-                let trackId = trackParts[trackParts.length - 1];
-                this.$store.commit('loading/initializeProgress', {id: 'generate'});
-                try {
-                    let trackResponse = await fetch(`${process.env.API_ORIGIN}/track/${trackId}`, {credentials: 'include'});
-                    let {track} = await trackResponse.json();
-                    let processedTrack = await processTrack(this.$store.getters['user/country'], track);
-                    let pruners;
-                    if (this.$store.state.preferences.onlyTheHits) {
-                        pruners = [builders.hits];
-                    }
-                    let {playlist} = await loadNewPlaylist(this.$store.state.preferences.tracksPerPlaylist, builders.randomwalk, null, processedTrack, pruners, percent => {
-                        this.$store.commit('loading/tickProgress', {id: 'generate', percent});
-                    });
-                    this.$store.dispatch('tracks/loadPlaylist', JSON.parse(JSON.stringify(playlist)));
-                    this.$store.commit('loading/completeProgress', {id: 'generate'});
-                    this.$store.commit('loading/resetProgress');
-                }
-                catch (e) {
-                    this.$ga.exception(e);
-                    console.error('Playlist generation failed', e);
-                    this.$store.dispatch('loading/failProgress');
-                }
-                this.$store.commit('loading/playlistGenerationComplete');
-                this.$store.dispatch('loading/endLoadAfterDelay');
             }
         }
     };

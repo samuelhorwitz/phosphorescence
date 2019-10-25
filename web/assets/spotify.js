@@ -130,3 +130,17 @@ export function getSpotifyTrackUrl(id) {
 export function getSpotifyTrackUri(id) {
     return `spotify:track:${id}`;
 }
+
+export function getSpotifyTrackDragTitle(track) {
+    if (!track || !track.track) {
+        return '';
+    }
+    return `${track.track.name}\n${track.track.artists.map(artist => artist.name).join(', ')}`;
+}
+
+export function getSpotifyAlbumDragTitle(album) {
+    if (!album) {
+        return '';
+    }
+    return `${album.name}\n${album.artists.map(artist => artist.name).join(', ')}`;
+}

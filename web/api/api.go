@@ -10,14 +10,15 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/samuelhorwitz/phosphorescence/api/cache"
 	"github.com/samuelhorwitz/phosphorescence/api/common"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/phosphor"
 	"github.com/samuelhorwitz/phosphorescence/api/handlers/spotify"
+	"github.com/samuelhorwitz/phosphorescence/api/mail"
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 	"github.com/samuelhorwitz/phosphorescence/api/models"
 	"github.com/samuelhorwitz/phosphorescence/api/session"
 	"github.com/samuelhorwitz/phosphorescence/api/spotifyclient"
-	"github.com/samuelhorwitz/phosphorescence/api/tracks"
 )
 
 func main() {
@@ -66,11 +67,12 @@ func main() {
 		postgresMaxIdleConnections:           pgMaxIdle,
 		postgresMaxConnectionLifetimeMinutes: pgLifetime,
 		readTimeout:                          5 * time.Second,
-		writeTimeout:                         10 * time.Second,
+		writeTimeout:                         60 * time.Second,
 		idleTimeout:                          120 * time.Second,
 		handlerTimeout:                       5 * time.Second,
 		rateLimitPerSecond:                   rateLimit,
 		redisHost:                            os.Getenv("REDIS_HOST"),
+		redisCacheHost:                       os.Getenv("REDIS_CACHE_HOST"),
 		mailgunAPIKey:                        os.Getenv("MAILGUN_API_KEY"),
 		phosphorescenceSpotifyID:             os.Getenv("PHOSPHORESCENCE_SPOTIFY_ID"),
 		phosphorescenceRefreshToken:          os.Getenv("PHOSPHORESCENCE_REFRESH_TOKEN"),
@@ -92,6 +94,11 @@ func initialize(cfg *config) {
 		RedisHost:      cfg.redisHost,
 	})
 	log.Println("Common initialized")
+	cache.Initialize(&cache.Config{
+		IsProduction: cfg.isProduction,
+		RedisHost:    cfg.redisCacheHost,
+	})
+	log.Println("Cache initialized")
 	middleware.Initialize(&middleware.Config{
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
 		PhosphorOrigin:     cfg.phosphorOrigin,
@@ -99,10 +106,12 @@ func initialize(cfg *config) {
 	})
 	log.Println("Middleware initialized")
 	spotifyclient.Initialize(&spotifyclient.Config{
-		SpotifyClientID: cfg.spotifyClientID,
-		SpotifySecret:   cfg.spotifySecret,
-		APIOrigin:       cfg.apiOrigin,
-		BaseHTTPTimeout: cfg.handlerTimeout,
+		SpotifyClientID:             cfg.spotifyClientID,
+		SpotifySecret:               cfg.spotifySecret,
+		APIOrigin:                   cfg.apiOrigin,
+		BaseHTTPTimeout:             cfg.handlerTimeout,
+		PhosphorescenceSpotifyID:    cfg.phosphorescenceSpotifyID,
+		PhosphorescenceRefreshToken: cfg.phosphorescenceRefreshToken,
 	})
 	log.Println("Spotify client initialized")
 	spotify.Initialize(&spotify.Config{
@@ -115,14 +124,13 @@ func initialize(cfg *config) {
 	})
 	log.Println("Spotify handlers initialized")
 	phosphor.Initialize(&phosphor.Config{
-		IsProduction:                cfg.isProduction,
-		PhosphorOrigin:              cfg.phosphorOrigin,
-		MailgunAPIKey:               cfg.mailgunAPIKey,
-		PhosphorescenceSpotifyID:    cfg.phosphorescenceSpotifyID,
-		PhosphorescenceRefreshToken: cfg.phosphorescenceRefreshToken,
-		GoogleAnalyticsSecret:       cfg.googleAnalyticsSecret,
+		IsProduction:   cfg.isProduction,
+		PhosphorOrigin: cfg.phosphorOrigin,
 	})
 	log.Println("Phosphor handlers initialized")
+	mail.Initialize(&mail.Config{
+		MailgunAPIKey: cfg.mailgunAPIKey,
+	})
 	session.Initialize(&session.Config{
 		CookieDomain: cfg.cookieDomain,
 		IsProduction: cfg.isProduction,
@@ -138,16 +146,9 @@ func initialize(cfg *config) {
 		PostgreMaxLifetime:       cfg.postgresMaxConnectionLifetimeMinutes,
 		SpacesScriptsEndpoint:    cfg.spacesScriptsEndpoint,
 		SpacesScriptsRegion:      cfg.spacesScriptsRegion,
+		GoogleAnalyticsSecret:    cfg.googleAnalyticsSecret,
 	})
 	log.Println("Models initialized")
-	tracks.Initialize(&tracks.Config{
-		IsProduction:   cfg.isProduction,
-		SpacesID:       cfg.spacesID,
-		SpacesSecret:   cfg.spacesSecret,
-		SpacesEndpoint: cfg.spacesTracksEndpoint,
-		SpacesRegion:   cfg.spacesTracksRegion,
-	})
-	log.Println("Tracks initialized")
 }
 
 func run(cfg *config) {
