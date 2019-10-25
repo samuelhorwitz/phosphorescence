@@ -19,18 +19,21 @@
 </template>
 
 <style scoped>
+    aside, aside * {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        transform: translate3d(0, 0, 0);
+    }
+
     aside {
         position: fixed;
+        top: 0px;
         height: 0px;
         width: 100%;
-        z-index: -1;
         display: flex;
         align-items: flex-start;
         justify-content: flex-start;
         color: transparent;
-        z-index: 99999999;
-        backface-visibility: hidden;
-        transform: translate3d(0, 0, 0);
     }
 
     aside.real {
@@ -206,7 +209,6 @@
             },
             repaint() {
                 let absScrollY = Math.abs(scrollY);
-                this.$refs.elastic.style.height = `${absScrollY}px`;
                 this.$refs.container.style.opacity = 1;
                 this.$refs.elastic.style.color = `rgba(255, 255, 255, ${Math.min(absScrollY / barHeight, 1)})`;
                 this.$refs.pullArrow.style.fill = `rgba(255, 255, 255, ${Math.min(absScrollY / barHeight, 1)})`;

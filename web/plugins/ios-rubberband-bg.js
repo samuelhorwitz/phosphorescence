@@ -21,22 +21,25 @@
     let bgCanvas = document.createElement('canvas');
     bgCanvas.classList.add('bgIosCanvas');
     let ctx = bgCanvas.getContext('2d');
-    function resetCanvasSize() {
-        setTimeout(() => {
-            let width = innerWidth;
-            let height = innerHeight;
-            if (navigator.standalone) {
-                width = outerWidth;
-                height = outerHeight;
-            }
-            bgCanvas.width = width * devicePixelRatio;
-            bgCanvas.height = height * devicePixelRatio;
-            bgCanvas.style.width = `${width}px`;
-            bgCanvas.style.height = `${height}px`;
-            ctx.scale(devicePixelRatio, devicePixelRatio);
-        }, 200);
+    async function resetCanvasSize() {
+        await new Promise(resolve => {
+            setTimeout(() => {
+                let width = innerWidth;
+                let height = innerHeight;
+                if (navigator.standalone) {
+                    width = outerWidth;
+                    height = outerHeight;
+                }
+                bgCanvas.width = width * devicePixelRatio;
+                bgCanvas.height = height * devicePixelRatio;
+                bgCanvas.style.width = `${width}px`;
+                bgCanvas.style.height = `${height}px`;
+                ctx.scale(devicePixelRatio, devicePixelRatio);
+                resolve();
+            }, 200);
+        });
     }
-    resetCanvasSize();
+    await resetCanvasSize();
     document.body.appendChild(bgCanvas);
 
     document.body.addEventListener('resize', function() {
@@ -75,6 +78,10 @@
         if (repaintLocked) {
             return;
         }
+        forceRepaint();
+    }
+
+    function forceRepaint() {
         let width = innerWidth;
         let height = innerHeight;
         if (navigator.standalone) {
@@ -115,7 +122,8 @@
         );
         ctx.restore();
     }
-    requestAnimationFrame(repaint);
+
+    requestAnimationFrame(forceRepaint);
     document.body.classList.add('iosRubberband');
     document.body.classList.add('ios');
 })();

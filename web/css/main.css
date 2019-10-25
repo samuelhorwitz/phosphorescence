@@ -60,6 +60,7 @@ canvas.bgIosCanvas {
     z-index: -100;
     pointer-events: none;
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     transform: translate3d(0, 0, 0);
 }
 
