@@ -29,11 +29,17 @@ type SpotifyDevice struct {
 }
 
 type Playback struct {
-	IsPlaying        bool         `json:"isPlaying"`
-	Progress         int          `json:"progress"`
-	FetchedAtSpotify int          `json:"fetchedAtSpotify"`
-	FetchedAt        int64        `json:"fetchedAt"`
-	Track            SpotifyTrack `json:"track"`
+	IsPlaying        bool                 `json:"isPlaying"`
+	Progress         int                  `json:"progress"`
+	FetchedAtSpotify int                  `json:"fetchedAtSpotify"`
+	FetchedAt        int64                `json:"fetchedAt"`
+	Track            SpotifyPlaybackTrack `json:"track"`
+}
+
+type SpotifyPlaybackTrack struct {
+	ID      string          `json:"id,omitempty"`
+	Name    string          `json:"name"`
+	Artists []SpotifyArtist `json:"artists"`
 }
 
 type PlayState int
@@ -172,6 +178,10 @@ func GetCurrentPlayback(ctx context.Context, sess *session.Session) (Playback, e
 		Progress:         parsedBody.ProgressMilliseconds,
 		FetchedAtSpotify: parsedBody.Timestamp,
 		FetchedAt:        fetchedAt.UnixNano() / int64(time.Millisecond),
-		Track:            parsedBody.Track,
+		Track: SpotifyPlaybackTrack{
+			ID:      parsedBody.Track.ID,
+			Name:    parsedBody.Track.Name,
+			Artists: parsedBody.Track.Artists,
+		},
 	}, nil
 }
