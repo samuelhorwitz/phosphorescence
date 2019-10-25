@@ -43,13 +43,13 @@ deploy: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l type=server
 
 deploy-phosphor: apply
-	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l name=phosphor
+	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=phosphor
 
 deploy-eos: apply
-	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l name=eos
+	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=eos
 
 deploy-api: apply
-	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l name=api
+	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=api
 
 postgres-local:
 	docker run --rm --name phosphor-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=phosphor -d -p 5432:5432 -v ${PWD}/pgdata:/var/lib/postgresql/data samuelhorwitz/postgres-perl:11.5
