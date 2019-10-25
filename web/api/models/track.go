@@ -360,6 +360,9 @@ func getManyAudioFeatures(ctx context.Context, token *oauth2.Token, allTrackIDs 
 func findBestImage(images []SpotifyImage) []SpotifyImage {
 	// from the docs: "The cover art for the album in various sizes, widest first."
 	// https://developer.spotify.com/documentation/web-api/reference/object-model/#album-object-simplified
+	if len(images) == 0 {
+		return images
+	}
 	bestImage := images[0]
 	bestImage.Width = 0
 	bestImage.Height = 0
