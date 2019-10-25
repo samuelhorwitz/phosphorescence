@@ -29,6 +29,8 @@
         justify-content: flex-start;
         color: transparent;
         z-index: 99999999;
+        backface-visibility: hidden;
+        transform: translate3d(0, 0, 0);
     }
 
     aside.real {

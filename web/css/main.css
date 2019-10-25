@@ -59,6 +59,8 @@ canvas.bgIosCanvas {
     top: 0px;
     z-index: -100;
     pointer-events: none;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
 }
 
 .grecaptcha-badge {
