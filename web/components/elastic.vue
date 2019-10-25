@@ -27,7 +27,7 @@
 
     aside {
         position: fixed;
-        top: env(safe-area-inset-top, 0px);
+        top: 0px;
         height: 0px;
         width: 100%;
         display: flex;
@@ -42,6 +42,7 @@
     }
 
     .container {
+        padding-top: env(safe-area-inset-top, 0px);
         display: flex;
         align-items: center;
         justify-content: center;
