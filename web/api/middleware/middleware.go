@@ -30,7 +30,7 @@ type Config struct {
 
 func Initialize(cfg *Config) {
 	phosphorLimiter = tollbooth.NewLimiter(float64(cfg.RateLimitPerSecond), nil)
-	spotifyLimiter = tollbooth.NewLimiter(4, nil)
+	spotifyLimiter = tollbooth.NewLimiter(10, nil)
 	ipLimiter = tollbooth.NewLimiter(float64(cfg.RateLimitPerSecond), nil)
 	googleHTTPClient = &http.Client{
 		Timeout: 10 * time.Second,

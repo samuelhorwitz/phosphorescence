@@ -20,7 +20,7 @@ export function initialize() {
         document.body.appendChild(iframe);
         try {
             await new Promise(async (resolve, reject) => {
-                setTimeout(() => reject('Timed out, probably an ad blocker or other extension'), 1000);
+                setTimeout(() => reject('Timed out, probably an ad blocker or other extension'), 10000);
                 await ready;
                 resolve();
             });
