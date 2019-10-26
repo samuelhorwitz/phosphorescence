@@ -5,8 +5,8 @@
                 ref="canvas"
                 :class="{pointer: hoverTrack !== null}"
                 :title="canvasTitle"
-                @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing')"
-                @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing')"
+                @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing', trackHovering ? hoverTrack : null)"
+                @dblclick="handleCanvasDoubleClick(); $ga.event('constellation', 'double-click', trackHovering ? 'track' : 'nothing', trackHovering ? hoverTrack : null)"
                 tabindex="0"
                 @keydown.arrow-up="moveCursorUp(); $ga.event('constellation', 'key', 'up')"
                 @keydown.arrow-down="moveCursorDown(); $ga.event('constellation', 'key', 'down')"
@@ -36,7 +36,7 @@
                 <span class="label vertical right" title="Aetherealness">aethereal</span>
             </div>
         </div>
-        <div class="details" :style="{left: detailsOffsetX + 'px', top: detailsOffsetY + 'px'}" ref="details" v-if="detailsTrack">
+        <div class="details" :style="{left: detailsOffsetX + 'px', top: detailsOffsetY + 'px'}" ref="details" v-if="showDetails && detailsTrack">
             <dl>
                 <dt>Track</dt>
                 <dd><a tabindex="0" target="_blank" rel="external noopener" :href="detailsTrackUrl" v-spotify-uri:track="detailsTrack.track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(detailsTrack)">{{detailsTrack.track.name}}</a></dd>
@@ -296,8 +296,8 @@
     export default {
         data() {
             return {
+                showDetails: false,
                 hoverTrack: null,
-                detailsTrack: null,
                 innerSize: null,
                 destroyCanvas: null,
                 markConstellationAsDirty: null,
@@ -341,6 +341,9 @@
                     return null;
                 }
                 return this.$store.getters['tracks/currentTrack'];
+            },
+            detailsTrack() {
+                return this.$store.getters['tracks/selectedTrack'];
             },
             trackHovering() {
                 return !(typeof this.hoverTrack == 'undefined' || this.hoverTrack === null);
@@ -415,7 +418,7 @@
                     this.markConstellationAsDirty && this.markConstellationAsDirty();
                     this.beatPulses = [];
                     this.edges = [];
-                    this.detailsTrack = null;
+                    this.showDetails = false;
                     this.hoverTrack = null;
                     let lastTrack;
                     for (let track of newTracks) {
@@ -434,6 +437,8 @@
             mainViewportEventBus.$on('resize', this.handleResizeAfterTick);
             this.handleResize();
             this.$nextTick(this.resetCanvasBounds);
+            this.$refs.canvas.focus();
+            this.$refs.canvas.addEventListener('keydown', this.handleKeyPress);
         },
         created() {
             this.haloInterval = setInterval(this.updateHalos, 1000 / (fps * 2));
@@ -444,6 +449,7 @@
             removeEventListener('orientationchange', this.handleResizeAfterTick);
             mainViewportEventBus.$off('resize', this.handleResizeAfterTick);
             this.destroyCanvas && this.destroyCanvas();
+            this.$refs.canvas.removeEventListener('keydown', this.handleKeyPress);
         },
         methods: {
             updateHalos() {
@@ -531,7 +537,8 @@
             },
             handleCanvasClick() {
                 let oldDetailsTrack = this.detailsTrack;
-                this.detailsTrack = this.tracks[this.hoverTrack];
+                this.$store.commit('tracks/selectTrack', this.hoverTrack);
+                this.showDetails = true;
                 if (this.detailsTrack || (oldDetailsTrack && !this.detailsTrack)) {
                     this.showAxisLabels = false;
                 } else {
@@ -545,37 +552,27 @@
                 this.$store.dispatch('tracks/seekTrack', this.hoverTrack);
             },
             moveCursorUp() {
-                if (!this.trackHovering) {
-                    this.hoverTrack = 0;
-                    return;
-                }
-                if (this.hoverTrack === 0) {
-                    return;
-                }
-                this.hoverTrack = Math.max(0, this.hoverTrack - 1);
+                this.$store.commit('tracks/selectPreviousTrack');
             },
             moveCursorDown() {
-                if (!this.trackHovering) {
-                    this.hoverTrack = 0;
-                    return;
-                }
-                if (this.hoverTrack === this.tracks.length - 1) {
-                    return;
-                }
-                this.hoverTrack = Math.min(this.tracks.length - 1, this.hoverTrack + 1);
+                this.$store.commit('tracks/selectNextTrack');
             },
             handleEnter() {
-                this.handleCanvasClick();
+                if (this.$store.getters['tracks/isPlayerDisconnected']) {
+                    this.showDetails = true;
+                }
+                this.$store.dispatch('tracks/seekSelectedTrack');
             },
             handleEscape() {
+                this.showDetails = false;
                 this.$refs.container.blur();
             },
             handleBlur(e) {
-                if (this.$refs.container.contains(e.relatedTarget)) {
+                if (this.$refs.container && this.$refs.container.contains(e.relatedTarget)) {
                     e.preventDefault();
                     return;
                 }
-                this.detailsTrack = null;
+                this.showDetails = false;
                 this.showAxisLabels = false;
             },
             humanReadableArtists(artists) {
@@ -634,12 +631,18 @@
                         this.moveCursorUp();
                         this.$ga.event('constellation', 'touch-scroll', 'up');
                     }
-                    this.detailsTrack = this.tracks[this.hoverTrack];
+                    this.hoverTrack = null;
+                    this.showDetails = true;
                     this.ongoingTouch = newTouch;
                 }
             },
             handleTouchEnd({touches}) {
                 this.ongoingTouch = null;
+            },
+            handleKeyPress(e) {
+                if (e.keyCode === 73) {
+                    this.showDetails = !this.showDetails;
+                }
             },
             getSpotifyTrackDragTitle,
             getSpotifyAlbumDragTitle

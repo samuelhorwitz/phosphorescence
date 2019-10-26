@@ -24,6 +24,9 @@ export const mutations = {
     showPlaylist(state) {
         state.showConstellation = false;
     },
+    toggleConstellation(state) {
+        state.showConstellation = !state.showConstellation;
+    },
     restore(state) {
         let tracksPerPlaylist = localStorage.getItem('tracksPerPlaylist');
         let seedStyle = localStorage.getItem('seedStyle');

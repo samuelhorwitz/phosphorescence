@@ -172,7 +172,7 @@
                 this.$store.commit('loading/startLoad');
                 this.$store.commit('loading/playlistGenerating');
                 let uriList = (e.clipboardData || clipboardData).getData('text');
-                this.handleUriListDrop(uriList);
+                this.handleUriListDrop(uriList, true);
             },
             async handleDrop(e) {
                 this.count = 0;
@@ -187,6 +187,7 @@
                 this.isBadDropHovering = false;
                 this.dragStarted = false;
                 if (!shouldHandleDrop) {
+                    this.$ga.event('dropzone', 'drop', 'invalid');
                     return;
                 }
                 this.$store.commit('loading/startLoad');
@@ -202,20 +203,24 @@
                     for (let trackUrl of trackUrlsArr) {
                         trackIds.push(getIdFromSpotifyUri(trackUrl));
                     }
+                    this.$ga.event('dropzone', 'drop', 'tracks', trackIds.length);
                     this.handleTrackDrop(trackIds);
                 } else if (playlistUrls) {
                     let playlistUrlsArr = playlistUrls.replace(/\r/g, '').split('\n');
                     let playlistUrl = playlistUrlsArr[0];
+                    this.$ga.event('dropzone', 'drop', 'playlists', playlistUrlsArr.length);
                     this.handlePlaylistDrop(getIdFromSpotifyUri(playlistUrl));
                 } else if (albumUrls) {
                     let albumUrlsArr = albumUrls.replace(/\r/g, '').split('\n');
                     let albumUrl = albumUrlsArr[0];
+                    this.$ga.event('dropzone', 'drop', 'albums', albumUrlsArr.length);
                     this.handleAlbumDrop(getIdFromSpotifyUri(albumUrl));
                 } else if (uriList) {
                     this.handleUriListDrop(uriList);
                 }
             },
-            handleUriListDrop(uriList) {
+            handleUriListDrop(uriList, fromPaste) {
+                let dropType = fromPaste ? 'paste' : 'drop';
                 let uris = uriList.replace(/\r/g, '').split('\n');
                 let ids = [];
                 let spotifyType;
@@ -243,14 +248,18 @@
                     }
                 }
                 if (spotifyType == 'track') {
+                    this.$ga.event('dropzone', dropType, 'tracks', ids.length);
                     this.handleTrackDrop(ids);
                 }
                 else if (spotifyType == 'playlist') {
+                    this.$ga.event('dropzone', dropType, 'playlists', ids.length);
                     this.handlePlaylistDrop(ids[0]);
                 }
                 else if (spotifyType == 'album') {
+                    this.$ga.event('dropzone', dropType, 'albums', ids.length);
                     this.handleAlbumDrop(ids[0]);
                 } else {
+                    this.$ga.event('dropzone', dropType, 'invalid');
                     this.$store.dispatch('loading/failProgress');
                     this.$store.commit('loading/playlistGenerationComplete');
                     this.$store.dispatch('loading/endLoadAfterDelay');

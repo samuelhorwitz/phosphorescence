@@ -22,6 +22,7 @@ export function initialize(storagePrefix) {
 
 const getState = () => () => ({
     currentTrackCursor: 0,
+    selectedTrackCursor: 0,
     playlist: null,
     playback: STOPPED,
     deviceId: null,
@@ -38,18 +39,39 @@ const getMutations = storagePrefix => Object.assign({
             return;
         }
         state.currentTrackCursor++;
+        state.selectedTrackCursor = state.currentTrackCursor;
     },
     previousTrack(state) {
         if (!canSkipBackward(state)) {
             return;
         }
         state.currentTrackCursor--;
+        state.selectedTrackCursor = state.currentTrackCursor;
     },
     seekTrack(state, cursor) {
         if (!isCursorInRange(state, cursor)) {
             return;
         }
         state.currentTrackCursor = cursor;
+        state.selectedTrackCursor = state.currentTrackCursor;
+    },
+    selectTrack(state, cursor) {
+        if (!isCursorInRange(state, cursor)) {
+            return;
+        }
+        state.selectedTrackCursor = cursor;
+    },
+    selectNextTrack(state) {
+        if (!canSelectNext(state)) {
+            return;
+        }
+        state.selectedTrackCursor++;
+    },
+    selectPreviousTrack(state) {
+        if (!canSelectPrevious(state)) {
+            return;
+        }
+        state.selectedTrackCursor--;
     },
     loadPlaylist(state, playlist) {
         if (navigator.standalone) {
@@ -65,11 +87,13 @@ const getMutations = storagePrefix => Object.assign({
         }
         state.playlist = playlist;
         state.currentTrackCursor = 0;
+        state.selectedTrackCursor = 0;
         state.playback = STOPPED;
     },
     clearPlaylist(state) {
         state.playlist = null;
         state.currentTrackCursor = 0;
+        state.selectedTrackCursor = 0;
         state.playback = STOPPED;
     },
     restore(state) {
@@ -90,6 +114,7 @@ const getMutations = storagePrefix => Object.assign({
         if (playlist) {
             state.playlist = JSON.parse(playlist);
             state.currentTrackCursor = 0;
+            state.selectedTrackCursor = 0;
             state.playback = STOPPED;
         }
         let spotifyState = sessionStorage.getItem(`${storagePrefix}/spotifyState`);
@@ -218,6 +243,9 @@ const getActions = () => Object.assign({
         }
         dispatch('loading/endLoadAfterDelay', null, {root: true});
     },
+    seekSelectedTrack({dispatch, state}) {
+        dispatch('seekTrack', state.selectedTrackCursor);
+    },
     loadPlaylist({commit, dispatch}, playlist) {
         commit('loadPlaylist', playlist);
         dispatch('stop');
@@ -234,6 +262,12 @@ const getGetters = () => Object.assign({
             return null;
         }
         return state.playlist[state.currentTrackCursor];
+    },
+    selectedTrack(state) {
+        if (!state.playlist) {
+            return null;
+        }
+        return state.playlist[state.selectedTrackCursor];
     },
     canSkipBackward(state) {
         return canSkipBackward(state);
@@ -283,6 +317,20 @@ function canSkipForward(state) {
         return false;
     }
     return state.currentTrackCursor < state.playlist.length - 1;
+}
+
+function canSelectPrevious(state) {
+    if (!state.playlist) {
+        return false;
+    }
+    return state.selectedTrackCursor > 0;
+}
+
+function canSelectNext(state) {
+    if (!state.playlist) {
+        return false;
+    }
+    return state.selectedTrackCursor < state.playlist.length - 1;
 }
 
 function isCursorInRange(state, cursor) {
