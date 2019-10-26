@@ -144,3 +144,9 @@ export function getSpotifyAlbumDragTitle(album) {
     }
     return `${album.name}\n${album.artists.map(artist => artist.name).join(', ')}`;
 }
+
+export function getIdFromSpotifyUri(uri) {
+    let parts = uri.split('/');
+    let lastPart = parts[parts.length - 1];
+    return lastPart.split('?')[0];
+}

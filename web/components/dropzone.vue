@@ -74,6 +74,7 @@
 <script>
     import {getCaptchaToken} from '~/assets/captcha';
     import {builders, loadNewPlaylist, processTrack, processTracks} from '~/assets/recordcrate';
+    import {getIdFromSpotifyUri} from '~/assets/spotify';
 
     export default {
         data() {
@@ -104,11 +105,13 @@
             document.body.addEventListener('dragenter', this.handleWindowDragenter);
             document.body.addEventListener('dragover', this.handleWindowDragover);
             document.body.addEventListener('drop', this.handleWindowDrop);
+            addEventListener('paste', this.handlePaste);
         },
         beforeDestroy() {
             document.body.removeEventListener('dragenter', this.handleWindowDragenter);
             document.body.removeEventListener('dragover', this.handleWindowDragover);
             document.body.removeEventListener('drop', this.handleWindowDrop);
+            removeEventListener('paste', this.handlePaste);
         },
         methods: {
             handleWindowDragenter(e) {
@@ -164,10 +167,17 @@
                 this.isBadDropHovering = false;
                 this.dragStarted = false;
             },
+            handlePaste(e) {
+                e.preventDefault();
+                this.$store.commit('loading/startLoad');
+                this.$store.commit('loading/playlistGenerating');
+                let uriList = (e.clipboardData || clipboardData).getData('text');
+                this.handleUriListDrop(uriList);
+            },
             async handleDrop(e) {
                 this.count = 0;
                 let shouldHandleDrop = false;
-                if (this.isDropHovering || (this.isBadDropHovering && (e.dataTransfer.types.includes('text/x-spotify-tracks') || e.dataTransfer.types.includes('text/x-spotify-playlists') || e.dataTransfer.types.includes('text/x-spotify-albums')))) {
+                if (this.isDropHovering || (this.isBadDropHovering && (e.dataTransfer.types.includes('text/x-spotify-tracks') || e.dataTransfer.types.includes('text/x-spotify-playlists') || e.dataTransfer.types.includes('text/x-spotify-albums') || e.dataTransfer.types.includes('text/uri-list')))) {
                     shouldHandleDrop = true;
                 }
                 this.isDropHovering = false;
@@ -183,25 +193,67 @@
                 this.$store.commit('loading/playlistGenerating');
                 e.preventDefault();
                 let trackUrls = e.dataTransfer.getData('text/x-spotify-tracks');
-                let playlistUrl = e.dataTransfer.getData('text/x-spotify-playlists');
-                let albumUrl = e.dataTransfer.getData('text/x-spotify-albums');
+                let playlistUrls = e.dataTransfer.getData('text/x-spotify-playlists');
+                let albumUrls = e.dataTransfer.getData('text/x-spotify-albums');
+                let uriList = e.dataTransfer.getData('text/plain'); // text/uri-list doesnt have newline separators in ff
                 if (trackUrls) {
-                    let trackUrlsArr = trackUrls.split('\n');
+                    let trackUrlsArr = trackUrls.replace(/\r/g, '').split('\n');
                     let trackIds = [];
                     for (let trackUrl of trackUrlsArr) {
-                        let trackParts = trackUrl.split('/');
-                        let trackId = trackParts[trackParts.length - 1];
-                        trackIds.push(trackId);
+                        trackIds.push(getIdFromSpotifyUri(trackUrl));
                     }
                     this.handleTrackDrop(trackIds);
-                } else if (playlistUrl) {
-                    let playlistParts = playlistUrl.split('/');
-                    let playlistId = playlistParts[playlistParts.length - 1];
-                    this.handlePlaylistDrop(playlistId);
-                } else if (albumUrl) {
-                    let albumParts = albumUrl.split('/');
-                    let albumId = albumParts[albumParts.length - 1];
-                    this.handleAlbumDrop(albumId);
+                } else if (playlistUrls) {
+                    let playlistUrlsArr = playlistUrls.replace(/\r/g, '').split('\n');
+                    let playlistUrl = playlistUrlsArr[0];
+                    this.handlePlaylistDrop(getIdFromSpotifyUri(playlistUrl));
+                } else if (albumUrls) {
+                    let albumUrlsArr = albumUrls.replace(/\r/g, '').split('\n');
+                    let albumUrl = albumUrlsArr[0];
+                    this.handleAlbumDrop(getIdFromSpotifyUri(albumUrl));
+                } else if (uriList) {
+                    this.handleUriListDrop(uriList);
+                }
+            },
+            handleUriListDrop(uriList) {
+                let uris = uriList.replace(/\r/g, '').split('\n');
+                let ids = [];
+                let spotifyType;
+                function handleUri(uri, type) {
+                    let shouldPush = false;
+                    if (!spotifyType) {
+                        spotifyType = type;
+                        shouldPush = true;
+                    } else if (spotifyType == type) {
+                        shouldPush = true;
+                    }
+                    if (shouldPush) {
+                        ids.push(getIdFromSpotifyUri(uri));
+                    }
+                }
+                for (let uri of uris) {
+                    if (uri.startsWith('https://open.spotify.com/track/')) {
+                        handleUri(uri, 'track');
+                    }
+                    else if (uri.startsWith('https://open.spotify.com/playlist/') || uri.match(/^https:\/\/open\.spotify\.com\/user\/[^\/]+\/playlist\//)) {
+                        handleUri(uri, 'playlist');
+                    }
+                    else if (uri.startsWith('https://open.spotify.com/album/')) {
+                        handleUri(uri, 'album');
+                    }
+                }
+                if (spotifyType == 'track') {
+                    this.handleTrackDrop(ids);
+                }
+                else if (spotifyType == 'playlist') {
+                    this.handlePlaylistDrop(ids[0]);
+                }
+                else if (spotifyType == 'album') {
+                    this.handleAlbumDrop(ids[0]);
+                } else {
+                    this.$store.dispatch('loading/failProgress');
+                    this.$store.commit('loading/playlistGenerationComplete');
+                    this.$store.dispatch('loading/endLoadAfterDelay');
                 }
             },
             async handleTrackDrop(trackIds) {
