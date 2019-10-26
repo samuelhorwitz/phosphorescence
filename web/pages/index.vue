@@ -4,6 +4,8 @@
             <table>
                 <thead>
                     <tr>
+                        <th class="playButton" v-if="playlistPlayButton">
+                        </th>
                         <th class="number">
                         </th>
                         <th>
@@ -18,8 +20,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(track, index) in $store.state.tracks.playlist" :class="{currentTrack: isPlaying(track.id)}" @click="seekTrack(index)" tabindex="0" @keydown.enter="seekTrack(index)" v-spotify-uri:track="track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(track)">
-                        <td :title="humanReadableEvocativeness[index]" class="number">{{index + 1}}</td>
+                    <tr
+                        v-for="(track, index) in $store.state.tracks.playlist"
+                        ref="playlistTrack"
+                        :class="{currentTrack: isPlaying(track.id), selectedTrack: isSelected(track.id)}"
+                        @click="selectTrack(index); $ga.event('playlist', 'click', 'track', index)"
+                        @dblclick="seekTrack(index); $ga.event('playlist', 'double-click', 'track', index)"
+                        tabindex="0"
+                        @keydown.arrow-up="moveCursorUp(); $ga.event('playlist', 'key', 'up')"
+                        @keydown.arrow-down="moveCursorDown(); $ga.event('playlist', 'key', 'down')"
+                        @keydown.enter="seekTrack(index); $ga.event('playlist', 'key', 'enter')"
+                        v-spotify-uri:track="track.id"
+                        v-spotify-uri-title="getSpotifyTrackDragTitle(track)">
+                        <td class="playButton" v-if="playlistPlayButton">
+                            <button @click.stop="seekTrack(index); play(); $ga.event('playlist', 'click', 'play', index)" class="playButton">
+                                <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Play Track</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
+                            </button>
+                        </td>
+                        <td :title="humanReadableEvocativeness[index]" class="number" :class="{pullRight: !playlistPlayButton}">
+                            <span>{{index + 1}}</span>
+                        </td>
                         <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="getSpotifyTrackUrl(track.id)" @click.stop v-spotify-uri:track="track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(track)">{{track.track.name}}</a></td>
                         <td :title="track.track.artists.map(artist => artist.name).join(', ')">
                             <ol>
@@ -77,6 +97,33 @@
         display: inline;
     }
 
+    .playButton button {
+        appearance: none;
+        background-color: transparent;
+        border: 0px;
+        margin: 0px;
+        padding: 0px;
+        display: inline;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .playButton button svg {
+        width: 1.5em;
+        fill: white;
+        stroke: white;
+        stroke-linejoin: round;
+    }
+
+    .playButton button:hover svg {
+        fill: magenta;
+        stroke: magenta;
+    }
+
     .tracks {
         display: flex;
         flex: 1;
@@ -120,9 +167,17 @@
         width: 3em;
     }
 
+    th.playButton {
+        width: 3em;
+    }
+
     tr {
         color: white;
         background-color: rgb(15,10,54);
+    }
+
+    tr:focus {
+        outline: none;
     }
 
     td {
@@ -139,11 +194,15 @@
         text-overflow: ellipsis;
     }
 
-    td.number {
+    td.number.pullRight {
         text-align: right;
     }
 
-    tr.currentTrack, tr:hover {
+    td.playButton {
+        padding: 0px;
+    }
+
+    tr.currentTrack, tr.selectedTrack, tr:hover {
         background-color: transparent !important;
     }
 
@@ -211,9 +270,9 @@
                     this.$refs.tableWrapper.scrollTop = playingEl.offsetTop;
                 }
             },
-            // This is purely to fix a weird rendering bug in Desktop Safari
-            // MacOS 10.14.6, Safari 13.0.1
             showConstellation(newVal, oldVal) {
+                // This is purely to fix a weird rendering bug in Desktop Safari
+                // MacOS 10.14.6, Safari 13.0.1
                 if (oldVal && !newVal) {
                     setTimeout(() => {
                         this.$refs.tableWrapper.style.display = 'none';
@@ -221,9 +280,18 @@
                         this.$refs.tableWrapper.style.display = '';
                     }, 10);
                 }
+                // below is actual business logic
+                this.$nextTick(() => {
+                    if (!newVal) {
+                        this.$refs.playlistTrack[this.$store.state.tracks.selectedTrackCursor].focus();
+                    }
+                });
             }
         },
         computed: {
+            playlistPlayButton() {
+                return !this.$store.getters['tracks/isPlayerDisconnected'];
+            },
             showConstellation() {
                 return this.$store.state.preferences.showConstellation;
             },
@@ -233,19 +301,8 @@
                 }
                 return this.$store.getters['tracks/currentTrack'];
             },
-            currentTrackImage() {
-                let track = this.currentTrack;
-                if (!track) {
-                    return null;
-                }
-                return track.track.album.images[0].url;
-            },
-            currentTrackImageAltText() {
-                let track = this.currentTrack;
-                if (!track) {
-                    return null;
-                }
-                return `${track.track.album.name} - ${track.track.album.artists.map(artist => artist.name).join(', ')}`;
+            selectedTrack() {
+                return this.$store.getters['tracks/selectedTrack'];
             },
             humanReadableEvocativeness() {
                 return this.$store.state.tracks.playlist.map(({evocativeness}) => {
@@ -271,14 +328,46 @@
                 }
                 return this.currentTrack.id == id;
             },
+            isSelected(id) {
+                if (!this.selectedTrack) {
+                    return false;
+                }
+                return this.selectedTrack.id == id;
+            },
+            selectTrack(i) {
+                this.$store.commit('tracks/selectTrack', i);
+            },
             seekTrack(i) {
                 this.$store.dispatch('tracks/seekTrack', i);
+                this.$refs.playlistTrack[i].focus();
+            },
+            moveCursorUp() {
+                this.$store.commit('tracks/selectPreviousTrack');
+                this.$refs.playlistTrack[this.$store.state.tracks.selectedTrackCursor].focus();
+            },
+            moveCursorDown() {
+                this.$store.commit('tracks/selectNextTrack');
+                this.$refs.playlistTrack[this.$store.state.tracks.selectedTrackCursor].focus();
+            },
+            handleKeyPress(e) {
+                if (e.keyCode === 67) {
+                    this.$store.commit('preferences/toggleConstellation');
+                }
+            },
+            play() {
+                this.$store.dispatch('tracks/play');
             },
             getSpotifyAlbumUrl,
             getSpotifyArtistUrl,
             getSpotifyTrackUrl,
             getSpotifyTrackDragTitle,
             getSpotifyAlbumDragTitle
+        },
+        mounted() {
+            document.addEventListener('keydown', this.handleKeyPress);
+        },
+        beforeDestroy() {
+            document.removeEventListener('keydown', this.handleKeyPress);
         },
         head() {
             return {
