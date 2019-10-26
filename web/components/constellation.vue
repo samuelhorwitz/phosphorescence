@@ -39,17 +39,17 @@
         <div class="details" :style="{left: detailsOffsetX + 'px', top: detailsOffsetY + 'px'}" ref="details" v-if="detailsTrack">
             <dl>
                 <dt>Track</dt>
-                <dd><a target="_blank" rel="external noopener" :href="detailsTrackUrl" v-spotify-uri:track="detailsTrack.track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(detailsTrack)">{{detailsTrack.track.name}}</a></dd>
+                <dd><a tabindex="0" target="_blank" rel="external noopener" :href="detailsTrackUrl" v-spotify-uri:track="detailsTrack.track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(detailsTrack)">{{detailsTrack.track.name}}</a></dd>
                 <dt>Artists</dt>
                 <dd>
                     <ol class="artists">
                         <li class="artist" v-for="artist in detailsTrackArtists">
-                            <a target="_blank" rel="external noopener" :href="artist.url" v-spotify-uri:artist="artist.id" v-spotify-uri-title="artist.name">{{artist.name}}</a>
+                            <a tabindex="0" target="_blank" rel="external noopener" :href="artist.url" v-spotify-uri:artist="artist.id" v-spotify-uri-title="artist.name">{{artist.name}}</a>
                         </li>
                     </ol>
                 </dd>
                 <dt>Album</dt>
-                <dd><a target="_blank" rel="external noopener" :href="detailsTrackAlbumUrl" v-spotify-uri:album="detailsTrack.track.album.id" v-spotify-uri-title="getSpotifyAlbumDragTitle(detailsTrack.track.album)">{{detailsTrack.track.album.name}}</a></dd>
+                <dd><a tabindex="0" target="_blank" rel="external noopener" :href="detailsTrackAlbumUrl" v-spotify-uri:album="detailsTrack.track.album.id" v-spotify-uri-title="getSpotifyAlbumDragTitle(detailsTrack.track.album)">{{detailsTrack.track.album.name}}</a></dd>
                 <dt>Key</dt>
                 <dd>{{getHarmonics(detailsTrack)}}</dd>
                 <dt>BPM</dt>
@@ -394,7 +394,7 @@
                 }
                 let artists = [];
                 for (let artist of this.detailsTrack.track.artists) {
-                    artists.push({...artist, url: getSpotifyArtistUrl(artist)});
+                    artists.push({...artist, url: getSpotifyArtistUrl(artist.id)});
                 }
                 return artists;
             }
