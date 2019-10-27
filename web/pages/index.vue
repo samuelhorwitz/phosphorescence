@@ -271,23 +271,22 @@
                 }
             },
             showConstellation(newVal, oldVal) {
-                // This is purely to fix a weird rendering bug in Desktop Safari
-                // MacOS 10.14.6, Safari 13.0.1
                 if (oldVal && !newVal) {
                     setTimeout(() => {
+                        // This is purely to fix a weird rendering bug in Desktop Safari
+                        // MacOS 10.14.6, Safari 13.0.1
                         if (this.$refs.tableWrapper) {
                             this.$refs.tableWrapper.style.display = 'none';
                             this.$refs.tableWrapper.offsetHeight;
                             this.$refs.tableWrapper.style.display = '';
                         }
+
+                        // This is for focusing the correct tr
+                        if (this.$refs.playlistTrack && this.$refs.playlistTrack[this.$store.state.tracks.selectedTrackCursor]) {
+                            this.$refs.playlistTrack[this.$store.state.tracks.selectedTrackCursor].focus();
+                        }
                     }, 10);
                 }
-                // below is actual business logic
-                this.$nextTick(() => {
-                    if (!newVal && this.$refs.playlistTrack) {
-                        this.$refs.playlistTrack[this.$store.state.tracks.selectedTrackCursor].focus();
-                    }
-                });
             }
         },
         computed: {
