@@ -353,6 +353,7 @@
             },
             handleKeyPress(e) {
                 if (e.keyCode === 67) {
+                    this.$ga.event('playlist', 'toggle-constellation');
                     this.$store.commit('preferences/toggleConstellation');
                 }
             },
