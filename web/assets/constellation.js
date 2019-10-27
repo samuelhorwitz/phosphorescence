@@ -1,8 +1,16 @@
-export function initializeCanvas(canvasEl, component, fps) {
-    let canvas = canvasEl;
+const scrollbarWidth = 10;
+const minScrollPillHeight = 25;
+
+export function initializeCanvas(canvas, component, fps) {
     let ctx = canvas.getContext('2d');
     resizeCanvas(canvas, ctx, component);
     return beginLoop(ctx, drawGridOffscreen(component), component, fps);
+}
+
+export function initializeScrollCanvas(canvas, component) {
+    let ctx = canvas.getContext('2d');
+    resizeScrollCanvas(canvas, ctx, component);
+    return (i, total) => drawScrollbar(ctx, component, i, total);
 }
 
 export async function renderOffscreen(component, bgFn, fgFn) {
@@ -58,6 +66,16 @@ function resizeCanvas(canvas, ctx, component, ratio = devicePixelRatio) {
     ctx.scale(ratio, ratio);
 }
 
+function resizeScrollCanvas(canvas, ctx, component, ratio = devicePixelRatio) {
+    let width = scrollbarWidth;
+    let height = component.outerSize;
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.scale(ratio, ratio);
+}
+
 function resizeStarCanvas(canvas, ctx, size, ratio = devicePixelRatio) {
     canvas.width = size * ratio;
     canvas.height = size * ratio;
@@ -101,6 +119,44 @@ function beginLoop(ctx, grid, component, fps) {
             redrawConstellation = true;
         }
     };
+}
+
+function drawScrollbar(ctx, component, i, total) {
+    requestAnimationFrame(() => {
+        let outerHeight = component.outerSize;
+        let paddingY = 2;
+        let innerHeight = outerHeight - (paddingY * 2);
+        let pillWidth = 6;
+        let minPillHeight = innerHeight / total;
+        let pillHeight = Math.max(minScrollPillHeight, minPillHeight);
+        let paddingX = (scrollbarWidth - pillWidth) / 2;
+        let pillY = (i / total) * (innerHeight - (pillHeight - minPillHeight));
+        ctx.clearRect(0, 0, scrollbarWidth, outerHeight);
+        ctx.save();
+        ctx.translate(paddingX, paddingY);
+        drawScrollPill(ctx, 0, pillY, pillWidth, pillHeight);
+        ctx.restore();
+    });
+}
+
+function drawScrollPill(ctx, x, y, width, height) {
+    let radius = 3;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 }
 
 function drawStarOffscreen(ctx, size) {

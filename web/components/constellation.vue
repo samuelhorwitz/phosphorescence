@@ -2,7 +2,8 @@
     <section ref="container">
         <div class="canvasWrapper">
             <canvas
-                ref="canvas"
+                ref="constellationCanvas"
+                class="constellationCanvas"
                 :class="{pointer: hoverTrack !== null}"
                 :title="canvasTitle"
                 @click="handleCanvasClick(); $ga.event('constellation', 'click', trackHovering ? 'track' : 'nothing', trackHovering ? hoverTrack : null)"
@@ -19,6 +20,7 @@
                 @touchmove.prevent="handleTouchMove"
                 @touchend.passive="handleTouchEnd"
                 @touchcancel.passive="handleTouchEnd"
+                @wheel.passive="handleWheel"
                 v-spotify-uri:track="canvasSpotifyDragTrack"
                 v-spotify-uri-title="canvasSpotifyDragTrackTitle">
                 <ol>
@@ -27,6 +29,7 @@
                     </li>
                 </ol>
             </canvas>
+            <canvas ref="scrollCanvas" class="scrollCanvas" :class="{show: showScrollbar}">Canvas may be scrolled or panned to scroll through tracks</canvas>
             <div class="hover" :class="{show: showAxisLabels}">
                 <span class="label vertical left" title="Chthonicness">chthonic</span>
                 <div class="hoverInner">
@@ -69,17 +72,31 @@
         height: 100%;
     }
 
-    canvas {
+    .constellationCanvas {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
     }
 
-    canvas.pointer {
+    .constellationCanvas.pointer {
         cursor: pointer;
     }
 
-    canvas:focus {
+    .constellationCanvas:focus {
         outline: none;
+    }
+
+    .scrollCanvas {
+        pointer-events: none;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        transition: opacity 0.2s ease-in 0s;
+        opacity: 0;
+    }
+
+    .scrollCanvas.show {
+        transition: opacity 0s ease-in 0s;
+        opacity: 1;
     }
 
     .canvasWrapper {
@@ -270,7 +287,7 @@
 
 <script>
     import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackDragTitle, getSpotifyAlbumDragTitle} from '~/assets/spotify';
-    import {initializeCanvas} from '~/assets/constellation';
+    import {initializeCanvas, initializeScrollCanvas} from '~/assets/constellation';
     import mainViewportEventBus from '~/assets/mainviewport';
 
     const A_FLAT = 8, E_FLAT = 3, B_FLAT = 10, F = 5, C = 0, G = 7, D = 2, A = 9, E = 4, B = 11, F_SHARP = 6, D_FLAT = 1;
@@ -309,7 +326,11 @@
                 canvasAbsoluteX: null,
                 canvasAbsoluteY: null,
                 ongoingTouch: null,
-                showAxisLabels: false
+                ongoingScroll: 0,
+                showAxisLabels: false,
+                redrawScrollbar: null,
+                showScrollbar: false,
+                scrollbarFadeTimer: null
             };
         },
         computed: {
@@ -344,6 +365,9 @@
             },
             detailsTrack() {
                 return this.$store.getters['tracks/selectedTrack'];
+            },
+            detailsTrackIndex() {
+                return this.$store.state.tracks.selectedTrackCursor;
             },
             trackHovering() {
                 return !(typeof this.hoverTrack == 'undefined' || this.hoverTrack === null);
@@ -408,7 +432,8 @@
                 if (!newVal) {
                     return;
                 }
-                let {destroyer, redrawConstellation} = initializeCanvas(this.$refs.canvas, this, fps);
+                let {destroyer, redrawConstellation} = initializeCanvas(this.$refs.constellationCanvas, this, fps);
+                this.redrawScrollbar = initializeScrollCanvas(this.$refs.scrollCanvas, this);
                 this.destroyCanvas = destroyer;
                 this.markConstellationAsDirty = redrawConstellation;
             },
@@ -429,6 +454,16 @@
                         lastTrack = track;
                     }
                 }
+            },
+            detailsTrack(newDetailsTrack) {
+                if (newDetailsTrack) {
+                    clearTimeout(this.scrollbarFadeTimer);
+                    this.redrawScrollbar(this.detailsTrackIndex, this.tracks.length);
+                    this.showScrollbar = true;
+                    this.scrollbarFadeTimer = setTimeout(() => this.showScrollbar = false, 750);
+                } else {
+                    this.showScrollbar = false;
+                }
             }
         },
         mounted() {
@@ -437,8 +472,8 @@
             mainViewportEventBus.$on('resize', this.handleResizeAfterTick);
             this.handleResize();
             this.$nextTick(this.resetCanvasBounds);
-            this.$refs.canvas.focus();
-            this.$refs.canvas.addEventListener('keydown', this.handleKeyPress);
+            this.$refs.constellationCanvas.focus();
+            this.$refs.constellationCanvas.addEventListener('keydown', this.handleKeyPress);
         },
         created() {
             this.haloInterval = setInterval(this.updateHalos, 1000 / (fps * 2));
@@ -449,7 +484,7 @@
             removeEventListener('orientationchange', this.handleResizeAfterTick);
             mainViewportEventBus.$off('resize', this.handleResizeAfterTick);
             this.destroyCanvas && this.destroyCanvas();
-            this.$refs.canvas.removeEventListener('keydown', this.handleKeyPress);
+            this.$refs.constellationCanvas.removeEventListener('keydown', this.handleKeyPress);
         },
         methods: {
             updateHalos() {
@@ -598,15 +633,27 @@
                 this.resetCanvasBounds();
             },
             resetCanvasBounds() {
-                let {x, y} = this.$refs.canvas.getBoundingClientRect();
+                let {x, y} = this.$refs.constellationCanvas.getBoundingClientRect();
                 this.canvasAbsoluteX = x;
                 this.canvasAbsoluteY = y;
+            },
+            handleWheel({deltaY}) {
+                this.ongoingScroll += deltaY;
+                if (deltaY < 0 && this.ongoingScroll < -dragThreshold) {
+                    this.moveCursorUp();
+                    this.$ga.event('constellation', 'wheel-scroll', 'up');
+                    this.ongoingScroll = 0;
+                } else if (deltaY > 0 && this.ongoingScroll > dragThreshold) {
+                    this.moveCursorDown();
+                    this.$ga.event('constellation', 'wheel-scroll', 'down');
+                    this.ongoingScroll = 0;
+                }
             },
             handleTouchStart({touches}) {
                 if (touches.length > 1 || this.ongoingTouch) {
                     return;
                 }
-                this.$refs.canvas.focus();
+                this.$refs.constellationCanvas.focus();
                 this.ongoingTouch = touches[0];
             },
             handleTouchMove({touches}) {
@@ -625,11 +672,11 @@
                 }
                 if (Math.abs(newTouch.screenY - this.ongoingTouch.screenY) > dragThreshold) {
                     if (newTouch.screenY > this.ongoingTouch.screenY) {
-                        this.moveCursorDown();
-                        this.$ga.event('constellation', 'touch-scroll', 'down');
-                    } else {
                         this.moveCursorUp();
                         this.$ga.event('constellation', 'touch-scroll', 'up');
+                    } else {
+                        this.moveCursorDown();
+                        this.$ga.event('constellation', 'touch-scroll', 'down');
                     }
                     this.hoverTrack = null;
                     this.showDetails = true;
