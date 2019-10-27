@@ -42,11 +42,12 @@ let loadingPercentBase = 0;
 })();
 
 async function handleSendTracks(data) {
+    console.log('Will process tracks...');
     let tracksArr;
     if (data.raw) {
         tracksArr = data.tracks;
     } else {
-        tracksArr = JSON.parse(decoder.decode(data.tracks));
+        tracksArr = JSON.parse(decoder.decode(new Uint8Array(data.tracks)));
     }
     console.log('Processing tracks...');
     tracksArr = await getEvocativeness(tracksArr);
