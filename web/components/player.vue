@@ -562,6 +562,7 @@
             },
             tracks() {
                 this.savedPlaylistId = null;
+                this.$store.commit('tracks/stopPreview');
             },
             currentPreview(newPreview) {
                 if (newPreview) {

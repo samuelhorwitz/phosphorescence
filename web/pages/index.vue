@@ -36,8 +36,8 @@
                             <button @click.stop="seekTrack(index); $ga.event('playlist', 'click', 'play', index)" :disabled="$store.state.tracks.previewLocked || ($store.getters['tracks/isPlayerDisconnected'] && !previewUrls[index])" class="playButton" v-if="$store.state.tracks.currentPreview != track.id">
                                 <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">{{playButtonText}}</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
                             </button>
-                            <button @click.stop="handlePreviewStop(); $ga.event('playlist', 'click', 'stop', index)" class="stopButton" v-if="$store.state.tracks.currentPreview == track.id">
-                                <previewPlayback :percent="$store.state.tracks.currentPreviewPercent"></previewPlayback>
+                            <button @click.stop="handlePreviewStop(); $ga.event('playlist', 'click', 'stop', index)" class="stopButton" v-if="$store.state.tracks.currentPreview == track.id" @mouseover="previewPlaybackShadowColor = 'cyan'" @mouseout="previewPlaybackShadowColor = 'magenta'">
+                                <previewPlayback :percent="$store.state.tracks.currentPreviewPercent" :shadowColor="previewPlaybackShadowColor"></previewPlayback>
                                 <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px"aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Stop</title><path d="M1,1V31H31V1H1ZM29,29H3V3H29V29Z"></path></svg>
                             </button>
                         </td>
@@ -136,12 +136,12 @@
 
     td.playButton button.stopButton svg {
         position: absolute;
-        fill: magenta;
+        fill: aquamarine;
         stroke: magenta;
     }
 
     td.playButton button:hover svg {
-        fill: magenta;
+        fill: aquamarine;
         stroke: magenta;
     }
 
@@ -296,6 +296,11 @@
 
     export default {
         components: {constellation, loadingScreen, previewPlayback},
+        data() {
+            return {
+                previewPlaybackShadowColor: 'magenta'
+            };
+        },
         watch: {
             currentTrack() {
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');
