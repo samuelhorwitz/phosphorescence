@@ -1,10 +1,10 @@
 <template>
     <article :class="{loading: !$store.getters['tracks/playlistLoaded']}">
-        <div class="tableWrapper" :class="{loading: this.$store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="$store.getters['tracks/playlistLoaded'] && !showConstellation">
+        <div class="tableWrapper" :class="{loading: $store.state.loading.playlistGenerating}" ref="tableWrapper" v-if="$store.getters['tracks/playlistLoaded'] && !showConstellation">
             <table>
                 <thead>
                     <tr>
-                        <th class="playButton" v-if="playlistPlayButton">
+                        <th class="playButton">
                         </th>
                         <th class="number">
                         </th>
@@ -32,12 +32,16 @@
                         @keydown.enter="seekTrack(index); $ga.event('playlist', 'key', 'enter')"
                         v-spotify-uri:track="track.id"
                         v-spotify-uri-title="getSpotifyTrackDragTitle(track)">
-                        <td class="playButton" v-if="playlistPlayButton">
-                            <button @click.stop="seekTrack(index); play(); $ga.event('playlist', 'click', 'play', index)" class="playButton">
-                                <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Play Track</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
+                        <td class="playButton">
+                            <button @click.stop="handlePlaylistPlay(track.id, index); $ga.event('playlist', 'click', 'play', index)" :disabled="$store.getters['tracks/isPlayerDisconnected'] && !previewUrls[index]" class="playButton" v-if="$store.state.tracks.currentPreview != track.id">
+                                <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">{{playButtonText}}</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
+                            </button>
+                            <button @click.stop="handlePreviewStop(); $ga.event('playlist', 'click', 'stop', index)" class="stopButton" v-if="$store.state.tracks.currentPreview == track.id">
+                                <previewPlayback :percent="$store.state.tracks.currentPreviewPercent"></previewPlayback>
+                                <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px"aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Stop</title><path d="M1,1V31H31V1H1ZM29,29H3V3H29V29Z"></path></svg>
                             </button>
                         </td>
-                        <td :title="humanReadableEvocativeness[index]" class="number" :class="{pullRight: !playlistPlayButton}">
+                        <td :title="humanReadableEvocativeness[index]" class="number">
                             <span>{{index + 1}}</span>
                         </td>
                         <td :title="track.track.name"><a target="_blank" rel="external noopener" :href="getSpotifyTrackUrl(track.id)" @click.stop v-spotify-uri:track="track.id" v-spotify-uri-title="getSpotifyTrackDragTitle(track)">{{track.track.name}}</a></td>
@@ -53,7 +57,7 @@
                 </tbody>
             </table>
         </div>
-        <constellation class="constellation" :class="{loading: this.$store.state.loading.playlistGenerating}" v-if="$store.getters['tracks/playlistLoaded'] && showConstellation"></constellation>
+        <constellation class="constellation" :class="{loading: $store.state.loading.playlistGenerating}" v-if="$store.getters['tracks/playlistLoaded'] && showConstellation"></constellation>
         <loadingScreen v-if="!$store.getters['tracks/playlistLoaded']"></loadingScreen>
     </article>
 </template>
@@ -112,6 +116,10 @@
         cursor: pointer;
     }
 
+    .playButton button:focus {
+        outline: none;
+    }
+
     .playButton button svg {
         width: 1.5em;
         fill: white;
@@ -119,9 +127,20 @@
         stroke-linejoin: round;
     }
 
+    .playButton button.stopButton svg {
+        position: absolute;
+        fill: magenta;
+        stroke: magenta;
+    }
+
     .playButton button:hover svg {
         fill: magenta;
         stroke: magenta;
+    }
+
+    .playButton button.stopButton:hover svg {
+        fill: aquamarine;
+        stroke: aquamarine;
     }
 
     .tracks {
@@ -260,9 +279,10 @@
     import {getSpotifyAlbumUrl, getSpotifyArtistUrl, getSpotifyTrackUrl, getSpotifyTrackDragTitle, getSpotifyAlbumDragTitle} from '~/assets/spotify';
     import constellation from '~/components/constellation';
     import loadingScreen from '~/components/loading-screen';
+    import previewPlayback from '~/components/preview-playback';
 
     export default {
-        components: {constellation, loadingScreen},
+        components: {constellation, loadingScreen, previewPlayback},
         watch: {
             currentTrack() {
                 let playingEl = this.$el.querySelector('.tableWrapper .playing');
@@ -290,8 +310,18 @@
             }
         },
         computed: {
-            playlistPlayButton() {
-                return !this.$store.getters['tracks/isPlayerDisconnected'];
+            previewUrls() {
+                let previewUrls = [];
+                for (let track of this.$store.state.tracks.playlist) {
+                    previewUrls.push(this.$store.state.tracks.previews[track.id]);
+                }
+                return previewUrls;
+            },
+            playButtonText() {
+                if (this.$store.getters['tracks/isPlayerDisconnected']) {
+                    return 'Play Preview';
+                }
+                return 'Play Track';
             },
             showConstellation() {
                 return this.$store.state.preferences.showConstellation;
@@ -358,6 +388,18 @@
             },
             play() {
                 this.$store.dispatch('tracks/play');
+            },
+            handlePlaylistPlay(id, index) {
+                if (!this.$store.getters['tracks/isPlayerDisconnected']) {
+                    this.seekTrack(index);
+                    this.play();
+                } else {
+                    this.selectTrack(index);
+                    this.$store.commit('tracks/playPreview', id);
+                }
+            },
+            handlePreviewStop() {
+                this.$store.commit('tracks/stopPreview');
             },
             getSpotifyAlbumUrl,
             getSpotifyArtistUrl,

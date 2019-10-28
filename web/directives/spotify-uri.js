@@ -133,6 +133,10 @@ function handle(target, setDataInterface) {
         uri = buildUriList('https://open.spotify.com/album/', ids);
         setDataInterface.setData('text/x-spotify-albums', uri);
     }
+    else if (type === 'playlist') {
+        uri = buildUriList('https://open.spotify.com/playlist/', ids);
+        setDataInterface.setData('text/x-spotify-playlists', uri);
+    }
     else {
         return false;
     }

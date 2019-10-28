@@ -77,7 +77,7 @@ async function getTracks(isLoggedIn, region) {
     } else {
         console.warn('Browser does not support cache');
     }
-    let tracksUrlResponse
+    let tracksUrlResponse;
     if (isLoggedIn) {
         tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/tracks`, {credentials: 'include'});
     } else {

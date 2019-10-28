@@ -209,7 +209,7 @@
         async created() {
             this.$store.commit('loading/startLoad');
             this.$store.commit('preferences/restore');
-            this.$store.commit('tracks/restore');
+            this.$store.dispatch('tracks/restore');
             this.$store.commit('loading/tracksDownloading');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Downloading track data');
             this.$store.commit('loading/initializeProgress', {id: 'tracks', weight: 60});

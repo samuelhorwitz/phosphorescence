@@ -156,11 +156,13 @@ func initializeRoutes(cfg *config) http.Handler {
 	trackRouter := func(r chi.Router) {
 		r.Route("/unauthenticated", func(r chi.Router) {
 			r.With(middleware.Captcha("api/track", 0.5)).Get("/{region}/{trackIDs}", phosphor.GetTracksUnauthenticated)
+			r.With(middleware.Captcha("api/track/preview", 0.5)).Get("/preview/{region}/{trackIDs}", phosphor.GetTrackPreviewsUnauthenticated)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
 			r.Use(middleware.SpotifyLimiter)
 			r.Get("/{trackIDs}", phosphor.GetTracks)
+			r.Get("/preview/{trackIDs}", phosphor.GetTrackPreviews)
 		})
 	}
 	r.Route("/track", trackRouter)

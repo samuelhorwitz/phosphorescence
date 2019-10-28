@@ -39,7 +39,7 @@
                 </menu>
                 <div class="trackData" ref="trackData" :class="{stopped: $store.getters['tracks/stopped']}">
                     <span v-if="!premiumUser && savedPlaylistUrl" class="openPlaylist">
-                        <a target="_blank" rel="external noopener" :href="savedPlaylistUrl">Open Playlist in Spotify</a>
+                        <a target="_blank" rel="external noopener" :href="savedPlaylistUrl" v-spotify-uri:playlist="savedPlaylistId" v-spotify-uri-title="'Phosphor.me Playlist'">Open Playlist in Spotify</a>
                     </span>
                     <span class="trackDetails" :class="{scrollingBanner: isTrackDataScrolling}" ref="trackDetails" v-if="playerReadyAndConnected && !$store.getters['tracks/stopped']">
                         <span class="trackName">
@@ -91,6 +91,7 @@
                 </li>
             </ol>
         </div>
+        <audio ref="previewPlayer" :src="currentPreview" v-if="currentPreview" @timeupdate="handlePreviewPlayback" @ended="handlePreviewFinished">Your browser does not support the audio element</audio>
     </aside>
 </template>
 
@@ -463,6 +464,12 @@
             tracks() {
                 return this.$store.state.tracks.playlist;
             },
+            currentPreview() {
+                if (!this.$store.state.tracks.currentPreview) {
+                    return null;
+                }
+                return this.$store.state.tracks.previews[this.$store.state.tracks.currentPreview];
+            },
             currentTrack() {
                 return this.$store.getters['tracks/currentTrack'];
             },
@@ -555,6 +562,13 @@
             },
             tracks() {
                 this.savedPlaylistId = null;
+            },
+            currentPreview(newPreview) {
+                if (newPreview) {
+                    this.$nextTick(() => {
+                        this.$refs.previewPlayer.addEventListener('canplaythrough', () => this.$refs.previewPlayer.play());
+                    });
+                }
             }
         },
         methods: {
@@ -827,6 +841,12 @@
             },
             showPlaylist() {
                 this.$store.commit('preferences/showPlaylist');
+            },
+            handlePreviewPlayback({target}) {
+                this.$store.commit('tracks/updatePreviewPercent', !target.currentTime || !target.duration ? 0 : target.currentTime / target.duration);
+            },
+            handlePreviewFinished() {
+                this.$store.commit('tracks/completePreview');
             },
             getSpotifyTrackDragTitle,
             getSpotifyAlbumDragTitle

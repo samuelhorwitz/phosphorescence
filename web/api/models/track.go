@@ -27,6 +27,7 @@ type SpotifyTrack struct {
 	Artists          []SpotifyArtist     `json:"artists"`
 	Name             string              `json:"name"`
 	Popularity       int                 `json:"popularity"`
+	PreviewURL       string              `json:"preview_url"`
 	AvailableMarkets []string            `json:"available_markets,omitempty"`
 	IsPlayable       bool                `json:"is_playable"`
 	LinkedFrom       *SpotifyLinkedTrack `json:"linked_from,omitempty"`
@@ -76,6 +77,7 @@ func (t SpotifyTrack) MarshalJSON() ([]byte, error) {
 		Artists    []SpotifyArtist     `json:"artists"`
 		Name       string              `json:"name"`
 		Popularity int                 `json:"popularity"`
+		PreviewURL string              `json:"preview_url"`
 		IsPlayable bool                `json:"is_playable"`
 		LinkedFrom *SpotifyLinkedTrack `json:"linked_from,omitempty"`
 	}
@@ -83,6 +85,7 @@ func (t SpotifyTrack) MarshalJSON() ([]byte, error) {
 	tmp.Artists = t.Artists
 	tmp.Name = t.Name
 	tmp.Popularity = t.Popularity
+	tmp.PreviewURL = t.PreviewURL
 	tmp.IsPlayable = t.IsPlayable
 	tmp.LinkedFrom = t.LinkedFrom
 	return json.Marshal(&tmp)
