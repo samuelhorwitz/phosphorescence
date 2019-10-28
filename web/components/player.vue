@@ -812,7 +812,7 @@
                 if (e.code === 'Space') {
                     e.stopPropagation();
                     e.preventDefault();
-                    if (this.webPlayerReady) {
+                    if (this.$store.getters['tracks/isPlayerConnected']) {
                         if (this.$store.getters['tracks/stopped']) {
                             this.play();
                         } else if (this.$store.getters['tracks/paused']) {
@@ -833,8 +833,11 @@
                 else if (e.keyCode === 37 && (e.metaKey || e.ctrlKey)) {
                     e.stopPropagation();
                     e.preventDefault();
-                    this.previous();
-                    if (!this.webPlayerReady) {
+                    if (this.$store.getters['tracks/isPlayerConnected']) {
+                        this.previous();
+                    }
+                    else {
+                        this.$store.commit('tracks/previousTrack');
                         this.$store.commit('tracks/playPreviewOfSelectedTrack');
                     }
                 }
@@ -842,8 +845,11 @@
                 else if (e.keyCode == 39 && (e.metaKey || e.ctrlKey)) {
                     e.stopPropagation();
                     e.preventDefault();
-                    this.next();
-                    if (!this.webPlayerReady) {
+                    if (this.$store.getters['tracks/isPlayerConnected']) {
+                        this.next();
+                    }
+                    else {
+                        this.$store.commit('tracks/nextTrack');
                         this.$store.commit('tracks/playPreviewOfSelectedTrack');
                     }
                 }
@@ -874,6 +880,7 @@
             }
             this.$store.commit('loading/startLoad');
             let messageId = await this.$store.dispatch('loading/pushMessage', 'Initializing Spotify web player');
+            this.$store.commit('tracks/lockPreview');
             this.$store.commit('loading/initializeProgress', {id: 'player', weight: 5});
             try {
                 let playerWrapper = await initializePlayer(this.$store, 'tracks');
@@ -894,6 +901,7 @@
             this.$store.commit('loading/completeProgress', {id: 'player'});
             this.$store.commit('loading/clearMessage', messageId);
             this.$store.dispatch('loading/endLoadAfterDelay');
+            this.$store.commit('tracks/unlockPreview');
         },
         beforeDestroy() {
             if (this.destroyer) {

@@ -28,6 +28,7 @@ const getState = () => () => ({
     previews: {},
     currentPreview: null,
     currentPreviewPercent: 0,
+    previewLocked: false,
     playback: STOPPED,
     deviceId: null,
     spotifyState: null,
@@ -38,6 +39,12 @@ const getState = () => () => ({
 });
 
 const getMutations = storagePrefix => Object.assign({
+    lockPreview(state) {
+        state.previewLocked = true;
+    },
+    unlockPreview(state) {
+        state.previewLocked = false;
+    },
     nextTrack(state) {
         if (!canSkipForward(state)) {
             return;

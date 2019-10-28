@@ -33,7 +33,7 @@
                         v-spotify-uri:track="track.id"
                         v-spotify-uri-title="getSpotifyTrackDragTitle(track)">
                         <td class="playButton">
-                            <button @click.stop="seekTrack(index); $ga.event('playlist', 'click', 'play', index)" :disabled="$store.getters['tracks/isPlayerDisconnected'] && !previewUrls[index]" class="playButton" v-if="$store.state.tracks.currentPreview != track.id">
+                            <button @click.stop="seekTrack(index); $ga.event('playlist', 'click', 'play', index)" :disabled="$store.state.tracks.previewLocked || ($store.getters['tracks/isPlayerDisconnected'] && !previewUrls[index])" class="playButton" v-if="$store.state.tracks.currentPreview != track.id">
                                 <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">{{playButtonText}}</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
                             </button>
                             <button @click.stop="handlePreviewStop(); $ga.event('playlist', 'click', 'stop', index)" class="stopButton" v-if="$store.state.tracks.currentPreview == track.id">
@@ -382,10 +382,11 @@
                 this.$store.commit('tracks/selectTrack', i);
             },
             seekTrack(i) {
-                this.$store.dispatch('tracks/seekTrack', i);
                 if (!this.$store.getters['tracks/isPlayerDisconnected']) {
+                    this.$store.dispatch('tracks/seekTrack', i);
                     this.play();
                 } else {
+                    this.$store.commit('tracks/seekTrack', i);
                     this.$store.commit('tracks/playPreview', this.$store.state.tracks.playlist[i].id);
                 }
                 this.$refs.playlistTrack[i].focus();
