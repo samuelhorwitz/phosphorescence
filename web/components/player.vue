@@ -825,6 +825,7 @@
                         if (this.$store.state.tracks.playlist && this.$store.state.tracks.playlist[this.$store.state.tracks.selectedTrackCursor] && this.$store.state.tracks.currentPreview == this.$store.state.tracks.playlist[this.$store.state.tracks.selectedTrackCursor].id) {
                             this.$store.commit('tracks/stopPreview');
                         } else {
+                            this.$store.commit('tracks/seekTrack', this.$store.state.tracks.selectedTrackCursor);
                             this.$store.commit('tracks/playPreviewOfSelectedTrack');
                         }
                     }
