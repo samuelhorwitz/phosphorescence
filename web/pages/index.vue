@@ -101,7 +101,7 @@
         display: inline;
     }
 
-    .playButton button {
+    td.playButton button {
         appearance: none;
         background-color: transparent;
         border: 0px;
@@ -114,37 +114,38 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        position: relative;
     }
 
-    .playButton button:focus {
+    td.playButton button:focus {
         outline: none;
     }
 
-    .playButton button svg {
+    td.playButton button svg {
         width: 1.5em;
         fill: white;
         stroke: white;
         stroke-linejoin: round;
     }
 
-    .playButton button:disabled svg {
+    td.playButton button:disabled svg {
         fill: gray !important;
         stroke: gray !important;
         cursor: not-allowed;
     }
 
-    .playButton button.stopButton svg {
+    td.playButton button.stopButton svg {
         position: absolute;
         fill: magenta;
         stroke: magenta;
     }
 
-    .playButton button:hover svg {
+    td.playButton button:hover svg {
         fill: magenta;
         stroke: magenta;
     }
 
-    .playButton button.stopButton:hover svg {
+    td.playButton button.stopButton:hover svg {
         fill: aquamarine;
         stroke: aquamarine;
     }
@@ -219,10 +220,6 @@
         text-overflow: ellipsis;
     }
 
-    td.number.pullRight {
-        text-align: right;
-    }
-
     td.playButton {
         padding: 0px;
     }
@@ -277,6 +274,16 @@
     @media only screen and (max-width: 1499px) {
         body.playerConnected th.album, body.playerConnected td.album {
             display: none;
+        }
+    }
+
+    @media only screen and (max-width: 399px) {
+        th.playButton, td.playButton {
+            display: none;
+        }
+
+        td.number {
+            text-align: right;
         }
     }
 </style>
