@@ -809,18 +809,24 @@
                 }
             },
             handleKeyPress(e) {
-                if (!this.webPlayerReady) {
-                    return;
-                }
                 if (e.code === 'Space') {
                     e.stopPropagation();
                     e.preventDefault();
-                    if (this.$store.getters['tracks/stopped']) {
-                        this.play();
-                    } else if (this.$store.getters['tracks/paused']) {
-                        this.resume();
-                    } else if (this.$store.getters['tracks/playing']) {
-                        this.pause();
+                    if (this.webPlayerReady) {
+                        if (this.$store.getters['tracks/stopped']) {
+                            this.play();
+                        } else if (this.$store.getters['tracks/paused']) {
+                            this.resume();
+                        } else if (this.$store.getters['tracks/playing']) {
+                            this.pause();
+                        }
+                    }
+                    else {
+                        if (this.$store.state.tracks.playlist && this.$store.state.tracks.playlist[this.$store.state.tracks.selectedTrackCursor] && this.$store.state.tracks.currentPreview == this.$store.state.tracks.playlist[this.$store.state.tracks.selectedTrackCursor].id) {
+                            this.$store.commit('tracks/stopPreview');
+                        } else {
+                            this.$store.commit('tracks/playPreviewOfSelectedTrack');
+                        }
                     }
                 }
                 // left arrow
@@ -828,12 +834,18 @@
                     e.stopPropagation();
                     e.preventDefault();
                     this.previous();
+                    if (!this.webPlayerReady) {
+                        this.$store.commit('tracks/playPreviewOfSelectedTrack');
+                    }
                 }
                 // right arrow
                 else if (e.keyCode == 39 && (e.metaKey || e.ctrlKey)) {
                     e.stopPropagation();
                     e.preventDefault();
                     this.next();
+                    if (!this.webPlayerReady) {
+                        this.$store.commit('tracks/playPreviewOfSelectedTrack');
+                    }
                 }
             },
             showConstellation() {

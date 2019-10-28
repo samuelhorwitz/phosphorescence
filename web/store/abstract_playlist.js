@@ -134,6 +134,20 @@ const getMutations = storagePrefix => Object.assign({
         state.spotifyState = spotifyState;
     },
     playPreview(state, id) {
+        if (state.currentPreview == id) {
+            return;
+        }
+        state.currentPreview = id;
+        state.currentPreviewPercent = 0;
+    },
+    playPreviewOfSelectedTrack(state) {
+        if (!state.playlist || !state.playlist[state.selectedTrackCursor]) {
+            return;
+        }
+        let id = state.playlist[state.selectedTrackCursor].id;
+        if (state.currentPreview == id) {
+            return;
+        }
         state.currentPreview = id;
         state.currentPreviewPercent = 0;
     },
