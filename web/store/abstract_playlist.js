@@ -1,5 +1,6 @@
 import {getAccessToken} from '~/assets/session';
 import {getSpotifyTrackUri} from '~/assets/spotify';
+import {getCaptchaToken} from '~/assets/captcha';
 
 const STOPPED = 0;
 const PLAYING = 1;
@@ -24,6 +25,9 @@ const getState = () => () => ({
     currentTrackCursor: 0,
     selectedTrackCursor: 0,
     playlist: null,
+    previews: {},
+    currentPreview: null,
+    currentPreviewPercent: 0,
     playback: STOPPED,
     deviceId: null,
     spotifyState: null,
@@ -96,6 +100,9 @@ const getMutations = storagePrefix => Object.assign({
         state.selectedTrackCursor = 0;
         state.playback = STOPPED;
     },
+    loadPreviews(state, previews) {
+        state.previews = {...state.previews, ...previews};
+    },
     restore(state) {
         let playlist;
         if (navigator.standalone) {
@@ -125,6 +132,21 @@ const getMutations = storagePrefix => Object.assign({
     lastKnownSpotifyState(state, spotifyState) {
         sessionStorage.setItem(`${storagePrefix}/spotifyState`, JSON.stringify(spotifyState));
         state.spotifyState = spotifyState;
+    },
+    playPreview(state, id) {
+        state.currentPreview = id;
+        state.currentPreviewPercent = 0;
+    },
+    stopPreview(state) {
+        state.currentPreview = null;
+        state.currentPreviewPercent = 0;
+    },
+    completePreview(state) {
+        state.currentPreview = null;
+        state.currentPreviewPercent = 0;
+    },
+    updatePreviewPercent(state, percent) {
+        state.currentPreviewPercent = percent;
     },
     play(state) {
         state.playback = PLAYING;
@@ -246,9 +268,20 @@ const getActions = () => Object.assign({
     seekSelectedTrack({dispatch, state}) {
         dispatch('seekTrack', state.selectedTrackCursor);
     },
-    loadPlaylist({commit, dispatch}, playlist) {
+    loadPlaylist({commit, dispatch, rootState, rootGetters}, playlist) {
+        (async () => {
+            let trackPreviews = await loadPreviews(playlist.map(t => t.id), !!rootState.user.user, rootGetters['user/country']);
+            commit('loadPreviews', trackPreviews);
+        })();
         commit('loadPlaylist', playlist);
         dispatch('stop');
+    },
+    restore({commit, state, rootState, rootGetters}) {
+        commit('restore');
+        (async () => {
+            let trackPreviews = await loadPreviews(state.playlist.map(t => t.id), !!rootState.user.user, rootGetters['user/country']);
+            commit('loadPreviews', trackPreviews);
+        })();
     },
     clearPlaylist({commit, dispatch}) {
         commit('clearPlaylist');
@@ -384,4 +417,17 @@ function setCurrentPlaylistIdIos(storagePrefix, id) {
 function clearCurrentPlaylistIdIos(storagePrefix) {
     location.hash = '';
     sessionStorage.removeItem(`${storagePrefix}/currentPlaylistId`);
+}
+
+async function loadPreviews(ids, isLoggedInUser, region) {
+    let trackPreviewsResponse;
+    let trackIdsStr = ids.join(',');
+    if (isLoggedInUser) {
+        trackPreviewsResponse = await fetch(`${process.env.API_ORIGIN}/track/preview/${trackIdsStr}`, {credentials: 'include'});
+    } else {
+        let captcha = await getCaptchaToken('api/track/preview');
+        trackPreviewsResponse = await fetch(`${process.env.API_ORIGIN}/track/unauthenticated/preview/${region}/${trackIdsStr}?captcha=${captcha}`);
+    }
+    let {trackPreviews} = await trackPreviewsResponse.json();
+    return trackPreviews;
 }
