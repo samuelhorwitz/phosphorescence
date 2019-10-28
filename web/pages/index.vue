@@ -127,6 +127,12 @@
         stroke-linejoin: round;
     }
 
+    .playButton button:disabled svg {
+        fill: gray !important;
+        stroke: gray !important;
+        cursor: not-allowed;
+    }
+
     .playButton button.stopButton svg {
         position: absolute;
         fill: magenta;
