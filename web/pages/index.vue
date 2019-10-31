@@ -33,12 +33,16 @@
                         v-spotify-uri:track="track.id"
                         v-spotify-uri-title="getSpotifyTrackDragTitle(track)">
                         <td class="playButton">
-                            <button @click.stop="seekTrack(index); $ga.event('playlist', 'click', 'play', index)" :disabled="$store.state.tracks.previewLocked || ($store.getters['tracks/isPlayerDisconnected'] && !previewUrls[index])" class="playButton" v-if="$store.state.tracks.currentPreview != track.id">
+                            <button @click.stop="seekTrack(index); $ga.event('playlist', 'click', 'play', index)" :disabled="$store.state.tracks.previewLocked || ($store.getters['tracks/isPlayerDisconnected'] && !previewUrls[index])" class="playButton" v-if="$store.state.tracks.currentPreview != track.id && !(isPlaying(track.id) && $store.getters['tracks/playing'])">
                                 <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">{{playButtonText}}</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
                             </button>
                             <button @click.stop="handlePreviewStop(); $ga.event('playlist', 'click', 'stop', index)" class="stopButton" v-if="$store.state.tracks.currentPreview == track.id" @mouseover="previewPlaybackShadowColor = 'cyan'" @mouseout="previewPlaybackShadowColor = 'magenta'">
                                 <previewPlayback :percent="$store.state.tracks.currentPreviewPercent" :shadowColor="previewPlaybackShadowColor"></previewPlayback>
-                                <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px"aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Stop</title><path d="M1,1V31H31V1H1ZM29,29H3V3H29V29Z"></path></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px"aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Stop Preview</title><path d="M1,1V31H31V1H1ZM29,29H3V3H29V29Z"></path></svg>
+                            </button>
+                            <button @click.stop="pause(); $ga.event('playlist', 'click', 'pause', index)" class="currentlyPlaying" v-if="isPlaying(track.id) && $store.getters['tracks/playing']">
+                                <svg id="currentlyPlaying" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 128 128" style="enable-background:new 0 0 128 128;" xml:space="preserve" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Currently Playing Track</title><g><path d="M72.3,16.1L39.1,39.8H20.5c-1.3,0-2.4,1.1-2.4,2.4v43.5c0,1.3,1.1,2.4,2.4,2.4h18.6l33.2,23.7c0.4,0.3,0.9,0.4,1.4,0.4   c0.4,0,0.8-0.1,1.1-0.3c0.8-0.4,1.3-1.2,1.3-2.1V18.1c0-0.9-0.5-1.7-1.3-2.1S73,15.6,72.3,16.1z M22.9,44.7h14.5v38.7H22.9V44.7z    M71.2,105.2l-29-20.7v-41l29-20.7V105.2z"></path><path d="M97.6,90.3c0.6,0,1.2-0.2,1.7-0.7c6.8-6.9,10.6-16,10.6-25.6s-3.8-18.8-10.6-25.6c-0.9-0.9-2.5-0.9-3.4,0   c-0.9,0.9-0.9,2.5,0,3.4c5.9,6,9.2,13.8,9.2,22.2s-3.3,16.3-9.2,22.2c-0.9,0.9-0.9,2.5,0,3.4C96.3,90.1,97,90.3,97.6,90.3z"></path><path d="M87.3,81.1c0.5,0.5,1.1,0.7,1.7,0.7c0.6,0,1.2-0.2,1.7-0.7c4.6-4.5,7.1-10.6,7.1-17.1s-2.5-12.5-7.1-17.1   c-0.9-0.9-2.5-0.9-3.4,0c-0.9,0.9-0.9,2.5,0,3.4C91,54,93,58.8,93,64s-2,10-5.7,13.7C86.4,78.6,86.4,80.1,87.3,81.1z"></path></g></svg>
+                                <svg id="pauseTrack" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="uniqueTitleID" role="img"><title id="uniqueTitleID">Pause Track</title><path d="M13.76,1H6.63V31h7.14V1Zm-2,28H8.63V3h3.14V29Z"></path><path d="M25.37,1H18.24V31h7.14V1Zm-2,28H20.24V3h3.14V29Z"></path></svg>
                             </button>
                         </td>
                         <td :title="humanReadableEvocativeness[index]" class="number">
@@ -102,6 +106,7 @@
     }
 
     td.playButton button {
+        visibility: hidden;
         appearance: none;
         background-color: transparent;
         border: 0px;
@@ -117,6 +122,12 @@
         position: relative;
     }
 
+    tr:hover td.playButton button,
+    td.playButton button.stopButton,
+    td.playButton button.currentlyPlaying {
+        visibility: visible;
+    }
+
     td.playButton button:focus {
         outline: none;
     }
@@ -126,6 +137,19 @@
         fill: white;
         stroke: white;
         stroke-linejoin: round;
+    }
+
+    td.playButton button.currentlyPlaying svg {
+        fill: aquamarine;
+        stroke: aquamarine;
+    }
+
+    td.playButton button.currentlyPlaying svg#currentlyPlaying {
+        width: 2em;
+    }
+
+    td.playButton button.currentlyPlaying svg#pauseTrack {
+        display: none;
     }
 
     td.playButton button:disabled svg {
@@ -148,6 +172,14 @@
     td.playButton button.stopButton:hover svg {
         fill: aquamarine;
         stroke: aquamarine;
+    }
+
+    td.playButton button.currentlyPlaying:hover svg#currentlyPlaying {
+        display: none;
+    }
+
+    td.playButton button.currentlyPlaying:hover svg#pauseTrack {
+        display: block;
     }
 
     .tracks {
@@ -412,6 +444,9 @@
             },
             play() {
                 this.$store.dispatch('tracks/play');
+            },
+            pause() {
+                this.$store.dispatch('tracks/pause');
             },
             handlePreviewStop() {
                 this.$store.commit('tracks/stopPreview');
