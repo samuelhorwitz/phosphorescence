@@ -144,7 +144,11 @@ const getMutations = storagePrefix => Object.assign({
         if (state.currentPreview == id) {
             return;
         }
-        state.currentPreview = id;
+        if (!state.previews[id]) {
+            state.currentPreview = null;
+        } else {
+            state.currentPreview = id;
+        }
         state.currentPreviewPercent = 0;
     },
     playPreviewOfSelectedTrack(state) {
@@ -155,7 +159,11 @@ const getMutations = storagePrefix => Object.assign({
         if (state.currentPreview == id) {
             return;
         }
-        state.currentPreview = id;
+        if (!state.previews[id]) {
+            state.currentPreview = null;
+        } else {
+            state.currentPreview = id;
+        }
         state.currentPreviewPercent = 0;
     },
     stopPreview(state) {

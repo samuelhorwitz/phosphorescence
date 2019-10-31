@@ -252,7 +252,13 @@ func populateAudioFeatures(ctx context.Context, token *oauth2.Token, region stri
 			setTrackInCache(region, id, tracks[index])
 		}
 	}
-	return tracks, nil
+	var filteredTracks []*SpotifyTrackEnvelope
+	for _, track := range tracks {
+		if track.Features != nil {
+			filteredTracks = append(filteredTracks, track)
+		}
+	}
+	return filteredTracks, nil
 }
 
 func getTrackFromSpotify(ctx context.Context, token *oauth2.Token, region, trackID string) (*SpotifyTrack, error) {
