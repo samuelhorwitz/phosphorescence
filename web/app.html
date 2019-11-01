@@ -17,8 +17,43 @@
         },s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',
         a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
     </script>
+    <noscript>
+        <style type="text/css">
+            body {
+                background-color: rgb(40, 27, 61);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+                color: white;
+                text-align: justify;
+            }
+
+            noscript {
+                max-width: 40em;
+            }
+
+            img {
+                float: left;
+                margin-right: 1ex;
+            }
+
+            #nuxt-loading {
+                display: none !important;
+            }
+        </style>
+    </noscript>
   </head>
   <body {{ BODY_ATTRS }}>
+    <noscript>
+        <h1>Welcome to Phosphorescence.</h1>
+        <h2><img src="/images/logo-p.png" alt="Phosphorescence Logo" width="64" height="64">Phosphorescence lets you build trance playlists for Spotify in your browser, with the power of machine learning models.</h2>
+        <p>Javascript is required for this web application to function. Please enable Javascript for this domain in your browser, and ensure you are using a browser with up-to-date Javascript support.</p>
+    </noscript>
     {{ APP }}
     <aside id="gdpr" hidden><p>This website uses cookies. Please familiarize yourself with our <a target="_blank" href="/legal/privacy">Privacy Policy</a> and <a target="_blank" href="/legal/cookies">Cookie Policy</a>. Your usage of the website will be taken as consent to these cookies being used. If you would like to block cookies, your web browser should give you the ability to do so, however please note that certain cookies are necessary for the site to function properly on a technical level.</p><button id="gdpr-consent">Agree & Dismiss</button></aside>
   </body>

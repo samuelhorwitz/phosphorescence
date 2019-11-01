@@ -3,6 +3,7 @@ const fs = require('fs');
 
 module.exports = {
   head: {
+    title: 'Phosphorescence Trance Playlist Builder',
     meta: [
       { charset: 'utf-8' },
       { name: 'description', content: 'Intelligent trance music playlists for Spotify.' },
