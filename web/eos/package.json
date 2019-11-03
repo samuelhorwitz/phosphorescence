@@ -11,6 +11,7 @@
     "build": "webpack --config webpack.config.js --mode=production"
   },
   "dependencies": {
+    "compression": "^1.7.4",
     "express": "^4.16.4",
     "pako": "^1.0.10",
     "text-encoding-shim": "^1.0.4"

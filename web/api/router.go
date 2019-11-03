@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/go-chi/chi"
 	chimiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -25,6 +26,9 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Use(chimiddleware.Timeout(cfg.handlerTimeout))
 	r.Use(chimiddleware.NoCache)
 	r.Use(chimiddleware.RealIP)
+	if cfg.isProduction {
+		r.Use(gziphandler.GzipHandler)
+	}
 	r.Route("/spotify", func(r chi.Router) {
 		r.Route("/authorize", func(r chi.Router) {
 			r.Get("/", spotify.Authorize)
