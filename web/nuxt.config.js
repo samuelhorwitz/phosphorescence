@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const CompressionPlugin = require('compression-webpack-plugin');
 
 module.exports = {
   head: {
@@ -58,14 +57,6 @@ module.exports = {
   build: {
     extractCSS: true,
     publicPath: process.env.NODE_ENV === 'production' ? 'https://static.phosphor.me/' : '/_nuxt/',
-    plugins: [
-      new CompressionPlugin({
-        test: /\.(js|css|html|svg)$/,
-        filename(info) {
-          return `${info.path}${info.query}`;
-        }
-      })
-    ],
     extend(config) {
       config.output.globalObject = 'this';
     }

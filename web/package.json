@@ -26,7 +26,6 @@
   },
   "devDependencies": {
     "@tensorflow/tfjs": "^0.14.2",
-    "compression-webpack-plugin": "^3.0.0",
     "docco": "^0.8.0",
     "dotenv": "^6.2.0",
     "monaco-editor": "^0.15.6",

@@ -52,8 +52,18 @@ deploy-phosphor-static:
 	docker rm phosphor
 	docker create --name phosphor ${PHOSPHOR_LATEST}
 	docker cp phosphor:/app/public ./.production
-	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude ".DS_Store" --exclude "*.js" --exclude "*.css" --exclude "*.html" --exclude "*.svg"
-	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude "*" --include "*.js" --include "*.css" --include "*.html" --include "*.svg" --content-encoding gzip
+	# js, css, html, svg, ttf, xml, json, txt
+	find ./.production -type f -name '*.js' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.css' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.html' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.svg' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.ttf' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.xml' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.json' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.txt' -exec brotli -9 --rm -- {} \;
+	find ./.production -type f -name '*.br' -exec sh -c 'mv "$$0" "$${0%.br}"' {} \;
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude ".DS_Store" --exclude ".nojekyll" --exclude "*.js" --exclude "*.css" --exclude "*.html" --exclude "*.svg" --exclude "*.ttf" --exclude "*.xml" --exclude "*.json" --exclude "*.txt"
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude "*" --include "*.js" --include "*.css" --include "*.html" --include "*.svg" --include "*.ttf" --include "*.xml" --include "*.json" --include "*.txt" --content-encoding br
 
 deploy-eos: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=eos
