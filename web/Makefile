@@ -11,7 +11,7 @@ API_LATEST      := ${API_NAME}:latest
 build: build-phosphor build-eos build-jobs build-api
 
 build-phosphor:
-	docker build -t ${PHOSPHOR_LATEST} --build-arg EOS_ORIGIN=https://eoserigeneia.run --build-arg API_ORIGIN=https://api.phosphor.me --build-arg SCRIPTS_ORIGIN=https://scripts.phosphor.me .
+	docker build -t ${PHOSPHOR_LATEST} --build-arg EOS_ORIGIN=https://eoserigeneia.run --build-arg API_ORIGIN=https://api.phosphor.me --build-arg SCRIPTS_ORIGIN=https://scripts.phosphor.me --build-arg STATIC_ORIGIN=https://static.phosphor.me .
 
 build-eos:
 	docker build -t ${EOS_LATEST} -f ./eos/Dockerfile --build-arg PHOSPHOR_ORIGIN=https://phosphor.me .
@@ -42,8 +42,15 @@ apply:
 deploy: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l type=server
 
-deploy-phosphor: apply
+deploy-phosphor: deploy-phosphor-static apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=phosphor
+
+deploy-phosphor-static:
+	rm -rf ./.production
+	docker rm phosphor
+	docker create --name phosphor ${PHOSPHOR_LATEST}
+	docker cp phosphor:/app/public ./.production
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude ".DS_Store"
 
 deploy-eos: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=eos

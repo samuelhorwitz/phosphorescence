@@ -9,9 +9,9 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 const modelsReady = new Promise(async resolve => {
-    let aModel = await loadModel('/models/aetherealness/model.json');
-    let pModel = await loadModel('/models/primordialness/model.json');
-    let meanstdRaw = await fetch('/models/meanstd.json');
+    let aModel = await loadModel(`${process.env.STATIC_ORIGIN}/models/aetherealness/model.json`);
+    let pModel = await loadModel(`${process.env.STATIC_ORIGIN}/models/primordialness/model.json`);
+    let meanstdRaw = await fetch(`${process.env.STATIC_ORIGIN}/models/meanstd.json`);
     let meanstd = await meanstdRaw.json();
     resolve({aModel, pModel, meanstd});
 });

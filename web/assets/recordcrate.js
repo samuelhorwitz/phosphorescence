@@ -1,4 +1,4 @@
-import RecordCrateWorker from 'worker-loader!~/assets/recordcrate.worker.js';
+import RecordCrateWorker from 'worker-loader?inline!~/assets/recordcrate.worker.js';
 import {sendTrackBlobToEos, sendTrackToEos, buildPlaylist} from '~/assets/eos';
 import _builders from '~/builders/index';
 import SecureMessenger from '~/secure-messenger/secure-messenger';

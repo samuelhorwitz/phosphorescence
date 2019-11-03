@@ -10,6 +10,7 @@ Dockerfile
 node_modules/*
 dist/*
 .nuxt/*
+.production/*
 static/tracks.json
 static/tracks-small.json
 static/docs/*
