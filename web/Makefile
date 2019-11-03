@@ -42,7 +42,9 @@ apply:
 deploy: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l type=server
 
-deploy-phosphor: deploy-phosphor-static apply
+deploy-phosphor: deploy-phosphor-static deploy-phosphor-k8s
+
+deploy-phosphor-k8s: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=phosphor
 
 deploy-phosphor-static:
@@ -50,7 +52,8 @@ deploy-phosphor-static:
 	docker rm phosphor
 	docker create --name phosphor ${PHOSPHOR_LATEST}
 	docker cp phosphor:/app/public ./.production
-	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude ".DS_Store"
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude ".DS_Store" --exclude "*.js" --exclude "*.css" --exclude "*.html" --exclude "*.svg"
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude "*" --include "*.js" --include "*.css" --include "*.html" --include "*.svg" --content-encoding gzip
 
 deploy-eos: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=eos
