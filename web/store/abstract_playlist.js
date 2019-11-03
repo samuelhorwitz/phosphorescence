@@ -299,6 +299,9 @@ const getActions = () => Object.assign({
     },
     loadPlaylist({commit, dispatch, rootState, rootGetters}, playlist) {
         (async () => {
+            if (!playlist) {
+                return;
+            }
             let trackPreviews = await loadPreviews(playlist.map(t => t.id), !!rootState.user.user, rootGetters['user/country']);
             commit('loadPreviews', trackPreviews);
         })();
@@ -308,6 +311,9 @@ const getActions = () => Object.assign({
     restore({commit, state, rootState, rootGetters}) {
         commit('restore');
         (async () => {
+            if (!state.playlist) {
+                return;
+            }
             let trackPreviews = await loadPreviews(state.playlist.map(t => t.id), !!rootState.user.user, rootGetters['user/country']);
             commit('loadPreviews', trackPreviews);
         })();

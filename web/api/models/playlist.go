@@ -60,6 +60,18 @@ func GetPlaylist(ctx context.Context, region, playlistID string) (*Playlist, err
 	return playlist, nil
 }
 
+func GetSimplePlaylist(ctx context.Context, playlistID string) (*Playlist, error) {
+	phosphorescenceToken, err := spotifyclient.GetAppToken()
+	if err != nil {
+		return nil, fmt.Errorf("Could not get Spotify application token: %s", err)
+	}
+	playlist, err := getPlaylist(ctx, phosphorescenceToken, "", playlistID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get playlist: %s", err)
+	}
+	return playlist, nil
+}
+
 func CreatePlaylist(ctx context.Context, firstTrackName string, base64Image string, utcOffsetMinutes int, trackURIs []string) (string, error) {
 	phosphorescenceToken, err := spotifyclient.GetAppUserToken()
 	if err != nil {
@@ -123,11 +135,19 @@ func getPlaylist(ctx context.Context, token *oauth2.Token, region, playlistID st
 	if err != nil {
 		return nil, fmt.Errorf("Could not get track data for playlist tracks: %s", err)
 	}
+	playlist.Tracks, err = populateAudioFeatures(ctx, token, region, playlist.Tracks)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get audio features: %s", err)
+	}
 	return &playlist, nil
 }
 
 func getSpotifyPlaylist(ctx context.Context, token *oauth2.Token, region, playlistID string) (*SpotifyPlaylist, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("https://api.spotify.com/v1/playlists/%s?market=%s", playlistID, region), nil)
+	url := fmt.Sprintf("https://api.spotify.com/v1/playlists/%s", playlistID)
+	if region != "" {
+		url = fmt.Sprintf("%s?market=%s", url, region)
+	}
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Could not build Spotify playlist request: %s", err)
 	}
@@ -160,7 +180,7 @@ func getSpotifyPlaylistTracks(ctx context.Context, token *oauth2.Token, region s
 				continue
 			}
 			track := playlistTrack.Track
-			if !track.IsPlayable {
+			if region != "" && !track.IsPlayable {
 				continue
 			}
 			trackData = append(trackData, &SpotifyTrackEnvelope{
@@ -176,10 +196,6 @@ func getSpotifyPlaylistTracks(ctx context.Context, token *oauth2.Token, region s
 		} else {
 			break
 		}
-	}
-	trackData, err = populateAudioFeatures(ctx, token, region, trackData)
-	if err != nil {
-		return nil, fmt.Errorf("Could not get audio features: %s", err)
 	}
 	return trackData, nil
 }

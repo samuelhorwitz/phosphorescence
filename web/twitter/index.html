@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>Phosphorescence Web Player</title>
+    <meta name="description" content="Phosphorescence lets you build trance playlists for Spotify.">
+    <script src="./node_modules/babel-polyfill/dist/polyfill.js"></script>
+    <link rel="preconnect" href="https://pl.scdn.co">
+    <link rel="dns-prefetch" href="https://pl.scdn.co">
+    <link rel="preconnect" href="https://www.google.com" crossorigin="crossorigin">
+    <link rel="dns-prefetch" href="https://www.google.com">
+    <link rel="preconnect" href="https://api.phosphor.me">
+    <link rel="dns-prefetch" href="https://api.phosphor.me">
+    <link rel="preconnect" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-148749300-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', 'UA-148749300-1', {
+        'linker': {
+          'domains': ['phosphor.me']
+        }
+      });
+    </script>
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <title>Phosphorescence Twitter Player Card</title>
+    <link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+<body>
+    <main class="playerContainer">
+        <header class="headerContainer">
+            <a href="https://phosphor.me" target="_blank" data-link-phosphor>
+                <div class="playlistImage" id="playlistImage" aria-labelledby="playlistImageAlt"></div>
+                <span id="playlistImageAlt">Visit phosphor.me to see this playlist in-app!</span>
+            </a>
+            <div class="playerControlsContainer">
+                <div class="playAndHeaders">
+                    <button id="playPlaylist" class="playPausePlaylist">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="playPlaylistID" role="img"><title id="playPlaylistID">Play Playlist</title><path d="M3,0.25V31.71L30.25,16ZM5,3.71L26.25,16,5,28.24V3.71Z"></path></svg>
+                    </button>
+                    <button id="pausePlaylist" class="playPausePlaylist" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="pausePlaylistID" role="img"><title id="pausePlaylistID">Pause Playlist</title><path d="M13.76,1H6.63V31h7.14V1Zm-2,28H8.63V3h3.14V29Z"></path><path d="M25.37,1H18.24V31h7.14V1Zm-2,28H20.24V3h3.14V29Z"></path></svg>
+                    </button>
+                    <div class="headers">
+                        <a class="headerLink" href="#" data-link-phosphor><h1 id="playlistTitle" class="glitch"><span class="blinkingCursor">▌</span></h1></a>
+                        <h2>Visit <a href="https://phosphor.me" target="_blank">phosphor.me</a> to create your own trance playlists for Spotify.</h2>
+                    </div>
+                </div>
+                <div class="controls">
+                    <svg id="previous" class="previousTrack" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="previousTrackID" role="img"><title id="previousTrackID">Previous Track</title><path d="M3.46,2h-2V30h2V16.08L30.54,31.71V0.25L3.46,15.89V2ZM28.54,3.72V28.25L7.3,16Z"></path></svg>
+                    <div class="scrubberContainer" id="scrubberContainer">
+                        <progress id="progress" class="scrubber" max="100" value="0">0%</progress>
+                        <div id="cursor" class="cursor" style="left: 0%;"></div>
+                    </div>
+                    <svg id="next" class="nextTrack" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" x="0px" y="0px" aria-labelledby="nextTrackID" role="img"><title id="nextTrackID">Next Track</title><path d="M28.54,15.89L1.46,0.25V31.71L28.54,16.08V30h2V2h-2v13.9ZM3.46,28.25V3.72L24.7,16Z"></path></svg>
+                </div>
+            </div>
+        </header>
+        <footer class="footerContainer">
+            <a href="https://phosphor.me/" target="_blank" data-link-phosphor><img class="phosphorescenceLogo" alt="View playlist in Phosphorescence" src="/logo-p.png"></a>
+            <a href="https://spotify.com/" target="_blank" rel="external noopener" data-link-spotify><img class="spotifyLogo" alt="View playlist in Spotify" src="/spotify.png"></a>
+        </footer>
+        <audio id="audio">Your browser does not support audio playback</audio>
+    </main>
+    <nav id="nav" class="nav">
+        <table class="playlistTable">
+            <tbody id="playlistTable"></tbody>
+        </table>
+        <aside class="coverAside playFullCover" id="playFullCover" hidden>
+            <button class="coverClose" id="coverClose">Close</button>
+            <a href="https://phosphor.me" target="_blank"><img class="phosphorescenceLogoCover" alt="Open Phosphorescence" src="/logo-p.png"></a>
+            <p class="coverAsideCopy playFullCoverCopy">Listen to the full playlist on <a href="#" data-link-phosphor>Phosphorescence</a> or on <a href="https://spotify.com" rel="external noopener" target="_blank" data-link-spotify>Spotify</a>.</p>
+        </aside>
+        <aside class="coverAside errorCover" id="errorCover" hidden>
+            <a href="https://phosphor.me" target="_blank"><img class="phosphorescenceLogoCover" alt="Open Phosphorescence" src="/logo-p.png"></a>
+            <p class="coverAsideCopy errorCoverCopy">Oh no! We had trouble loading 😢</p>
+            <p class="coverAsideCopy errorCoverCopy">Listen to the full playlist on <a href="#" data-link-phosphor>Phosphorescence</a> or on <a href="https://spotify.com" rel="external noopener" target="_blank" data-link-spotify>Spotify</a>.</p>
+        </aside>
+        <aside class="coverAside timeoutCover" id="timeoutCover">
+            <a href="https://phosphor.me" target="_blank"><img class="phosphorescenceLogoCover" alt="Open Phosphorescence" src="/logo-p.png"></a>
+            <p class="coverAsideCopy timeoutCoverCopy">Things seem to be taking a while 😢</p>
+            <p class="coverAsideCopy timeoutCoverCopy">Listen to the full playlist on <a href="#" data-link-phosphor>Phosphorescence</a> or on <a href="https://spotify.com" rel="external noopener" target="_blank" data-link-spotify>Spotify</a>.</p>
+        </aside>
+    </nav>
+    <footer class="legalFooter" id="legalFooter"><span class="info" id="infoButton">ℹ</span><a href="https://phosphor.me/legal" target="_blank">Legal</a></footer>
+    <template id="trackRow">
+        <tr class="trackRow">
+            <td class="numCell">
+                <div class="trackIndexPlaying">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 128 128" style="enable-background:new 0 0 128 128;" xml:space="preserve" aria-labelledby="currentlyPlayingTrackID" role="img"><title id="currentlyPlayingTrackID">Currently Playing Track</title><g><path d="M72.3,16.1L39.1,39.8H20.5c-1.3,0-2.4,1.1-2.4,2.4v43.5c0,1.3,1.1,2.4,2.4,2.4h18.6l33.2,23.7c0.4,0.3,0.9,0.4,1.4,0.4   c0.4,0,0.8-0.1,1.1-0.3c0.8-0.4,1.3-1.2,1.3-2.1V18.1c0-0.9-0.5-1.7-1.3-2.1S73,15.6,72.3,16.1z M22.9,44.7h14.5v38.7H22.9V44.7z    M71.2,105.2l-29-20.7v-41l29-20.7V105.2z"></path><path d="M97.6,90.3c0.6,0,1.2-0.2,1.7-0.7c6.8-6.9,10.6-16,10.6-25.6s-3.8-18.8-10.6-25.6c-0.9-0.9-2.5-0.9-3.4,0   c-0.9,0.9-0.9,2.5,0,3.4c5.9,6,9.2,13.8,9.2,22.2s-3.3,16.3-9.2,22.2c-0.9,0.9-0.9,2.5,0,3.4C96.3,90.1,97,90.3,97.6,90.3z"></path><path d="M87.3,81.1c0.5,0.5,1.1,0.7,1.7,0.7c0.6,0,1.2-0.2,1.7-0.7c4.6-4.5,7.1-10.6,7.1-17.1s-2.5-12.5-7.1-17.1   c-0.9-0.9-2.5-0.9-3.4,0c-0.9,0.9-0.9,2.5,0,3.4C91,54,93,58.8,93,64s-2,10-5.7,13.7C86.4,78.6,86.4,80.1,87.3,81.1z"></path></g></svg>
+                </div>
+                <span class="trackIndex"></span>
+            </td>
+            <td class="trackCell">
+                <div class="tableTrackName"></div>
+                <div class="tableTrackArtists"></div>
+            </td>
+            <td class="timeCell"></td>
+        </tr>
+    </template> 
+    <script src="https://www.google.com/recaptcha/api.js?render=6LdfBboUAAAAAFv0977A1dWeer-eTy0IBmynzHcS"></script>
+    <script src="/script.js"></script>
+</body>
+</html>

@@ -22,6 +22,9 @@ build-jobs:
 build-api:
 	docker build -t ${API_LATEST} -f ./api/Dockerfile .
 
+build-twitter:
+	$(MAKE) -C twitter build
+
 push: push-phosphor push-eos push-jobs push-api
 
 push-phosphor:
@@ -35,6 +38,9 @@ push-jobs:
 
 push-api:
 	docker push ${API_LATEST}
+
+push-twitter:
+	${MAKE} -C twitter push
 
 apply:
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml apply -f k8s.yaml
@@ -55,7 +61,9 @@ postgres-local:
 	docker run --rm --name phosphor-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=phosphor -d -p 5432:5432 -v ${PWD}/pgdata:/var/lib/postgresql/data samuelhorwitz/postgres-perl:11.5
 
 redis-local:
+	-docker rm phosphor-redis
 	docker run -d -p 6379:6379 --name phosphor-redis redis
 
 redis-cache-local:
+	-docker rm phosphor-cache
 	docker run -d -p 6389:6379 --name phosphor-cache redis

@@ -20,12 +20,14 @@ var (
 	googleHTTPClient *http.Client
 	recaptchaSecret  string
 	phosphorHost     string
+	isProduction     bool
 )
 
 type Config struct {
 	RateLimitPerSecond int
 	RecaptchaSecret    string
 	PhosphorOrigin     string
+	IsProduction       bool
 }
 
 func Initialize(cfg *Config) {
@@ -42,4 +44,5 @@ func Initialize(cfg *Config) {
 		return
 	}
 	phosphorHost = phosphorOriginParsed.Hostname()
+	isProduction = cfg.IsProduction
 }

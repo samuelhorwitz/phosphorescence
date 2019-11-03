@@ -2,7 +2,7 @@
   "name": "phosphorescence",
   "version": "1.0.0",
   "author": "Samuel Horwitz",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "private": true,
   "dependencies": {
     "@nuxtjs/google-analytics": "^2.2.0",

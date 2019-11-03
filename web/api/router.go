@@ -14,8 +14,12 @@ import (
 
 func initializeRoutes(cfg *config) http.Handler {
 	r := chi.NewRouter()
+	allowedOrigins := []string{cfg.phosphorOrigin}
+	if !cfg.isProduction {
+		allowedOrigins = append(allowedOrigins, "http://localhost:8000")
+	}
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{cfg.phosphorOrigin},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -209,6 +213,9 @@ func initializeRoutes(cfg *config) http.Handler {
 			r.Use(middleware.SpotifyLimiter)
 			r.Get("/{albumID}", phosphor.GetAlbum)
 		})
+	})
+	r.Route("/player", func(r chi.Router) {
+		r.With(middleware.Captcha("api/player/playlist", 0.5)).Get("/playlist/{playlistID}", phosphor.GetPlayerPlaylist)
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "User-agent: *\nDisallow: /\n")
