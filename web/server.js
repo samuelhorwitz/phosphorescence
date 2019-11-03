@@ -1,5 +1,4 @@
 const express = require('express');
-const compression = require('compression');
 const app = express();
 
 app.use(function (req, res, next) {
@@ -11,7 +10,6 @@ app.use(function (req, res, next) {
 
 if (process.env.NODE_ENV === 'production') {
     const http = require('http');
-    app.use(compression());
     app.use(express.static('./public'));
     app.use('/editor/:id?', express.static('./public'));
     const server = http.createServer(app).listen('80', '0.0.0.0', () => {
