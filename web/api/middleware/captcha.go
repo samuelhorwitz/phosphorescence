@@ -69,7 +69,7 @@ func Captcha(action string, threshold float64) func(http.Handler) http.Handler {
 				common.Fail(w, errors.New("Recaptcha not successful"), http.StatusForbidden)
 				return
 			}
-			if isProduction && recaptchaResponse.Hostname != phosphorHost {
+			if isProduction && !(recaptchaResponse.Hostname == phosphorHost || recaptchaResponse.Hostname == twitterHost) {
 				common.Fail(w, fmt.Errorf("Invalid Recaptcha hostname: %s", recaptchaResponse.Hostname), http.StatusForbidden)
 				return
 			}

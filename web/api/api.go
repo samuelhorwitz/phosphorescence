@@ -53,6 +53,7 @@ func main() {
 		isProduction:                         isProduction,
 		phosphorOrigin:                       os.Getenv("PHOSPHOR_ORIGIN"),
 		apiOrigin:                            os.Getenv("API_ORIGIN"),
+		twitterOrigin:                        os.Getenv("TWITTER_ORIGIN"),
 		cookieDomain:                         os.Getenv("COOKIE_DOMAIN"),
 		spotifyClientID:                      os.Getenv("SPOTIFY_CLIENT_ID"),
 		spotifySecret:                        os.Getenv("SPOTIFY_SECRET"),
@@ -102,6 +103,7 @@ func initialize(cfg *config) {
 	middleware.Initialize(&middleware.Config{
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
 		PhosphorOrigin:     cfg.phosphorOrigin,
+		TwitterOrigin:      cfg.twitterOrigin,
 		RecaptchaSecret:    cfg.recaptchaSecret,
 		IsProduction:       cfg.isProduction,
 	})

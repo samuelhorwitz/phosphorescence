@@ -8,6 +8,7 @@ type config struct {
 	isProduction                         bool
 	phosphorOrigin                       string
 	apiOrigin                            string
+	twitterOrigin                        string
 	cookieDomain                         string
 	spotifyClientID                      string
 	spotifySecret                        string

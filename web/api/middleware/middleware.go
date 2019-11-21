@@ -20,6 +20,7 @@ var (
 	googleHTTPClient *http.Client
 	recaptchaSecret  string
 	phosphorHost     string
+	twitterHost      string
 	isProduction     bool
 )
 
@@ -27,6 +28,7 @@ type Config struct {
 	RateLimitPerSecond int
 	RecaptchaSecret    string
 	PhosphorOrigin     string
+	TwitterOrigin      string
 	IsProduction       bool
 }
 
@@ -44,5 +46,11 @@ func Initialize(cfg *Config) {
 		return
 	}
 	phosphorHost = phosphorOriginParsed.Hostname()
+	twitterOriginParsed, err := url.Parse(cfg.TwitterOrigin)
+	if err != nil {
+		log.Fatalf("Could not parse Phosphorescence Twitter origin: %s", err)
+		return
+	}
+	twitterHost = twitterOriginParsed.Hostname()
 	isProduction = cfg.IsProduction
 }

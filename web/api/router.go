@@ -14,9 +14,9 @@ import (
 
 func initializeRoutes(cfg *config) http.Handler {
 	r := chi.NewRouter()
-	allowedOrigins := []string{cfg.phosphorOrigin}
-	if !cfg.isProduction {
-		allowedOrigins = append(allowedOrigins, "http://localhost:8000")
+	allowedOrigins := []string{
+		cfg.phosphorOrigin,
+		cfg.twitterOrigin,
 	}
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,

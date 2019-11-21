@@ -208,7 +208,7 @@
     }
 
     function updateLinks(playlistId) {
-        let spotifyUrl = `https://open.spotify.com/playlist/${playlistId}`;
+        let spotifyUrl = `https://open.spotify.com/playlist/${playlistId}?utm_campaign=me.phosphor`;
         let phosphorescenceUrl = `https://phosphor.me/${playlistId}`;
         let spotifyLinks = document.querySelectorAll('[data-link-spotify]');
         spotifyLinks.forEach(el => {
