@@ -1,0 +1,686 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat');
+
+@keyframes noise-anim {
+    0% {
+        clip-path: inset(40% 0 18% 0);
+        -webkit-clip-path: inset(40% 0 18% 0);
+    }
+
+    5.8823529412% {
+        clip-path: inset(25% 0 1% 0);
+        -webkit-clip-path: inset(25% 0 1% 0);
+    }
+
+    11.7647058824% {
+        clip-path: inset(24% 0 66% 0);
+        -webkit-clip-path: inset(24% 0 66% 0);
+    }
+
+    17.6470588235% {
+        clip-path: inset(53% 0 20% 0);
+        -webkit-clip-path: inset(53% 0 20% 0);
+    }
+
+    23.5294117647% {
+        clip-path: inset(26% 0 12% 0);
+        -webkit-clip-path: inset(26% 0 12% 0);
+    }
+
+    29.4117647059% {
+        clip-path: inset(12% 0 76% 0);
+        -webkit-clip-path: inset(12% 0 76% 0);
+    }
+
+    35.2941176471% {
+        clip-path: inset(36% 0 9% 0);
+        -webkit-clip-path: inset(36% 0 9% 0);
+    }
+
+    41.1764705882% {
+        clip-path: inset(45% 0 53% 0);
+        -webkit-clip-path: inset(45% 0 53% 0);
+    }
+
+    47.0588235294% {
+        clip-path: inset(62% 0 3% 0);
+        -webkit-clip-path: inset(62% 0 3% 0);
+    }
+
+    52.9411764706% {
+        clip-path: inset(85% 0 5% 0);
+        -webkit-clip-path: inset(85% 0 5% 0);
+    }
+
+    58.8235294118% {
+        clip-path: inset(94% 0 2% 0);
+        -webkit-clip-path: inset(94% 0 2% 0);
+    }
+
+    64.7058823529% {
+        clip-path: inset(84% 0 9% 0);
+        -webkit-clip-path: inset(84% 0 9% 0);
+    }
+
+    70.5882352941% {
+        clip-path: inset(23% 0 44% 0);
+        -webkit-clip-path: inset(23% 0 44% 0);
+    }
+
+    76.4705882353% {
+        clip-path: inset(71% 0 10% 0);
+        -webkit-clip-path: inset(71% 0 10% 0);
+    }
+
+    82.3529411765% {
+        clip-path: inset(48% 0 23% 0);
+        -webkit-clip-path: inset(48% 0 23% 0);
+    }
+
+    88.2352941176% {
+        clip-path: inset(17% 0 1% 0);
+        -webkit-clip-path: inset(17% 0 1% 0);
+    }
+
+    94.1176470588% {
+        clip-path: inset(62% 0 36% 0);
+        -webkit-clip-path: inset(62% 0 36% 0);
+    }
+
+    100% {
+        clip-path: inset(63% 0 37% 0);
+        -webkit-clip-path: inset(63% 0 37% 0);
+    }
+}
+
+@keyframes noise-anim-2 {
+    0% {
+        clip-path: inset(96% 0 3% 0);
+        -webkit-clip-path: inset(96% 0 3% 0);
+    }
+
+    5.8823529412% {
+        clip-path: inset(29% 0 51% 0);
+        -webkit-clip-path: inset(29% 0 51% 0);
+    }
+
+    11.7647058824% {
+        clip-path: inset(65% 0 27% 0);
+        -webkit-clip-path: inset(65% 0 27% 0);
+    }
+
+    17.6470588235% {
+        clip-path: inset(58% 0 40% 0);
+        -webkit-clip-path: inset(58% 0 40% 0);
+    }
+
+    23.5294117647% {
+        clip-path: inset(7% 0 39% 0);
+        -webkit-clip-path: inset(7% 0 39% 0);
+    }
+
+    29.4117647059% {
+        clip-path: inset(68% 0 33% 0);
+        -webkit-clip-path: inset(68% 0 33% 0);
+    }
+
+    35.2941176471% {
+        clip-path: inset(43% 0 56% 0);
+        -webkit-clip-path: inset(43% 0 56% 0);
+    }
+
+    41.1764705882% {
+        clip-path: inset(91% 0 6% 0);
+        -webkit-clip-path: inset(91% 0 6% 0);
+    }
+
+    47.0588235294% {
+        clip-path: inset(43% 0 15% 0);
+        -webkit-clip-path: inset(43% 0 15% 0);
+    }
+
+    52.9411764706% {
+        clip-path: inset(85% 0 3% 0);
+        -webkit-clip-path: inset(85% 0 3% 0);
+    }
+
+    58.8235294118% {
+        clip-path: inset(51% 0 27% 0);
+        -webkit-clip-path: inset(51% 0 27% 0);
+    }
+
+    64.7058823529% {
+        clip-path: inset(70% 0 17% 0);
+        -webkit-clip-path: inset(70% 0 17% 0);
+    }
+
+    70.5882352941% {
+        clip-path: inset(59% 0 11% 0);
+        -webkit-clip-path: inset(59% 0 11% 0);
+    }
+
+    76.4705882353% {
+        clip-path: inset(16% 0 48% 0);
+        -webkit-clip-path: inset(16% 0 48% 0);
+    }
+
+    82.3529411765% {
+        clip-path: inset(51% 0 17% 0);
+        -webkit-clip-path: inset(51% 0 17% 0);
+    }
+
+    88.2352941176% {
+        clip-path: inset(11% 0 27% 0);
+        -webkit-clip-path: inset(11% 0 27% 0);
+    }
+
+    94.1176470588% {
+        clip-path: inset(75% 0 3% 0);
+        -webkit-clip-path: inset(75% 0 3% 0);
+    }
+
+    100% {
+        clip-path: inset(44% 0 2% 0);
+        -webkit-clip-path: inset(44% 0 2% 0);
+    }
+}
+
+.glitch:before,
+.glitch:after {
+    display: none;
+    content: attr(data-text);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    background-color: rgb(40, 27, 61);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.glitch:after {
+    left: 2px;
+    text-shadow: -1px 0 rgba(0, 255, 255, 1);
+    animation-name: noise-anim;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-direction: alternate-reverse;
+    animation-delay: 0.01s;
+}
+
+.glitch:before {
+    left: -1px;
+    text-shadow: 2px 0 rgba(255, 0, 255, 0.7);
+    animation-name: noise-anim-2;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-direction: alternate-reverse;
+    animation-delay: 0.01s;
+}
+
+.glitch:hover:before,
+.glitch:hover:after {
+    display: inline;
+}
+
+.glitch {
+    color: white;
+    position: relative;
+}
+
+html,
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    font-family: Montserrat;
+    background-image: linear-gradient(to top, rgb(244, 187, 251), rgb(0, 27, 244) 50%, rgb(40, 27, 61) 80%);;
+    background-attachment: fixed;
+    background-size: cover;
+    background-color: rgb(40, 27, 61);
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.grecaptcha-badge {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.playerContainer {
+    display: flex;
+    height: 80px;
+    min-height: 80px;
+    width: 100%;
+    background-color: rgb(40, 27, 61);
+}
+
+.playlistImage {
+    background-image: url("/logo-p.png");
+    background-size: cover;
+    width: 80px;
+    min-width: 80px;
+    height: 100%;
+    cursor: pointer;
+}
+
+.headerContainer {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.footerContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0px;
+    margin-right: 5px;
+}
+
+.playerControlsContainer {
+    display: flex;
+    flex-direction: column;
+    margin: 0px 10px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.playAndHeaders {
+    display: flex;
+    overflow: hidden;
+    margin-top: 7px;
+}
+
+.headers {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.controls {
+    display: flex;
+    flex: 1;
+    align-items: center;
+}
+
+.previousTrack,
+.nextTrack {
+    width: 12px;
+    min-width: 12px;
+    fill: white;
+    stroke: magenta;
+    cursor: pointer;
+}
+
+.previousTrack:hover,
+.nextTrack:hover {
+    stroke: aqua;
+}
+
+.playPausePlaylist {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    margin: 0px;
+    padding: 0px;
+    width: 33px;
+    min-width: 33px;
+}
+
+.playPausePlaylist:focus {
+    outline: none;
+}
+
+.playPausePlaylist svg {
+    width: 30px;
+    min-width: 30px;
+    margin-right: 5px;
+    max-height: 46px;
+    fill: aqua;
+    stroke: aqua;
+}
+
+.playPausePlaylist#playPlaylist svg {
+    margin-left: -2px;
+}
+
+.playPausePlaylist#pausePlaylist svg {
+    margin-left: -10px;
+}
+
+.playPausePlaylist:hover svg {
+    fill: white;
+    stroke: magenta;
+}
+
+.scrubberContainer {
+    display: flex;
+    flex: 1;
+    position: relative;
+    height: 100%;
+    align-items: center;
+    margin: 0px 5px;
+    cursor: pointer;
+}
+
+.scrubber {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    width: 100%;
+    height: 3px;
+    border: none;
+    background-color: white;
+}
+
+.scrubber::-webkit-progress-bar {
+    background-color: white;
+}
+
+.scrubber::-webkit-progress-value {
+    background-color: aqua;
+}
+
+.scrubber::-moz-progress-bar {
+    background-color: aqua;
+}
+
+.cursor {
+    opacity: 0;
+    border-radius: 10px;
+    width: 7px;
+    height: 7px;
+    margin-left: -3.5px;
+    background-color: cyan;
+    position: absolute;
+    transition: opacity 0.15s ease-in 0s;
+}
+
+.scrubberContainer:hover .cursor {
+    opacity: 1;
+}
+
+h1,
+h2 {
+    margin: 0px;
+    padding: 0px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+h1 {
+    font-weight: bold;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+h2 {
+    font-weight: normal;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.phosphorescenceLogo {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.spotifyLogo {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.blinkingCursor {
+    color: magenta;
+    font-size: 18px;
+    animation: blink 1s steps(3, start) infinite;
+}
+
+@keyframes blink {
+    to {
+        visibility: hidden;
+    }
+}
+
+a {
+    color: aqua;
+    text-decoration: none;
+}
+
+a:visited {
+    color: aqua;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a.headerLink {
+    text-decoration: none !important;
+}
+
+table, tbody {
+    display: block;
+}
+
+.trackRow {
+    display: flex;
+    padding: 7px 15px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+}
+
+.trackRow:hover {
+    background-color: rgba(255, 0, 255, 0.6);
+}
+
+.numCell {
+    text-align: left;
+    min-width: 25px;
+}
+
+.trackCell {
+    flex: 1;
+    overflow: hidden;
+}
+
+.timeCell {
+    text-align: right;
+    padding-left: 5px;
+}
+
+.tableTrackName {
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tableTrackArtists {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trackIndexPlaying {
+    display: none;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.trackRow.isPlaying .trackIndexPlaying {
+    display: flex;
+}
+
+.trackRow.isPlaying .trackIndex {
+    display: none;
+}
+
+.trackIndexPlaying svg {
+    fill: aqua;
+    stroke: aqua;
+    width: 30px;
+    margin-left: -14px;
+}
+
+.nav {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.nav.cover {
+    overflow: hidden;
+}
+
+.coverAside {
+    background-color: black;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: opacity 0.1s ease-in;
+}
+
+.timeoutCover {
+    transition: unset;
+    animation: loadingIn 10s ease;
+    -webkit-animation: loadingIn 10s ease;
+    animation-fill-mode: forwards;
+}
+
+.timeoutCover[hidden] {
+    display: none;
+}
+
+.coverAside[hidden] {
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.coverAsideCopy {
+    margin: 0px;
+    padding: 0px;
+    color: white;
+    font-size: 29px;
+    text-align: center;
+    max-width: 500px;
+    margin-bottom: 20px;
+}
+
+.coverClose {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: none;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    background-color: transparent;
+    color: white;
+    font-size: 16px;
+    border: 0px;
+    cursor: pointer;
+    color: aqua;
+}
+
+.coverClose:hover {
+    text-decoration: underline;
+}
+
+.coverClose:focus {
+    outline: none;
+}
+
+.phosphorescenceLogoCover {
+    cursor: pointer;
+    width: 128px;
+    margin-top: -45px;
+}
+
+.legalFooter {
+    background-color: transparent;
+    position: fixed;
+    bottom: 1px;
+    right: 3px;
+    width: 8px;
+    font-size: 10px;
+    overflow: hidden;
+    transition: width 0.2s ease-in-out;
+}
+
+.legalFooter:hover, .legalFooter.touched {
+    width: 40px;
+}
+
+.legalFooter:hover .info {
+    pointer-events: none;
+}
+
+.info {
+    color: white;
+    font-size: 16px;
+}
+
+#playlistImageAlt {
+    display: none;
+}
+
+@keyframes loadingIn {
+  0% {
+    visibility: hidden;
+    opacity: 0;
+  }
+  50% {
+    visibility: visible;
+    opacity: 0;
+  }
+  100% {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes loadingIn {
+  0% {
+    visibility: hidden;
+    opacity: 0;
+  }
+  50% {
+    visibility: visible;
+    opacity: 0;
+  }
+  100% {
+    visibility: visible;
+    opacity: 1;
+  }
+}

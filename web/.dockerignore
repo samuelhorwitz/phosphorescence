@@ -21,6 +21,10 @@ eos/.gitignore
 eos/dist/*
 eos/.gitignore
 eos/Dockerfile
+twitter/node_modules/*
+twitter/.cache/*
+twitter/dist/*
+twitter/distgz/*
 pgdata/*
 api/.gitignore
 api/Dockerfile

@@ -91,6 +91,9 @@ module.exports = {
       autoTracking: {
         exception: true
       },
+      fields: {
+        allowLinker: true
+      },
       disabled: () => localStorage.getItem('gdpr') !== 'true'
     }]
   ]

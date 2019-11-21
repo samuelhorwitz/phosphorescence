@@ -103,6 +103,7 @@ func initialize(cfg *config) {
 		RateLimitPerSecond: cfg.rateLimitPerSecond,
 		PhosphorOrigin:     cfg.phosphorOrigin,
 		RecaptchaSecret:    cfg.recaptchaSecret,
+		IsProduction:       cfg.isProduction,
 	})
 	log.Println("Middleware initialized")
 	spotifyclient.Initialize(&spotifyclient.Config{

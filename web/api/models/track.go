@@ -22,16 +22,17 @@ type SpotifyTrackEnvelope struct {
 }
 
 type SpotifyTrack struct {
-	ID               string              `json:"id,omitempty"`
-	Album            SpotifyAlbum        `json:"album"`
-	Artists          []SpotifyArtist     `json:"artists"`
-	Name             string              `json:"name"`
-	Popularity       int                 `json:"popularity"`
-	PreviewURL       string              `json:"preview_url"`
-	AvailableMarkets []string            `json:"available_markets,omitempty"`
-	IsPlayable       bool                `json:"is_playable"`
-	LinkedFrom       *SpotifyLinkedTrack `json:"linked_from,omitempty"`
-	IsLocal          bool                `json:"is_local,omitempty"`
+	ID                  string              `json:"id,omitempty"`
+	Album               SpotifyAlbum        `json:"album"`
+	Artists             []SpotifyArtist     `json:"artists"`
+	Name                string              `json:"name"`
+	Popularity          int                 `json:"popularity"`
+	PreviewURL          string              `json:"preview_url"`
+	AvailableMarkets    []string            `json:"available_markets,omitempty"`
+	IsPlayable          bool                `json:"is_playable"`
+	LinkedFrom          *SpotifyLinkedTrack `json:"linked_from,omitempty"`
+	IsLocal             bool                `json:"is_local,omitempty"`
+	DurationMillseconds int                 `json:"duration_ms,omitempty"`
 }
 
 type SpotifyLinkedTrack struct {
