@@ -139,6 +139,9 @@ func getPlaylist(ctx context.Context, token *oauth2.Token, region, playlistID st
 	if err != nil {
 		return nil, fmt.Errorf("Could not get audio features: %s", err)
 	}
+	for _, track := range playlist.Tracks {
+		track.Track.Album.Images = findBestImage(track.Track.Album.Images)
+	}
 	return &playlist, nil
 }
 

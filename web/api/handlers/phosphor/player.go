@@ -23,9 +23,16 @@ type playerPlaylist struct {
 type playerPlaylistTrack struct {
 	ID                  string                 `json:"id"`
 	Artists             []models.SpotifyArtist `json:"artists"`
+	Album               playerPlaylistAlbum    `json:"album"`
 	Name                string                 `json:"name"`
 	PreviewURL          string                 `json:"preview_url"`
 	DurationMillseconds int                    `json:"duration_ms"`
+}
+
+type playerPlaylistAlbum struct {
+	ID     string                `json:"id"`
+	Name   string                `json:"name"`
+	Images []models.SpotifyImage `json:"images"`
 }
 
 func GetPlayerPlaylist(w http.ResponseWriter, r *http.Request) {
@@ -51,8 +58,13 @@ func GetPlayerPlaylist(w http.ResponseWriter, r *http.Request) {
 	responsePlaylist.Images = playlist.Images
 	for _, track := range playlist.Tracks {
 		responsePlaylist.Tracks = append(responsePlaylist.Tracks, playerPlaylistTrack{
-			ID:                  track.ID,
-			Artists:             track.Track.Artists,
+			ID:      track.ID,
+			Artists: track.Track.Artists,
+			Album: playerPlaylistAlbum{
+				ID:     track.Track.Album.ID,
+				Name:   track.Track.Album.Name,
+				Images: track.Track.Album.Images,
+			},
 			Name:                track.Track.Name,
 			PreviewURL:          track.Track.PreviewURL,
 			DurationMillseconds: track.Track.DurationMillseconds,

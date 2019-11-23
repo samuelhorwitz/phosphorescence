@@ -7,8 +7,11 @@
     let currentTouch = 0;
     let tracks = [];
     let trackTitles = [];
+    let trackTitlesWithLinks = [];
+    let trackImages = [];
+    let trackAlbumUrls = [];
     let previewUrls = {};
-    let progressEl, cursorEl, audioEl, playPlaylistEl, pausePlaylistEl, subtitleEl;
+    let progressEl, cursorEl, audioEl, playPlaylistEl, pausePlaylistEl, subtitleEl, playlistImageEl;
     let state = {
         playState: stopped,
         currentTrack: 0,
@@ -79,7 +82,10 @@
         clearPlaying();
         document.title = `phosphor.me - ${trackTitles[state.currentTrack]}`;
         audioEl.title = `phosphor.me - ${trackTitles[state.currentTrack]}`;
-        subtitleEl.innerText = trackTitles[state.currentTrack];
+        subtitleEl.innerHTML = trackTitlesWithLinks[state.currentTrack];
+        playlistImageEl.style.backgroundImage = `url('${trackImages[state.currentTrack]}')`;
+        playlistImageLinkEl.setAttribute('data-old-href', playlistImageLinkEl.href);
+        playlistImageLinkEl.href = trackAlbumUrls[state.currentTrack];
         let shouldPlay = document.querySelector(`tr[data-track-index="${state.currentTrack}"]`);
         if (shouldPlay) {
             shouldPlay.classList.add('isPlaying');
@@ -185,6 +191,9 @@
             document.title = `phosphor.me - Web Player`;
             audioEl.removeAttribute('title');
             subtitleEl.innerHTML = 'Created with <a href="https://phosphor.me" target="_blank">phosphor.me</a>.';
+            playlistImageEl.style.backgroundImage = '';
+            playlistImageLinkEl.href = playlistImageLinkEl.getAttribute('data-old-href');
+            playlistImageLinkEl.removeAttribute('data-old-href');
             clearPlaying();
         } else {
             next();
@@ -273,7 +282,8 @@
                 playlistTitleEl.classList.remove('touch');
             }
         });
-        let playlistImageEl = document.getElementById('playlistImage');
+        playlistImageLinkEl = document.getElementById('playlistImageLink');
+        playlistImageEl = document.getElementById('playlistImage');
         if (playlist.images && playlist.images.length && playlist.images[0]) {
             playlistImageEl.style.backgroundImage = `url("${playlist.images[0].url}")`;
         }
@@ -316,6 +326,18 @@
         subtitleEl = document.getElementById('subtitle');
         tracks = playlist.tracks.map(t => t.id);
         trackTitles = playlist.tracks.map(t => `${t.name} - ${t.artists.map(a => a.name).join(', ')}`);
+        trackTitlesWithLinks = playlist.tracks.map(t => `
+            <a href="https://open.spotify.com/track/${t.id}?utm_campaign=me.phosphor" target="_blank" rel="external noopener">${t.name}</a>
+            -
+            ${t.artists.map(a => `<a href="https://open.spotify.com/artist/${a.id}?utm_campaign=me.phosphor" target="_blank" rel="external noopener">${a.name}</a>`).join(', ')}
+        `);
+        trackImages = playlist.tracks.map(t => {
+            if (t.album.images.length) {
+                return t.album.images[0].url;
+            }
+            return null;
+        });
+        trackAlbumUrls = playlist.tracks.map(t => `https://open.spotify.com/album/${t.album.id}?utm_campaign=me.phosphor`);
     }
 
     await new Promise(resolve => grecaptcha.ready(resolve));
