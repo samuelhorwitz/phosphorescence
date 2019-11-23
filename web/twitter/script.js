@@ -83,6 +83,7 @@
         document.title = `phosphor.me - ${trackTitles[state.currentTrack]}`;
         audioEl.title = `phosphor.me - ${trackTitles[state.currentTrack]}`;
         subtitleEl.innerHTML = trackTitlesWithLinks[state.currentTrack];
+        playlistImageEl.setAttribute('data-old-background-image', playlistImageEl.style.backgroundImage);
         playlistImageEl.style.backgroundImage = `url('${trackImages[state.currentTrack]}')`;
         playlistImageLinkEl.setAttribute('data-old-href', playlistImageLinkEl.href);
         playlistImageLinkEl.href = trackAlbumUrls[state.currentTrack];
@@ -191,7 +192,8 @@
             document.title = `phosphor.me - Web Player`;
             audioEl.removeAttribute('title');
             subtitleEl.innerHTML = 'Created with <a href="https://phosphor.me" target="_blank">phosphor.me</a>.';
-            playlistImageEl.style.backgroundImage = '';
+            playlistImageEl.style.backgroundImage = playlistImageEl.getAttribute('data-old-background-image');
+            playlistImageEl.removeAttribute('data-old-background-image');
             playlistImageLinkEl.href = playlistImageLinkEl.getAttribute('data-old-href');
             playlistImageLinkEl.removeAttribute('data-old-href');
             clearPlaying();
