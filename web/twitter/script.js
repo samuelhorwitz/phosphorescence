@@ -3,7 +3,10 @@
     const paused = 1;
     const playing = 2;
     const apiOrigin = 'https://api.phosphor.me';
+    let blockClick = false;
+    let currentTouch = 0;
     let tracks = [];
+    let trackTitles = [];
     let previewUrls = {};
     let progressEl, cursorEl, audioEl, playPlaylistEl, pausePlaylistEl;
     let state = {
@@ -70,10 +73,15 @@
         }
         state.playState = playing;
         audioEl.src = previewUrls[tracks[state.currentTrack]];
-        audioEl.addEventListener('canplaythrough', audioEl.play, {once: true});
+        audioEl.play();
         pausePlaylistEl.hidden = false;
         playPlaylistEl.hidden = true;
-        setPlaying();
+        document.title = trackTitles[state.currentTrack];
+        clearPlaying();
+        let shouldPlay = document.querySelector(`tr[data-track-index="${state.currentTrack}"]`);
+        if (shouldPlay) {
+            shouldPlay.classList.add('isPlaying');
+        }
     }
 
     function resume() {
@@ -178,14 +186,6 @@
         }
     }
 
-    function setPlaying() {
-        clearPlaying();
-        let shouldPlay = document.querySelector(`tr[data-track-index="${state.currentTrack}"]`);
-        if (shouldPlay) {
-            shouldPlay.classList.add('isPlaying');
-        }
-    }
-
     function clearPlaying() {
         let isPlaying = document.querySelectorAll('tr.isPlaying');
         for (let el of isPlaying) {
@@ -237,6 +237,37 @@
         let playlistTitleEl = document.getElementById('playlistTitle');
         playlistTitleEl.innerText = playlistName;
         playlistTitleEl.setAttribute('data-text', playlistName);
+        document.body.addEventListener('touchstart', () => {
+            playlistTitleEl.classList.add('touch');
+            currentTouch = Date.now();
+            blockClick = true;
+        });
+        document.body.addEventListener('touchend', async () => {
+            let oldCurrentTouch = currentTouch;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (oldCurrentTouch === currentTouch) {
+                playlistTitleEl.classList.remove('touch');
+            }
+        });
+        document.body.addEventListener('touchcancel', async () => {
+            let oldCurrentTouch = currentTouch;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (oldCurrentTouch === currentTouch) {
+                playlistTitleEl.classList.remove('touch');
+            }
+        });
+        document.body.addEventListener('click', async () => {
+            if (blockClick) {
+                return;
+            }
+            currentTouch = Date.now();
+            playlistTitleEl.classList.add('touch');
+            let oldCurrentTouch = currentTouch;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (oldCurrentTouch === currentTouch) {
+                playlistTitleEl.classList.remove('touch');
+            }
+        });
         let playlistImageEl = document.getElementById('playlistImage');
         if (playlist.images && playlist.images.length && playlist.images[0]) {
             playlistImageEl.style.backgroundImage = `url("${playlist.images[0].url}")`;
@@ -253,7 +284,7 @@
             trackIndex.innerText = parseInt(i, 10) + 1;
             let trackData = td[1].querySelectorAll('div');
             trackData[0].innerText = track.name;
-            trackData[1].innerText = track.artists.map(t => t.name).join(', ');
+            trackData[1].innerText = track.artists.map(a => a.name).join(', ');
             td[2].innerText = msToPrettyTime(track.duration_ms);
             playlistTableEl.appendChild(trackEl);
         }
@@ -278,6 +309,7 @@
         let legalFooterEl = document.getElementById('legalFooter');
         infoButtonEl.addEventListener('click', () => legalFooterEl.classList.toggle('touched'));
         tracks = playlist.tracks.map(t => t.id);
+        trackTitles = playlist.tracks.map(t => `phosphor.me - ${t.name} - ${t.artists.map(a => a.name).join(', ')}`);
     }
 
     await new Promise(resolve => grecaptcha.ready(resolve));

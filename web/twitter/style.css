@@ -221,7 +221,9 @@
 }
 
 .glitch:hover:before,
-.glitch:hover:after {
+.glitch:hover:after,
+.glitch.touch:before,
+.glitch.touch:after {
     display: inline;
 }
 
@@ -251,6 +253,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
 }
 
 .grecaptcha-badge {
@@ -630,6 +637,14 @@ table, tbody {
 .legalFooter {
     background-color: transparent;
     position: fixed;
+    width: 30px;
+    height: 30px;
+    bottom: 0px;
+    right: 0px;
+}
+
+.legalFooterWrapper {
+    position: absolute;
     bottom: 1px;
     right: 3px;
     width: 8px;
@@ -638,7 +653,8 @@ table, tbody {
     transition: width 0.2s ease-in-out;
 }
 
-.legalFooter:hover, .legalFooter.touched {
+.legalFooter:hover .legalFooterWrapper,
+.legalFooter.touched .legalFooterWrapper {
     width: 40px;
 }
 

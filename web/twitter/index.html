@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
     <meta charset="utf-8">
-    <title>Phosphorescence Web Player</title>
+    <title>phosphor.me - Web Player</title>
     <meta name="description" content="Phosphorescence lets you build trance playlists for Spotify.">
     <script src="./node_modules/babel-polyfill/dist/polyfill.js"></script>
     <link rel="preconnect" href="https://pl.scdn.co">
@@ -15,6 +15,19 @@
     <link rel="dns-prefetch" href="https://www.google-analytics.com">
     <link rel="preconnect" href="https://www.gstatic.com">
     <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="apple-touch-icon" sizes="57x57" href="https://twitter.phosphor.me/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="https://twitter.phosphor.me/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://twitter.phosphor.me/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="https://twitter.phosphor.me/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://twitter.phosphor.me/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="https://twitter.phosphor.me/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="https://twitter.phosphor.me/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://twitter.phosphor.me/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://twitter.phosphor.me/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://twitter.phosphor.me/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://twitter.phosphor.me/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://twitter.phosphor.me/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://twitter.phosphor.me/favicon-16x16.png">
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-148749300-1"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -28,7 +41,7 @@
       });
     </script>
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-    <title>Phosphorescence Twitter Player Card</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" type="text/css" href="/style.css">
 </head>
 <body>
@@ -48,7 +61,7 @@
                     </button>
                     <div class="headers">
                         <a class="headerLink" href="#" data-link-phosphor><h1 id="playlistTitle" class="glitch"><span class="blinkingCursor">▌</span></h1></a>
-                        <h2>Visit <a href="https://phosphor.me" target="_blank">phosphor.me</a> to create your own trance playlists for Spotify.</h2>
+                        <h2>Created with <a href="https://phosphor.me" target="_blank">phosphor.me</a>.</h2>
                     </div>
                 </div>
                 <div class="controls">
@@ -87,7 +100,11 @@
             <p class="coverAsideCopy timeoutCoverCopy">Listen to the full playlist on <a href="#" data-link-phosphor>Phosphorescence</a> or on <a href="https://spotify.com/?utm_campaign=me.phosphor" rel="external noopener" target="_blank" data-link-spotify>Spotify</a>.</p>
         </aside>
     </nav>
-    <footer class="legalFooter" id="legalFooter"><span class="info" id="infoButton">ℹ</span><a href="https://phosphor.me/legal" target="_blank">Legal</a></footer>
+    <footer class="legalFooter" id="legalFooter">
+        <div class="legalFooterWrapper">
+            <span class="info" id="infoButton">&#8505;&#xFE0E;</span><a href="https://phosphor.me/legal" target="_blank">Legal</a>
+        </div>
+    </footer>
     <template id="trackRow">
         <tr class="trackRow">
             <td class="numCell">
