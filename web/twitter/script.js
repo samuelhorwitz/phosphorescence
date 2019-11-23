@@ -8,7 +8,7 @@
     let tracks = [];
     let trackTitles = [];
     let previewUrls = {};
-    let progressEl, cursorEl, audioEl, playPlaylistEl, pausePlaylistEl;
+    let progressEl, cursorEl, audioEl, playPlaylistEl, pausePlaylistEl, subtitleEl;
     let state = {
         playState: stopped,
         currentTrack: 0,
@@ -76,8 +76,10 @@
         audioEl.play();
         pausePlaylistEl.hidden = false;
         playPlaylistEl.hidden = true;
-        document.title = trackTitles[state.currentTrack];
         clearPlaying();
+        document.title = `phosphor.me - ${trackTitles[state.currentTrack]}`;
+        audioEl.title = `phosphor.me - ${trackTitles[state.currentTrack]}`;
+        subtitleEl.innerText = trackTitles[state.currentTrack];
         let shouldPlay = document.querySelector(`tr[data-track-index="${state.currentTrack}"]`);
         if (shouldPlay) {
             shouldPlay.classList.add('isPlaying');
@@ -180,6 +182,9 @@
             state.playState = stopped;
             pausePlaylistEl.hidden = true;
             playPlaylistEl.hidden = false;
+            document.title = `phosphor.me - Web Player`;
+            audioEl.removeAttribute('title');
+            subtitleEl.innerHTML = 'Created with <a href="https://phosphor.me" target="_blank">phosphor.me</a>.';
             clearPlaying();
         } else {
             next();
@@ -308,8 +313,9 @@
         let infoButtonEl = document.getElementById('infoButton');
         let legalFooterEl = document.getElementById('legalFooter');
         infoButtonEl.addEventListener('click', () => legalFooterEl.classList.toggle('touched'));
+        subtitleEl = document.getElementById('subtitle');
         tracks = playlist.tracks.map(t => t.id);
-        trackTitles = playlist.tracks.map(t => `phosphor.me - ${t.name} - ${t.artists.map(a => a.name).join(', ')}`);
+        trackTitles = playlist.tracks.map(t => `${t.name} - ${t.artists.map(a => a.name).join(', ')}`);
     }
 
     await new Promise(resolve => grecaptcha.ready(resolve));
