@@ -22,6 +22,34 @@ var s3Session *session.Session
 var s3Uploader *s3manager.Uploader
 var s3Service *s3.S3
 
+func MakeBucketUpdates(cfg *Config) (err error) {
+	log.Println("Preparing to make updates to bucket...")
+	os.Setenv("AWS_ACCESS_KEY_ID", cfg.SpacesID)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", cfg.SpacesSecret)
+	s3Session, err = session.NewSession(&aws.Config{
+		Endpoint: aws.String(cfg.SpacesEndpoint),
+		Region:   aws.String(cfg.SpacesRegion),
+	})
+	if err != nil {
+		return fmt.Errorf("Could not initialize Spaces S3: %s", err)
+	}
+	s3Uploader = s3manager.NewUploader(s3Session)
+	s3Service = s3.New(s3Session)
+	err = versioning()
+	if err != nil {
+		return fmt.Errorf("Could not ensure versioning enabled: %s", err)
+	}
+	err = lifecycle()
+	if err != nil {
+		return fmt.Errorf("Could not ensure versioning lifecycle enabled: %s", err)
+	}
+	err = cors()
+	if err != nil {
+		return fmt.Errorf("Could not set CORS config: %s", err)
+	}
+	return nil
+}
+
 func PushTracks(cfg *Config, allTracks []*spider.TrackEnvelope, trackRegions map[string][]*spider.TrackEnvelope) (err error) {
 	log.Println("Preparing to push tracks...")
 	os.Setenv("AWS_ACCESS_KEY_ID", cfg.SpacesID)
@@ -172,15 +200,20 @@ func lifecycle() error {
 				{
 					ID:     aws.String("Expire Old Track Metadata"),
 					Status: aws.String("Enabled"),
-					AbortIncompleteMultipartUpload: &s3.AbortIncompleteMultipartUpload{
-						DaysAfterInitiation: aws.Int64(7),
-					},
 					Expiration: &s3.LifecycleExpiration{
 						Days: aws.Int64(7),
 					},
 					Filter: &s3.LifecycleRuleFilter{
 						Prefix: aws.String("tracks"),
 					},
+				},
+				{
+					ID:     aws.String("Abort Incomplete Multipart Upload"),
+					Status: aws.String("Enabled"),
+					AbortIncompleteMultipartUpload: &s3.AbortIncompleteMultipartUpload{
+						DaysAfterInitiation: aws.Int64(1),
+					},
+					Filter: &s3.LifecycleRuleFilter{},
 				},
 			},
 		},

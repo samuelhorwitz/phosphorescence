@@ -1,13 +1,14 @@
 package main
 
 type config struct {
-	spotifyClientID string
-	spotifySecret   string
-	spacesID        string
-	spacesSecret    string
-	spacesEndpoint  string
-	spacesRegion    string
-	outFile         string
-	testPush        bool
-	fakeData        bool
+	spotifyClientID   string
+	spotifySecret     string
+	spacesID          string
+	spacesSecret      string
+	spacesEndpoint    string
+	spacesRegion      string
+	outFile           string
+	testPush          bool
+	fakeData          bool
+	bucketUpdatesOnly bool
 }

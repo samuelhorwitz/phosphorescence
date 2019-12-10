@@ -18,9 +18,11 @@ func main() {
 	var outFile string
 	var testPush bool
 	var fakeData bool
+	var bucketUpdatesOnly bool
 	flag.StringVar(&outFile, "out", "", "output file (opt)")
 	flag.BoolVar(&testPush, "test", false, "test push (opt)")
 	flag.BoolVar(&fakeData, "fake", false, "fake data (opt)")
+	flag.BoolVar(&bucketUpdatesOnly, "bucket", false, "only make updates to bucket (opt)")
 	flag.Parse()
 	isProduction := os.Getenv("ENV") == "production"
 	if !isProduction {
@@ -30,15 +32,16 @@ func main() {
 		}
 	}
 	cfg := &config{
-		spotifyClientID: os.Getenv("SPOTIFY_CLIENT_ID"),
-		spotifySecret:   os.Getenv("SPOTIFY_SECRET"),
-		spacesID:        os.Getenv("SPACES_ID"),
-		spacesSecret:    os.Getenv("SPACES_SECRET"),
-		spacesEndpoint:  os.Getenv("SPACES_TRACKS_ENDPOINT"),
-		spacesRegion:    os.Getenv("SPACES_TRACKS_REGION"),
-		outFile:         outFile,
-		testPush:        testPush || fakeData,
-		fakeData:        fakeData,
+		spotifyClientID:   os.Getenv("SPOTIFY_CLIENT_ID"),
+		spotifySecret:     os.Getenv("SPOTIFY_SECRET"),
+		spacesID:          os.Getenv("SPACES_ID"),
+		spacesSecret:      os.Getenv("SPACES_SECRET"),
+		spacesEndpoint:    os.Getenv("SPACES_TRACKS_ENDPOINT"),
+		spacesRegion:      os.Getenv("SPACES_TRACKS_REGION"),
+		outFile:           outFile,
+		testPush:          testPush || fakeData,
+		fakeData:          fakeData,
+		bucketUpdatesOnly: bucketUpdatesOnly,
 	}
 	run(cfg)
 }
@@ -47,6 +50,20 @@ func run(cfg *config) {
 	var tracks map[string][]*spider.TrackEnvelope
 	var allTracks []*spider.TrackEnvelope
 	var err error
+	pushCfg := &push.Config{
+		SpacesID:       cfg.spacesID,
+		SpacesSecret:   cfg.spacesSecret,
+		SpacesEndpoint: cfg.spacesEndpoint,
+		SpacesRegion:   cfg.spacesRegion,
+	}
+	if cfg.bucketUpdatesOnly {
+		err = push.MakeBucketUpdates(pushCfg)
+		if err != nil {
+			log.Fatalf("Could not make bucket updates: %s", err)
+		}
+		log.Println("Success")
+		return
+	}
 	if cfg.fakeData {
 		tracks = map[string][]*spider.TrackEnvelope{"US": []*spider.TrackEnvelope{}}
 		allTracks = []*spider.TrackEnvelope{}
@@ -66,17 +83,11 @@ func run(cfg *config) {
 		}
 		return
 	}
-	filename := "tracks.{region}.json"
+	pushCfg.Key = "tracks.{region}.json"
 	if cfg.testPush {
-		filename = "tracks-test.{region}.json"
+		pushCfg.Key = "tracks-test.{region}.json"
 	}
-	err = push.PushTracks(&push.Config{
-		SpacesID:       cfg.spacesID,
-		SpacesSecret:   cfg.spacesSecret,
-		SpacesEndpoint: cfg.spacesEndpoint,
-		SpacesRegion:   cfg.spacesRegion,
-		Key:            filename,
-	}, allTracks, tracks)
+	err = push.PushTracks(pushCfg, allTracks, tracks)
 	if err != nil {
 		log.Fatalf("Could not push tracks: %s", err)
 	}
