@@ -12,6 +12,8 @@ import (
 	"github.com/samuelhorwitz/phosphorescence/api/middleware"
 )
 
+const botCutoff = 0.3
+
 func initializeRoutes(cfg *config) http.Handler {
 	r := chi.NewRouter()
 	allowedOrigins := []string{
@@ -35,7 +37,7 @@ func initializeRoutes(cfg *config) http.Handler {
 			r.Get("/redirect", spotify.AuthorizeRedirect)
 		})
 		r.Route("/unauthenticated", func(r chi.Router) {
-			r.With(middleware.Captcha("api/tracks", 0.5)).Get("/tracks/{region}", spotify.TracksUnauthenticated)
+			r.With(middleware.Captcha("api/tracks", botCutoff)).Get("/tracks/{region}", spotify.TracksUnauthenticated)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
@@ -159,8 +161,8 @@ func initializeRoutes(cfg *config) http.Handler {
 	r.Route("/users", userRouter)
 	trackRouter := func(r chi.Router) {
 		r.Route("/unauthenticated", func(r chi.Router) {
-			r.With(middleware.Captcha("api/track", 0.5)).Get("/{region}/{trackIDs}", phosphor.GetTracksUnauthenticated)
-			r.With(middleware.Captcha("api/track/preview", 0.5)).Get("/preview/{region}/{trackIDs}", phosphor.GetTrackPreviewsUnauthenticated)
+			r.With(middleware.Captcha("api/track", botCutoff)).Get("/{region}/{trackIDs}", phosphor.GetTracksUnauthenticated)
+			r.With(middleware.Captcha("api/track/preview", botCutoff)).Get("/preview/{region}/{trackIDs}", phosphor.GetTrackPreviewsUnauthenticated)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
@@ -194,8 +196,8 @@ func initializeRoutes(cfg *config) http.Handler {
 	})
 	r.Route("/playlist", func(r chi.Router) {
 		r.Route("/unauthenticated", func(r chi.Router) {
-			r.With(middleware.Captcha("api/playlist", 0.5)).Get("/{region}/{playlistID}", phosphor.GetPlaylistUnauthenticated)
-			r.With(middleware.Captcha("api/playlist/create", 0.5)).Post("/", phosphor.CreatePrivatePlaylist)
+			r.With(middleware.Captcha("api/playlist", botCutoff)).Get("/{region}/{playlistID}", phosphor.GetPlaylistUnauthenticated)
+			r.With(middleware.Captcha("api/playlist/create", botCutoff)).Post("/", phosphor.CreatePrivatePlaylist)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
@@ -206,7 +208,7 @@ func initializeRoutes(cfg *config) http.Handler {
 	})
 	r.Route("/album", func(r chi.Router) {
 		r.Route("/unauthenticated", func(r chi.Router) {
-			r.With(middleware.Captcha("api/album", 0.5)).Get("/{region}/{albumID}", phosphor.GetAlbumUnauthenticated)
+			r.With(middleware.Captcha("api/album", botCutoff)).Get("/{region}/{albumID}", phosphor.GetAlbumUnauthenticated)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Session)
@@ -215,7 +217,7 @@ func initializeRoutes(cfg *config) http.Handler {
 		})
 	})
 	r.Route("/player", func(r chi.Router) {
-		r.With(middleware.Captcha("api/player/playlist", 0.5)).Get("/playlist/{playlistID}", phosphor.GetPlayerPlaylist)
+		r.With(middleware.Captcha("api/player/playlist", botCutoff)).Get("/playlist/{playlistID}", phosphor.GetPlayerPlaylist)
 	})
 	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "User-agent: *\nDisallow: /\n")

@@ -84,6 +84,9 @@ async function getTracks(isLoggedIn, region) {
         let captcha = await getCaptchaToken('api/tracks');
         tracksUrlResponse = await fetch(`${process.env.API_ORIGIN}/spotify/unauthenticated/tracks/${region}?captcha=${captcha}`);
     }
+    if (tracksUrlResponse.status !== 200) {
+        throw new Error('Could not download track metadata');
+    }
     let {tracksUrl} = await tracksUrlResponse.json();
     let response = await fetch(tracksUrl);
     if (cache && response.ok && response.headers.get('expires')) {
