@@ -56,6 +56,7 @@ module.exports = {
   mode: 'spa',
   build: {
     extractCSS: true,
+    publicPath: process.env.NODE_ENV === 'production' ? 'https://static.phosphor.me/' : '/_nuxt/',
     extend(config) {
       config.output.globalObject = 'this';
     }
@@ -83,6 +84,7 @@ module.exports = {
     EOS_ORIGIN: process.env.EOS_ORIGIN,
     API_ORIGIN: process.env.API_ORIGIN,
     SCRIPTS_ORIGIN: process.env.SCRIPTS_ORIGIN,
+    STATIC_ORIGIN: process.env.STATIC_ORIGIN,
     CONSOLA_LEVEL: process.env.NODE_ENV === 'production' ? process.env.CONSOLA_LEVEL : 0
   },
   modules: [

@@ -14,7 +14,7 @@
     "xregexp": "^4.2.4"
   },
   "engines": {
-    "node": "^10.0.0"
+    "node": "^11.7.0"
   },
   "engineStrict": true,
   "scripts": {

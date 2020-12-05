@@ -11,7 +11,8 @@ API_LATEST      := ${API_NAME}:latest
 build: build-phosphor build-eos build-jobs build-api
 
 build-phosphor:
-	docker build -t ${PHOSPHOR_LATEST} --build-arg EOS_ORIGIN=https://eoserigeneia.run --build-arg API_ORIGIN=https://api.phosphor.me --build-arg SCRIPTS_ORIGIN=https://scripts.phosphor.me .
+	docker build -t phosphor-static --target static --build-arg EOS_ORIGIN=https://eoserigeneia.run --build-arg API_ORIGIN=https://api.phosphor.me --build-arg SCRIPTS_ORIGIN=https://scripts.phosphor.me --build-arg STATIC_ORIGIN=https://static.phosphor.me .
+	docker build -t ${PHOSPHOR_LATEST} --build-arg EOS_ORIGIN=https://eoserigeneia.run --build-arg API_ORIGIN=https://api.phosphor.me --build-arg SCRIPTS_ORIGIN=https://scripts.phosphor.me --build-arg STATIC_ORIGIN=https://static.phosphor.me .
 
 build-eos:
 	docker build -t ${EOS_LATEST} -f ./eos/Dockerfile --build-arg PHOSPHOR_ORIGIN=https://phosphor.me .
@@ -48,8 +49,28 @@ apply:
 deploy: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l type=server
 
-deploy-phosphor: apply
+deploy-phosphor: deploy-phosphor-static deploy-phosphor-k8s
+
+deploy-phosphor-k8s: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=phosphor
+
+deploy-phosphor-static:
+	rm -rf ./.production
+	-docker rm phosphor-static
+	docker create --name phosphor-static phosphor-static
+	docker cp phosphor-static:/app/public ./.production
+	# js, css, html, svg, ttf, xml, json, txt
+	find ./.production -type f -name '*.js' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.css' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.html' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.svg' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.ttf' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.xml' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.json' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.txt' -exec gzip -9 -- {} \;
+	find ./.production -type f -name '*.gz' -exec sh -c 'mv "$$0" "$${0%.gz}"' {} \;
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude ".DS_Store" --exclude ".nojekyll" --exclude "*.js" --exclude "*.css" --exclude "*.html" --exclude "*.svg" --exclude "*.ttf" --exclude "*.xml" --exclude "*.json" --exclude "*.txt"
+	aws s3 sync ./.production s3://phosphorescence-static/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --endpoint=https://nyc3.digitaloceanspaces.com --exclude "*" --include "*.js" --include "*.css" --include "*.html" --include "*.svg" --include "*.ttf" --include "*.xml" --include "*.json" --include "*.txt" --content-encoding gzip
 
 deploy-eos: apply
 	kubectl --kubeconfig=/Users/${USER}/.kube/phosphor-kubeconfig.yaml --namespace phosphor delete pods -l app=eos

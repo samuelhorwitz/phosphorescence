@@ -1,4 +1,5 @@
 .nuxt
+.production
 node_modules
 *.crt
 *.key
